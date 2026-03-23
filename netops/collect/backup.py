@@ -41,6 +41,23 @@ _GIT_NOTHING_TO_COMMIT = "nothing to commit"
 # Filesystem helpers
 # ---------------------------------------------------------------------------
 
+# Characters that must not appear in a host-derived directory name.
+_UNSAFE_PATH_CHARS = frozenset('/\\:*?"<>|')
+
+
+def _safe_hostname(host: str) -> str:
+    """Return a filesystem-safe version of *host*.
+
+    Replaces every character in :data:`_UNSAFE_PATH_CHARS` with ``_`` and
+    collapses any leading/trailing dots or spaces so that names like ``..``
+    or ``../../../etc`` cannot escape the output directory.
+    """
+    safe = "".join("_" if c in _UNSAFE_PATH_CHARS else c for c in host)
+    # Collapse path-separator sequences that survive the substitution above
+    # (e.g. a literal dot-dot that had no slashes around it).
+    safe = safe.replace("..", "_")
+    return safe.strip(". ") or "_"
+
 
 def _latest_backup_before(device_dir: Path, current_filename: str) -> Optional[Path]:
     """Return the most recent *.cfg in *device_dir* that is not *current_filename*."""
@@ -101,7 +118,15 @@ def save_backup(result: dict, output_dir: Path, timestamp: str) -> dict:
     if not result["success"]:
         return summary
 
-    device_dir = output_dir / result["host"]
+    safe_name = _safe_hostname(result["host"])
+    device_dir = output_dir / safe_name
+    # Guard against any remaining traversal attempt
+    try:
+        device_dir.resolve().relative_to(output_dir.resolve())
+    except ValueError:
+        raise ValueError(
+            f"Host name '{result['host']}' resolves to a path outside the output directory"
+        )
     device_dir.mkdir(parents=True, exist_ok=True)
 
     fname = f"{timestamp}.cfg"
@@ -202,12 +227,23 @@ def run_backup(
 
     Returns:
         A list of per-device summary dicts (see :func:`save_backup`).
+
+    Raises:
+        ValueError: If *workers* is less than 1.
+        RuntimeError: If *git* is True and git initialisation or commit fails.
     """
+    if workers < 1:
+        raise ValueError(f"workers must be >= 1, got {workers}")
     output_dir.mkdir(parents=True, exist_ok=True)
     timestamp = _timestamp or datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
 
     if git:
-        git_init(output_dir)
+        if not git_init(output_dir):
+            print(
+                f"⚠️  Warning: git init failed in {output_dir}; continuing without git",
+                file=sys.stderr,
+            )
+            git = False
 
     summaries: list[dict] = []
 
@@ -284,6 +320,9 @@ def main():
     args = parser.parse_args()
 
     password = args.password or os.environ.get("NETOPS_PASSWORD")
+
+    if args.workers < 1:
+        parser.error("--workers must be >= 1")
 
     inv = Inventory.from_file(args.inventory)
     devices = inv.filter(group=args.group) if args.group else list(inv.devices.values())

@@ -11,8 +11,11 @@ import subprocess
 from pathlib import Path
 from unittest.mock import MagicMock, call, patch
 
+import pytest
+
 from netops.collect.backup import (
     _latest_backup_before,
+    _safe_hostname,
     generate_diff,
     git_commit,
     git_init,
@@ -53,6 +56,41 @@ class TestLatestBackupBefore:
     def test_ignores_non_cfg_files(self, tmp_path):
         (tmp_path / "20240101-120000.txt").write_text("not a backup")
         assert _latest_backup_before(tmp_path, "20240102-130000.cfg") is None
+
+
+# ---------------------------------------------------------------------------
+# _safe_hostname
+# ---------------------------------------------------------------------------
+
+
+class TestSafeHostname:
+    def test_plain_ip_unchanged(self):
+        assert _safe_hostname("10.0.0.1") == "10.0.0.1"
+
+    def test_hostname_unchanged(self):
+        assert _safe_hostname("core-rtr-01.example.com") == "core-rtr-01.example.com"
+
+    def test_forward_slash_replaced(self):
+        assert "/" not in _safe_hostname("some/path")
+
+    def test_backslash_replaced(self):
+        assert "\\" not in _safe_hostname("win\\host")
+
+    def test_dotdot_collapsed(self):
+        result = _safe_hostname("../../../etc/passwd")
+        assert ".." not in result
+        assert "/" not in result
+
+    def test_colon_replaced(self):
+        assert ":" not in _safe_hostname("host:8080")
+
+    def test_empty_string_returns_placeholder(self):
+        assert _safe_hostname("") == "_"
+
+    def test_only_unsafe_chars_returns_placeholder(self):
+        # "..." stripped of dots yields empty → placeholder
+        result = _safe_hostname("...")
+        assert result == "_"
 
 
 # ---------------------------------------------------------------------------
@@ -489,3 +527,73 @@ class TestRunBackup:
             run_backup([params], out, alert_on_change=False)
 
         assert out.is_dir()
+
+    def test_workers_zero_raises_value_error(self, tmp_path):
+        with pytest.raises(ValueError, match="workers must be >= 1"):
+            run_backup([], tmp_path, workers=0, alert_on_change=False)
+
+    def test_workers_negative_raises_value_error(self, tmp_path):
+        with pytest.raises(ValueError, match="workers must be >= 1"):
+            run_backup([], tmp_path, workers=-1, alert_on_change=False)
+
+    def test_git_init_failure_disables_git_and_warns_stderr(self, tmp_path, capsys):
+        params = _make_params()
+        fake_result = {
+            "host": "10.0.0.1",
+            "success": True,
+            "config": "hostname rtr\n",
+            "error": None,
+            "collected_at": "2024-01-01T00:00:00+00:00",
+            "device_type": "cisco_ios",
+            "lines": 1,
+        }
+
+        with patch("netops.collect.backup.collect_config", return_value=fake_result):
+            with patch("netops.collect.backup.git_init", return_value=False):
+                with patch("netops.collect.backup.git_commit") as mock_commit:
+                    run_backup([params], tmp_path, git=True, alert_on_change=False)
+
+        # git_commit must not be called when git_init reports failure
+        mock_commit.assert_not_called()
+        captured = capsys.readouterr()
+        assert "Warning" in captured.err or "warning" in captured.err.lower()
+
+    def test_git_commit_failure_raises_runtime_error(self, tmp_path):
+        params = _make_params()
+        fake_result = {
+            "host": "10.0.0.1",
+            "success": True,
+            "config": "hostname rtr\n",
+            "error": None,
+            "collected_at": "2024-01-01T00:00:00+00:00",
+            "device_type": "cisco_ios",
+            "lines": 1,
+        }
+
+        with patch("netops.collect.backup.collect_config", return_value=fake_result):
+            with patch("netops.collect.backup.git_init", return_value=True):
+                with patch("netops.collect.backup.git_commit", return_value=False):
+                    with pytest.raises(RuntimeError, match="Git commit failed"):
+                        run_backup([params], tmp_path, git=True, alert_on_change=False)
+
+    def test_safe_hostname_used_as_directory_name(self, tmp_path):
+        """Hosts with path-unsafe chars must not create subdirectories outside output."""
+        params = ConnectionParams(host="192.168.1.1:9999", username="admin", password="secret")
+        fake_result = {
+            "host": "192.168.1.1:9999",
+            "success": True,
+            "config": "hostname rtr\n",
+            "error": None,
+            "collected_at": "2024-01-01T00:00:00+00:00",
+            "device_type": "cisco_ios",
+            "lines": 1,
+        }
+
+        with patch("netops.collect.backup.collect_config", return_value=fake_result):
+            summaries = run_backup([params], tmp_path, alert_on_change=False)
+
+        saved = Path(summaries[0]["saved_path"])
+        # The colon must not appear in the directory name
+        assert ":" not in saved.parent.name
+        # The saved file must still be inside tmp_path
+        assert str(saved).startswith(str(tmp_path))
