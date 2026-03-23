@@ -1,0 +1,108 @@
+name: Release & Package
+
+# Trigger: push a tag like v0.1.0, or manually from Actions tab
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g. 0.1.0)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+            echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+            echo "needs_tag=true" >> "$GITHUB_OUTPUT"
+          else
+            TAG="${GITHUB_REF#refs/tags/}"
+            VERSION="${TAG#v}"
+            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+            echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+            echo "needs_tag=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create tag (manual dispatch only)
+        if: steps.version.outputs.needs_tag == 'true'
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git tag -a "${{ steps.version.outputs.tag }}" -m "Release ${{ steps.version.outputs.version }}"
+          git push origin "${{ steps.version.outputs.tag }}"
+
+      - name: Build archives
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          NAME="netops-toolkit-${VERSION}"
+
+          # Create a clean directory with just the useful files
+          mkdir -p "/tmp/${NAME}"
+          cp -r netops/ "/tmp/${NAME}/"
+          cp -r docs/ "/tmp/${NAME}/"
+          cp -r examples/ "/tmp/${NAME}/"
+          cp README.md pyproject.toml "/tmp/${NAME}/"
+
+          # .zip for Windows users
+          cd /tmp
+          zip -r "${GITHUB_WORKSPACE}/${NAME}.zip" "${NAME}/"
+
+          # .tar.gz for Linux/Mac
+          tar czf "${GITHUB_WORKSPACE}/${NAME}.tar.gz" "${NAME}/"
+
+          echo "### 📦 Archives" >> "$GITHUB_STEP_SUMMARY"
+          echo "- ${NAME}.zip" >> "$GITHUB_STEP_SUMMARY"
+          echo "- ${NAME}.tar.gz" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          cat > /tmp/release-notes.md << NOTES
+          ## netops-toolkit v${VERSION}
+
+          ### 📥 Download
+
+          Pick one:
+          - **Windows**: Download the \`.zip\` file below, right-click → Extract All
+          - **Mac/Linux**: Download the \`.tar.gz\` file below
+
+          ### 🚀 Quick Start (no git needed)
+
+          1. Download and extract the archive
+          2. Open a terminal in the extracted folder
+          3. Run:
+             \`\`\`
+             pip install -e .
+             \`\`\`
+          4. Copy \`examples/inventory.yaml\` and add your devices
+          5. Try it:
+             \`\`\`
+             python -m netops.collect.config --host 10.0.0.1 --vendor cisco_ios --user admin
+             \`\`\`
+
+          📖 See \`docs/guides/getting-started.md\` for the full walkthrough.
+          NOTES
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: netops-toolkit ${{ steps.version.outputs.tag }}
+          body_path: /tmp/release-notes.md
+          files: |
+            netops-toolkit-${{ steps.version.outputs.version }}.zip
+            netops-toolkit-${{ steps.version.outputs.version }}.tar.gz
+          make_latest: true
