@@ -37,7 +37,7 @@ OID_CDP_CACHE_DEVICE_ID = "1.3.6.1.4.1.9.9.23.1.2.1.1.6"
 OID_CDP_CACHE_ADDRESS = "1.3.6.1.4.1.9.9.23.1.2.1.1.4"
 OID_CDP_CACHE_PLATFORM = "1.3.6.1.4.1.9.9.23.1.2.1.1.8"
 
-# LLDP OIDs (LLDP-MIB / IEEE 802.1AB — RFC 2922)
+# LLDP OIDs (LLDP-MIB / IEEE 802.1AB)
 OID_LLDP_REM_CHASSIS_ID = "1.3.6.1.2.1.127.1.4.1.5"
 OID_LLDP_REM_SYS_NAME = "1.3.6.1.2.1.127.1.4.1.9"
 OID_LLDP_REM_SYS_DESC = "1.3.6.1.2.1.127.1.4.1.10"
@@ -251,7 +251,7 @@ def identify_vendor(sys_descr: str, sys_obj_id: str = "") -> str:
         return "nokia_sros"
     if "juniper" in descr_lower or "junos" in descr_lower:
         return "juniper_junos"
-    if "arista" in descr_lower or "eos" in descr_lower:
+    if "arista" in descr_lower:
         return "arista_eos"
     if "cisco" in descr_lower:
         return "cisco_ios"
@@ -488,6 +488,26 @@ def results_to_inventory_fragment(results: list[ScanResult]) -> dict:
     return {"devices": devices}
 
 
+def _load_yaml(path: Path) -> dict:
+    """Load a YAML file, raising a helpful ImportError if PyYAML is missing."""
+    try:
+        import yaml  # type: ignore[import]
+
+        return yaml.safe_load(path.read_text()) or {}
+    except ImportError:
+        raise ImportError("PyYAML required for YAML inventory: pip install pyyaml")
+
+
+def _dump_yaml(path: Path, data: dict) -> None:
+    """Write *data* to *path* as YAML, raising a helpful ImportError if PyYAML is missing."""
+    try:
+        import yaml  # type: ignore[import]
+
+        path.write_text(yaml.dump(data, default_flow_style=False))
+    except ImportError:
+        raise ImportError("PyYAML required for YAML output: pip install pyyaml")
+
+
 def merge_inventory(existing_path: str, fragment: dict) -> dict:
     """
     Merge a scan fragment into an existing inventory file.
@@ -507,12 +527,7 @@ def merge_inventory(existing_path: str, fragment: dict) -> dict:
     path = Path(existing_path)
     if path.exists():
         if path.suffix in (".yaml", ".yml"):
-            try:
-                import yaml  # type: ignore[import]
-
-                existing = yaml.safe_load(path.read_text()) or {}
-            except ImportError:
-                raise ImportError("PyYAML required for YAML inventory: pip install pyyaml")
+            existing = _load_yaml(path)
         else:
             existing = json.loads(path.read_text())
     else:
@@ -616,9 +631,7 @@ def main():
         merged = merge_inventory(args.merge, fragment)
         merge_path = Path(args.merge)
         if merge_path.suffix in (".yaml", ".yml"):
-            import yaml  # type: ignore[import]
-
-            merge_path.write_text(yaml.dump(merged, default_flow_style=False))
+            _dump_yaml(merge_path, merged)
         else:
             merge_path.write_text(json.dumps(merged, indent=2))
         print(f"✅ Merged into {args.merge}", file=sys.stderr)
