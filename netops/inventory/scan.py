@@ -570,8 +570,25 @@ def merge_inventory(existing_path: str, fragment: dict) -> dict:
         else:
             existing_entry = existing["devices"][hostname]
             for key, value in info.items():
-                if key not in existing_entry or existing_entry[key] in (None, "unknown", ""):
-                    existing_entry[key] = value
+                # Special-case dict-valued keys like "tags" to deep-merge
+                # subkeys while preserving any existing non-placeholder values.
+                if key == "tags" and isinstance(value, dict):
+                    existing_tags = existing_entry.get("tags")
+                    if isinstance(existing_tags, dict):
+                        for tag_key, tag_value in value.items():
+                            if (
+                                tag_key not in existing_tags
+                                or existing_tags[tag_key] in (None, "unknown", "")
+                            ):
+                                existing_tags[tag_key] = tag_value
+                    elif existing_tags in (None, "unknown", "") or key not in existing_entry:
+                        # If the existing "tags" value is a placeholder or missing,
+                        # replace it entirely with the discovered tags dict.
+                        existing_entry["tags"] = value
+                    # If existing_tags is a non-dict, non-placeholder value, leave it as-is.
+                else:
+                    if key not in existing_entry or existing_entry[key] in (None, "unknown", ""):
+                        existing_entry[key] = value
             logger.debug("Updated existing device: %s", hostname)
 
     return existing
