@@ -86,7 +86,9 @@ def ping_host(host: str, timeout: int = 1, count: int = 1) -> bool:
     is_windows = platform.system().lower() == "windows"
     count_flag = "-n" if is_windows else "-c"
     timeout_flag = "-w" if is_windows else "-W"
-    cmd = ["ping", count_flag, str(count), timeout_flag, str(timeout), host]
+    # On Windows, `ping -w` expects milliseconds; elsewhere, `ping -W` expects seconds.
+    ping_timeout = timeout * 1000 if is_windows else timeout
+    cmd = ["ping", count_flag, str(count), timeout_flag, str(ping_timeout), host]
     try:
         proc = subprocess.run(
             cmd,
