@@ -232,7 +232,14 @@ def run_backup(
         commit_msg = f"backup {timestamp}"
         if changed_hosts:
             commit_msg += f" — {len(changed_hosts)} change(s): {', '.join(changed_hosts)}"
-        git_commit(output_dir, commit_msg)
+        commit_ok = git_commit(output_dir, commit_msg)
+        if not commit_ok:
+            logger.error(
+                "Git commit failed for backup %s in repository %s",
+                timestamp,
+                output_dir,
+            )
+            raise RuntimeError("Git commit failed; backup repository is not up to date")
 
     if alert_on_change:
         for s in summaries:
