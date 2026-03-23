@@ -499,12 +499,12 @@ class TestScanSubnet:
 
     def test_skip_ping_skips_sweep(self):
         """With skip_ping, all addresses in the subnet are probed (no subprocess ping)."""
-        with patch("netops.inventory.scan._scan_host_async") as mock_scan:
-            mock_scan.return_value = ScanResult(host="192.0.2.1", reachable=True)
-
+        # When skip_ping is True, scan_subnet should not call ping_sweep at all.
+        with patch("netops.inventory.scan.ping_sweep") as mock_sweep:
             # /30 has 2 usable hosts; skip_snmp so we don't need pysnmp
             results = scan_subnet("192.0.2.0/30", skip_ping=True, skip_snmp=True)
 
+        mock_sweep.assert_not_called()
         assert len(results) == 2
 
     def test_empty_subnet_when_no_hosts_reachable(self):
