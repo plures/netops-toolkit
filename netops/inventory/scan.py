@@ -404,7 +404,34 @@ async def _scan_subnet_async(
                 logger.warning("SNMP scan failed for %s: %s", host, exc)
                 return ScanResult(host=host, reachable=True, error=str(exc))
 
-    results = list(await asyncio.gather(*[bounded_scan(h) for h in reachable_hosts]))
+    # Use a worker-queue pattern to avoid creating one coroutine per host at once.
+    queue: asyncio.Queue[Optional[str]] = asyncio.Queue()
+    for host in reachable_hosts:
+        await queue.put(host)
+
+    results: list[ScanResult] = []
+
+    async def worker() -> None:
+        while True:
+            host = await queue.get()
+            if host is None:
+                queue.task_done()
+                break
+            try:
+                result = await bounded_scan(host)
+                results.append(result)
+            finally:
+                queue.task_done()
+
+    num_workers = min(snmp_concurrency, len(reachable_hosts)) or 1
+    workers = [asyncio.create_task(worker()) for _ in range(num_workers)]
+
+    # Add sentinel values to signal workers to exit once the queue is drained.
+    for _ in range(num_workers):
+        await queue.put(None)
+
+    await queue.join()
+    await asyncio.gather(*workers)
     engine.close_dispatcher()
 
     return sorted(results, key=lambda r: ipaddress.ip_address(r.host))
