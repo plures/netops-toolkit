@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+# Never commit credentials
+*.key
+*.pem
+credentials.yaml
+secrets.yaml

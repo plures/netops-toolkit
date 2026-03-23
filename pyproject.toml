@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "netops-toolkit"
+version = "0.1.0"
+description = "Modular network automation utilities for telco operations"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+
+dependencies = [
+    "netmiko>=4.3.0",
+    "paramiko>=3.4.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.4.0",
+]
+ansible = [
+    "ansible-core>=2.16",
+    "ansible.netcommon>=6.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"

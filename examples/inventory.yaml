@@ -1,0 +1,42 @@
+# Example network inventory
+# Copy and customize for your environment
+
+defaults:
+  username: admin
+  transport: ssh
+
+devices:
+  core-rtr-01:
+    host: 10.0.0.1
+    vendor: cisco_ios
+    role: core
+    site: dc1
+    groups: [routers, core, dc1]
+    tags:
+      environment: production
+      managed_by: noc
+
+  core-rtr-02:
+    host: 10.0.0.2
+    vendor: nokia_sros
+    role: core
+    site: dc1
+    groups: [routers, core, dc1]
+    tags:
+      environment: production
+
+  dist-sw-01:
+    host: 10.0.1.1
+    vendor: cisco_ios
+    role: distribution
+    site: dc1
+    groups: [switches, distribution, dc1]
+    transport: telnet  # Legacy device
+    port: 23
+
+  access-sw-01:
+    host: 10.0.2.1
+    vendor: cisco_ios
+    role: access
+    site: office1
+    groups: [switches, access, office1]
