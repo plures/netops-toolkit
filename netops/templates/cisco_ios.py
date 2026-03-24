@@ -7,6 +7,7 @@ SHOW = {
     "interfaces_detail": "show interfaces",
     "routes": "show ip route",
     "bgp_summary": "show ip bgp summary",
+    "bgp_summary_xr": "show bgp summary",
     "ospf_neighbors": "show ip ospf neighbor",
     "arp": "show ip arp",
     "mac_table": "show mac address-table",
