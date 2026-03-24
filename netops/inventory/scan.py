@@ -235,7 +235,7 @@ def identify_vendor(sys_descr: str, sys_obj_id: str = "") -> str:
 
     Returns one of: ``cisco_ios``, ``cisco_xe``, ``cisco_xr``, ``cisco_nxos``,
     ``nokia_sros``, ``nokia_srl``, ``juniper_junos``, ``arista_eos``,
-    or ``"unknown"``.
+    ``brocade_fastiron``, ``brocade_nos``, or ``"unknown"``.
     """
     descr_lower = sys_descr.lower()
 
@@ -255,6 +255,10 @@ def identify_vendor(sys_descr: str, sys_obj_id: str = "") -> str:
         return "juniper_junos"
     if "arista" in descr_lower:
         return "arista_eos"
+    if "brocade network os" in descr_lower or "network os" in descr_lower:
+        return "brocade_nos"
+    if "brocade" in descr_lower or "foundry" in descr_lower or "fastiron" in descr_lower:
+        return "brocade_fastiron"
     if "cisco" in descr_lower:
         return "cisco_ios"
 
@@ -268,6 +272,10 @@ def identify_vendor(sys_descr: str, sys_obj_id: str = "") -> str:
             return "juniper_junos"
         if ".1.3.6.1.4.1.30065." in sys_obj_id:  # Arista
             return "arista_eos"
+        if ".1.3.6.1.4.1.1991." in sys_obj_id:  # Foundry Networks / Brocade FastIron
+            return "brocade_fastiron"
+        if ".1.3.6.1.4.1.1588." in sys_obj_id:  # Brocade Communications (NOS/FOS)
+            return "brocade_nos"
 
     return "unknown"
 
