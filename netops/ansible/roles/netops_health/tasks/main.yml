@@ -1,0 +1,67 @@
+---
+# tasks/main.yml — netops_health role
+#
+# Runs a configurable set of health checks against each device and optionally
+# fails the play when any CRITICAL finding is returned.
+
+- name: Run health checks via netops_facts
+  netops_facts:
+    host: "{{ ansible_host }}"
+    vendor: "{{ netops_health_vendor }}"
+    username: "{{ netops_health_username }}"
+    password: "{{ netops_health_password }}"
+    port: "{{ netops_health_port }}"
+    gather:
+      - "{{ 'cpu' if netops_health_check_cpu else '' }}"
+      - "{{ 'memory' if netops_health_check_memory else '' }}"
+      - "{{ 'interfaces' if netops_health_check_interfaces else '' }}"
+      - "{{ 'bgp' if netops_health_check_bgp else '' }}"
+      - "{{ 'ospf' if netops_health_check_ospf else '' }}"
+  register: _health_facts
+
+- name: Evaluate CPU threshold
+  ansible.builtin.assert:
+    that:
+      - >-
+        (_health_facts.ansible_facts.netops_cpu | default(0) | int)
+        < (netops_health_cpu_critical | int)
+    fail_msg: >-
+      CRITICAL: {{ inventory_hostname }} CPU
+      {{ _health_facts.ansible_facts.netops_cpu }}% >=
+      {{ netops_health_cpu_critical }}%
+    success_msg: "CPU OK: {{ _health_facts.ansible_facts.netops_cpu | default('N/A') }}%"
+  when:
+    - netops_health_check_cpu
+    - netops_health_fail_on_critical
+
+- name: Evaluate memory threshold
+  ansible.builtin.assert:
+    that:
+      - >-
+        (_health_facts.ansible_facts.netops_memory_used_pct | default(0) | int)
+        < (netops_health_memory_critical | int)
+    fail_msg: >-
+      CRITICAL: {{ inventory_hostname }} memory
+      {{ _health_facts.ansible_facts.netops_memory_used_pct }}% >=
+      {{ netops_health_memory_critical }}%
+    success_msg: >-
+      Memory OK:
+      {{ _health_facts.ansible_facts.netops_memory_used_pct | default('N/A') }}%
+  when:
+    - netops_health_check_memory
+    - netops_health_fail_on_critical
+
+- name: Write health report to file
+  ansible.builtin.copy:
+    content: "{{ _health_facts.ansible_facts | to_nice_json }}"
+    dest: "{{ netops_health_report_path }}/{{ inventory_hostname }}_health.json"
+    mode: "0640"
+  delegate_to: localhost
+  when: netops_health_report_path | length > 0
+
+- name: Emit health summary
+  ansible.builtin.debug:
+    msg: >-
+      Health check complete for {{ inventory_hostname }}.
+      CPU: {{ _health_facts.ansible_facts.netops_cpu | default('N/A') }}%
+      Memory: {{ _health_facts.ansible_facts.netops_memory_used_pct | default('N/A') }}%

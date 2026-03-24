@@ -1,0 +1,4 @@
+---
+# handlers/main.yml — netops_health role
+# No handlers required — health checks are stateless.
+

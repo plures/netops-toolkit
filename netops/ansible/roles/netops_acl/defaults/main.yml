@@ -1,0 +1,30 @@
+---
+# defaults/main.yml — netops_acl role
+
+# List of ACL definitions to deploy.  Each entry must have at minimum:
+#   name   — ACL name as it appears on the device
+#   rules  — list of ACE strings in device-native syntax
+# Example:
+#   netops_acl_list:
+#     - name: MGMT-IN
+#       rules:
+#         - "10 permit tcp 10.0.0.0 0.0.0.255 any eq 22"
+#         - "20 deny ip any any log"
+netops_acl_list: []
+
+# When true, print a diff of the ACL changes without applying them.
+netops_acl_diff_only: false
+
+# When true, abort if the diff shows the ACL would be removed entirely.
+netops_acl_abort_on_empty_diff: true
+
+# Interface to which each ACL should be applied (optional — leave blank to
+# deploy the ACL to the device without binding it to an interface).
+netops_acl_interface: ""
+netops_acl_direction: "in"   # in | out
+
+# Connection parameters.
+netops_acl_username: "{{ ansible_user | default(omit) }}"
+netops_acl_password: "{{ ansible_password | default(omit) }}"
+netops_acl_port: "{{ ansible_port | default(22) }}"
+netops_acl_vendor: "{{ ansible_network_os | default('cisco_ios') }}"

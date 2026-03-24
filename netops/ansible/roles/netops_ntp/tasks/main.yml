@@ -1,0 +1,121 @@
+---
+# tasks/main.yml — netops_ntp role
+#
+# Configures NTP servers, optional authentication, and optional timezone on
+# network devices and validates synchronisation.
+
+- name: Validate that at least one NTP server is specified
+  ansible.builtin.assert:
+    that: netops_ntp_servers | length > 0
+    fail_msg: "netops_ntp_servers must contain at least one NTP server address."
+
+- name: Collect current NTP configuration
+  netops_command:
+    host: "{{ ansible_host }}"
+    vendor: "{{ netops_ntp_vendor }}"
+    username: "{{ netops_ntp_username }}"
+    password: "{{ netops_ntp_password }}"
+    port: "{{ netops_ntp_port }}"
+    commands:
+      - show ntp status
+      - show ntp associations
+  register: _ntp_before
+
+- name: Display current NTP state
+  ansible.builtin.debug:
+    msg: "NTP status on {{ inventory_hostname }}:\n{{ _ntp_before.output[0] }}"
+
+- name: Remove unwanted NTP servers
+  netops_command:
+    host: "{{ ansible_host }}"
+    vendor: "{{ netops_ntp_vendor }}"
+    username: "{{ netops_ntp_username }}"
+    password: "{{ netops_ntp_password }}"
+    port: "{{ netops_ntp_port }}"
+    commands: >-
+      {{
+        ['configure terminal'] +
+        (netops_ntp_servers_absent | map('regex_replace', '^(.+)$', 'no ntp server \1') | list) +
+        ['end', 'write memory']
+      }}
+  when: netops_ntp_servers_absent | length > 0
+  register: _ntp_remove
+
+- name: Configure NTP authentication key
+  netops_command:
+    host: "{{ ansible_host }}"
+    vendor: "{{ netops_ntp_vendor }}"
+    username: "{{ netops_ntp_username }}"
+    password: "{{ netops_ntp_password }}"
+    port: "{{ netops_ntp_port }}"
+    commands:
+      - configure terminal
+      - >-
+        ntp authentication-key {{ netops_ntp_auth_key_id }}
+        {{ netops_ntp_auth_key_type }} {{ netops_ntp_auth_key_value }}
+      - "ntp trusted-key {{ netops_ntp_auth_key_id }}"
+      - ntp authenticate
+      - end
+      - write memory
+  when: netops_ntp_auth_key_id | length > 0
+
+- name: Add NTP servers
+  netops_command:
+    host: "{{ ansible_host }}"
+    vendor: "{{ netops_ntp_vendor }}"
+    username: "{{ netops_ntp_username }}"
+    password: "{{ netops_ntp_password }}"
+    port: "{{ netops_ntp_port }}"
+    commands: >-
+      {{
+        ['configure terminal'] +
+        (netops_ntp_servers | map('regex_replace', '^(.+)$',
+          'ntp server \1' + (
+            (' key ' + netops_ntp_auth_key_id | string)
+            if netops_ntp_auth_key_id | length > 0 else ''
+          )
+        ) | list) +
+        (
+          ['ntp source ' + netops_ntp_source_interface]
+          if netops_ntp_source_interface | length > 0 else []
+        ) +
+        ['end', 'write memory']
+      }}
+  register: _ntp_configure
+
+- name: Configure device timezone
+  netops_command:
+    host: "{{ ansible_host }}"
+    vendor: "{{ netops_ntp_vendor }}"
+    username: "{{ netops_ntp_username }}"
+    password: "{{ netops_ntp_password }}"
+    port: "{{ netops_ntp_port }}"
+    commands:
+      - configure terminal
+      - "clock timezone {{ netops_ntp_timezone }}"
+      - end
+      - write memory
+  when: netops_ntp_timezone | length > 0
+
+- name: Wait for NTP synchronisation
+  netops_command:
+    host: "{{ ansible_host }}"
+    vendor: "{{ netops_ntp_vendor }}"
+    username: "{{ netops_ntp_username }}"
+    password: "{{ netops_ntp_password }}"
+    port: "{{ netops_ntp_port }}"
+    commands:
+      - show ntp status
+  register: _ntp_sync_status
+  until: >-
+    'synchronized' in (_ntp_sync_status.output[0] | lower) or
+    'synchronised' in (_ntp_sync_status.output[0] | lower)
+  retries: "{{ (netops_ntp_sync_timeout | int // 10) | int }}"
+  delay: 10
+  when: netops_ntp_validate_sync
+
+- name: Confirm NTP synchronisation result
+  ansible.builtin.debug:
+    msg: >-
+      NTP configuration applied on {{ inventory_hostname }}.
+      Sync status: {{ _ntp_sync_status.output[0] | default('validation skipped') }}

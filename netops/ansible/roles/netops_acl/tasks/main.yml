@@ -1,0 +1,93 @@
+---
+# tasks/main.yml — netops_acl role
+#
+# Deploys ACL definitions to network devices.  Optionally shows a diff of
+# what would change before committing.
+
+- name: Validate that ACL list is not empty
+  ansible.builtin.assert:
+    that: netops_acl_list | length > 0
+    fail_msg: "netops_acl_list must contain at least one ACL definition."
+
+- name: Collect current ACL configuration (for diff)
+  netops_command:
+    host: "{{ ansible_host }}"
+    vendor: "{{ netops_acl_vendor }}"
+    username: "{{ netops_acl_username }}"
+    password: "{{ netops_acl_password }}"
+    port: "{{ netops_acl_port }}"
+    commands:
+      - show ip access-lists
+  register: _acl_before
+
+- name: Display current ACL state (diff preview)
+  ansible.builtin.debug:
+    msg: "Current ACL state on {{ inventory_hostname }}:\n{{ _acl_before.output[0] }}"
+  when: netops_acl_diff_only
+
+- name: Build ACL configuration lines
+  ansible.builtin.set_fact:
+    _acl_config_lines: >-
+      {{
+        netops_acl_list | map(attribute='name') | zip(netops_acl_list | map(attribute='rules'))
+        | list
+      }}
+
+- name: Deploy ACLs to device
+  netops_command:
+    host: "{{ ansible_host }}"
+    vendor: "{{ netops_acl_vendor }}"
+    username: "{{ netops_acl_username }}"
+    password: "{{ netops_acl_password }}"
+    port: "{{ netops_acl_port }}"
+    commands: >-
+      {{
+        ['configure terminal'] +
+        (netops_acl_list | map(attribute='name')
+          | map('regex_replace', '^(.+)$', 'ip access-list extended \1') | list) +
+        (netops_acl_list | map(attribute='rules') | list | flatten) +
+        ['end', 'write memory']
+      }}
+  register: _acl_deploy
+  when: not netops_acl_diff_only
+  notify: Verify ACL deployment
+
+- name: Bind ACL to interface
+  netops_command:
+    host: "{{ ansible_host }}"
+    vendor: "{{ netops_acl_vendor }}"
+    username: "{{ netops_acl_username }}"
+    password: "{{ netops_acl_password }}"
+    port: "{{ netops_acl_port }}"
+    commands:
+      - configure terminal
+      - "interface {{ netops_acl_interface }}"
+      - "ip access-group {{ netops_acl_list[0].name }} {{ netops_acl_direction }}"
+      - end
+      - write memory
+  register: _acl_bind
+  when:
+    - not netops_acl_diff_only
+    - netops_acl_interface | length > 0
+
+- name: Collect post-deployment ACL state
+  netops_command:
+    host: "{{ ansible_host }}"
+    vendor: "{{ netops_acl_vendor }}"
+    username: "{{ netops_acl_username }}"
+    password: "{{ netops_acl_password }}"
+    port: "{{ netops_acl_port }}"
+    commands:
+      - show ip access-lists
+  register: _acl_after
+  when: not netops_acl_diff_only
+
+- name: Abort if ACL appears empty after deployment
+  ansible.builtin.fail:
+    msg: >-
+      ACL deployment produced an empty result on {{ inventory_hostname }}.
+      Enable netops_acl_abort_on_empty_diff=false to suppress this check.
+  when:
+    - not netops_acl_diff_only
+    - netops_acl_abort_on_empty_diff
+    - _acl_after.output[0] | trim | length == 0

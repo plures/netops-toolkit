@@ -1,0 +1,23 @@
+---
+# meta/main.yml — netops_acl role (Galaxy-compatible metadata)
+
+galaxy_info:
+  role_name: netops_acl
+  author: netops-toolkit
+  description: >
+    Deploy Access Control Lists to network devices with an optional diff
+    preview and safety checks to prevent unintentional ACL removal.
+  company: ""
+  license: MIT
+  min_ansible_version: "2.16"
+  platforms:
+    - name: all
+  galaxy_tags:
+    - networking
+    - acl
+    - security
+    - netops
+    - cisco
+    - arista
+
+dependencies: []

@@ -1,0 +1,25 @@
+---
+# meta/main.yml — netops_update role (Galaxy-compatible metadata)
+
+galaxy_info:
+  role_name: netops_update
+  author: netops-toolkit
+  description: >
+    Upgrade the OS of network devices with pre/post validation and automatic
+    rollback on failure.
+  company: ""
+  license: MIT
+  min_ansible_version: "2.16"
+  platforms:
+    - name: all
+  galaxy_tags:
+    - networking
+    - upgrade
+    - update
+    - netops
+    - cisco
+    - juniper
+    - arista
+
+dependencies:
+  - role: netops_health

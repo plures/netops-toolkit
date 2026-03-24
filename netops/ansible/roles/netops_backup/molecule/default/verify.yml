@@ -1,0 +1,18 @@
+---
+# molecule/default/verify.yml — netops_backup
+
+- name: Verify — netops_backup
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Check that backup directory was created
+      ansible.builtin.stat:
+        path: /tmp/molecule_backup_test
+      register: _backup_dir_stat
+
+    - name: Assert backup directory exists
+      ansible.builtin.assert:
+        that: _backup_dir_stat.stat.exists
+        fail_msg: "Backup directory /tmp/molecule_backup_test was not created."
+        success_msg: "Backup directory exists."

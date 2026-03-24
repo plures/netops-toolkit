@@ -1,0 +1,32 @@
+---
+# molecule/default/molecule.yml — netops_update
+
+dependency:
+  name: galaxy
+
+driver:
+  name: delegated
+  options:
+    managed: false
+    ansible_connection_options:
+      connection: local
+
+platforms:
+  - name: mock-router
+    groups:
+      - all
+
+provisioner:
+  name: ansible
+  inventory:
+    hosts:
+      all:
+        hosts:
+          mock-router:
+            ansible_host: 127.0.0.1
+            ansible_network_os: cisco_ios
+            ansible_user: admin
+            ansible_password: admin
+
+verifier:
+  name: ansible

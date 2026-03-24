@@ -1,0 +1,24 @@
+---
+# meta/main.yml — netops_health role (Galaxy-compatible metadata)
+
+galaxy_info:
+  role_name: netops_health
+  author: netops-toolkit
+  description: >
+    Run health checks (CPU, memory, interfaces, BGP, OSPF) against network
+    devices and fail the play on any CRITICAL finding.
+  company: ""
+  license: MIT
+  min_ansible_version: "2.16"
+  platforms:
+    - name: all
+  galaxy_tags:
+    - networking
+    - health
+    - monitoring
+    - netops
+    - cisco
+    - juniper
+    - arista
+
+dependencies: []

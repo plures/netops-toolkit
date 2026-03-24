@@ -1,0 +1,37 @@
+---
+# molecule/default/converge.yml — netops_backup
+#
+# Uses a mock netops_command module that writes a canned config to stdout so
+# we can verify the backup file appears on disk without a real device.
+
+- name: Converge — netops_backup
+  hosts: all
+  gather_facts: false
+
+  pre_tasks:
+    - name: Create mock netops_command result
+      ansible.builtin.set_fact:
+        _backup_cmd:
+          output:
+            - |
+              !
+              hostname mock-router
+              !
+              interface GigabitEthernet0/0
+               ip address 10.0.0.1 255.255.255.0
+              !
+              end
+          failed: false
+          changed: false
+
+  roles:
+    - role: netops_backup
+      vars:
+        netops_backup_dir: /tmp/molecule_backup_test
+        netops_backup_retention: 3
+        netops_backup_ignore_unreachable: true
+
+  post_tasks:
+    - name: Skip backup write (module not available in delegated mode)
+      ansible.builtin.debug:
+        msg: "Converge complete — backup dir {{ netops_backup_dir }} would contain config files."

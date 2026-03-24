@@ -1,0 +1,29 @@
+---
+# molecule/default/converge.yml — netops_health
+
+- name: Converge — netops_health
+  hosts: all
+  gather_facts: false
+
+  pre_tasks:
+    - name: Inject mock health facts
+      ansible.builtin.set_fact:
+        _health_facts:
+          ansible_facts:
+            netops_cpu: 12
+            netops_memory_used_pct: 45
+            netops_interfaces: []
+          failed: false
+          changed: false
+
+  roles:
+    - role: netops_health
+      vars:
+        netops_health_check_cpu: true
+        netops_health_check_memory: true
+        netops_health_check_interfaces: false
+        netops_health_check_bgp: false
+        netops_health_check_ospf: false
+        netops_health_fail_on_critical: true
+        netops_health_cpu_critical: 90
+        netops_health_memory_critical: 90

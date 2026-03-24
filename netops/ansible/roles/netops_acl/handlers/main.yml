@@ -1,0 +1,19 @@
+---
+# handlers/main.yml — netops_acl role
+
+- name: Verify ACL deployment
+  netops_command:
+    host: "{{ ansible_host }}"
+    vendor: "{{ netops_acl_vendor }}"
+    username: "{{ netops_acl_username }}"
+    password: "{{ netops_acl_password }}"
+    port: "{{ netops_acl_port }}"
+    commands:
+      - show ip access-lists
+  register: _acl_verify
+  listen: Verify ACL deployment
+
+- name: Report ACL verification result
+  ansible.builtin.debug:
+    msg: "ACL state after deployment on {{ inventory_hostname }}:\n{{ _acl_verify.output[0] }}"
+  listen: Verify ACL deployment

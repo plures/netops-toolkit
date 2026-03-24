@@ -1,0 +1,25 @@
+---
+# handlers/main.yml — netops_update role
+
+- name: Rollback OS image
+  netops_command:
+    host: "{{ ansible_host }}"
+    vendor: "{{ netops_update_vendor }}"
+    username: "{{ netops_update_username }}"
+    password: "{{ netops_update_password }}"
+    port: "{{ netops_update_port }}"
+    commands:
+      - configure terminal
+      - "no boot system {{ netops_update_image_dest }}{{ netops_update_image }}"
+      - write memory
+      - reload
+  register: _rollback_result
+  ignore_errors: true
+  listen: Rollback OS image
+
+- name: Report rollback outcome
+  ansible.builtin.debug:
+    msg: >-
+      Rollback initiated for {{ inventory_hostname }}.
+      Result: {{ _rollback_result | default('unknown') }}
+  listen: Rollback OS image

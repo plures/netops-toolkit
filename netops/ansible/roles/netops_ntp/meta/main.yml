@@ -1,0 +1,25 @@
+---
+# meta/main.yml — netops_ntp role (Galaxy-compatible metadata)
+
+galaxy_info:
+  role_name: netops_ntp
+  author: netops-toolkit
+  description: >
+    Standardise NTP configuration on network devices: add/remove servers,
+    configure authentication keys and timezone, and validate synchronisation.
+  company: ""
+  license: MIT
+  min_ansible_version: "2.16"
+  platforms:
+    - name: all
+  galaxy_tags:
+    - networking
+    - ntp
+    - time
+    - netops
+    - cisco
+    - juniper
+    - arista
+    - nokia
+
+dependencies: []

@@ -1,0 +1,19 @@
+---
+# handlers/main.yml — netops_ntp role
+
+- name: Verify NTP synchronisation
+  netops_command:
+    host: "{{ ansible_host }}"
+    vendor: "{{ netops_ntp_vendor }}"
+    username: "{{ netops_ntp_username }}"
+    password: "{{ netops_ntp_password }}"
+    port: "{{ netops_ntp_port }}"
+    commands:
+      - show ntp status
+  register: _ntp_verify
+  listen: Verify NTP synchronisation
+
+- name: Report NTP verification result
+  ansible.builtin.debug:
+    msg: "NTP sync status on {{ inventory_hostname }}:\n{{ _ntp_verify.output[0] }}"
+  listen: Verify NTP synchronisation
