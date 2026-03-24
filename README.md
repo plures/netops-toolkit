@@ -14,6 +14,8 @@ A collection of small, composable Python scripts for common network engineering 
 |--------|-----------|--------|
 | Cisco | IOS, IOS-XE, IOS-XR, NX-OS | ✅ Core |
 | Nokia | SR OS (SROS), SRL | ✅ Core |
+| Brocade | FastIron/ICX (`brocade_fastiron`), Network OS/VDX (`brocade_nos`) | ✅ Core |
+| Palo Alto | PAN-OS | ✅ Core |
 | Juniper | Junos | 🔜 Planned |
 | Arista | EOS | 🔜 Planned |
 | Generic | Any CLI-based device | ✅ Via raw transport |
@@ -71,7 +73,15 @@ These utilities are designed to work standalone today and integrate with Ansible
 
 ## What Works Today
 
-Nothing yet — this project is being built iteratively. Check the issues for the roadmap.
+| Area | Status |
+|------|--------|
+| Inventory scan (ping sweep + SNMP fingerprint) | ✅ |
+| Config collection (backup) | ✅ |
+| Interface health checks | ✅ |
+| Health checks — CPU, memory, errors, logs (Cisco, Nokia, Brocade, Palo Alto) | ✅ |
+| Credential vault (AES-256-GCM) | ✅ |
+| Brocade FastIron/ICX & NOS: templates, parsers, health checks, SNMP detection | ✅ |
+| Palo Alto PAN-OS: templates, parsers, policy audit, health checks | ✅ |
 
 ## License
 
