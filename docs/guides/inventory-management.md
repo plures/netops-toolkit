@@ -2,6 +2,8 @@
 
 Your inventory file is the foundation — it tells every script which devices exist, how to connect, and how they're organized.
 
+> **Auto-discovery:** Don't want to type every device by hand? The [Network Scanner](scan.md) can discover devices automatically via ping sweep and SNMP, and produce an inventory fragment you can merge straight into this file.
+
 ## What It Does
 
 - Stores all your device info in one YAML or JSON file
@@ -230,3 +232,13 @@ If you prefer JSON:
 ```
 
 Both YAML and JSON work everywhere. YAML is easier to read; JSON is easier to generate from scripts.
+
+## Auto-Discovery
+
+Instead of building your inventory by hand, you can scan a subnet to discover devices automatically:
+
+```bash
+python -m netops.inventory.scan --subnet 10.0.0.0/24 --merge my-inventory.yaml
+```
+
+See the [Network Scanner Guide](scan.md) for full details.
