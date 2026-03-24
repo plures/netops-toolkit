@@ -16,6 +16,7 @@ module path, which you call directly.
   - [netops.collect.backup — Bulk config backup](#netopscollectbackup--bulk-config-backup)
   - [netops.collect.config — Config collection](#netopscollectconfig--config-collection)
 - [Change commands](#change-commands)
+  - [netops.change.diff — Semantic config diff](#netopschangediff--semantic-config-diff)
   - [netops.change.push — Safe config push](#netopschangepush--safe-config-push)
 - [Inventory commands](#inventory-commands)
   - [netops.inventory.scan — Subnet scanner](#netopsinventoryscan--subnet-scanner)
@@ -523,6 +524,56 @@ python -m netops.collect.config \
 ---
 
 ## Change commands
+
+### netops.change.diff — Semantic config diff
+
+Compares two network configuration snapshots with structural awareness.
+Understands Cisco IOS / JunOS / flat config formats and highlights
+security-sensitive changes (ACLs, authentication, routing policy).
+
+See the full guide: [Config Diff Engine](config-diff.md)
+
+```
+python -m netops.change.diff --before FILE --after FILE [OPTIONS]
+```
+
+**Required**
+
+| Flag | Description |
+|------|-------------|
+| `--before FILE` | Before (original / running) config file |
+| `--after FILE` | After (new / candidate) config file |
+
+**Options**
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--format FORMAT` | `semantic` | Output format: `unified`, `semantic`, or `json` |
+| `--style STYLE` | auto-detect | Config syntax: `cisco`, `junos`, or `flat` |
+| `--fail-on-change` | off | Exit code 1 if any change is detected |
+| `--fail-on-security` | off | Exit code 2 if security-sensitive changes detected |
+
+**Examples**
+
+```bash
+# Semantic diff (default)
+python -m netops.change.diff --before before.txt --after after.txt
+
+# Unified diff (patch-compatible)
+python -m netops.change.diff --before b.txt --after a.txt --format unified
+
+# JSON output for CI pipelines
+python -m netops.change.diff --before b.txt --after a.txt --format json
+
+# Block pipeline on security changes
+python -m netops.change.diff \
+  --before b.txt \
+  --after a.txt \
+  --format json \
+  --fail-on-security
+```
+
+---
 
 ### netops.change.push — Safe config push
 
