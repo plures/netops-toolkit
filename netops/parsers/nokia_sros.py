@@ -4,16 +4,17 @@ from __future__ import annotations
 
 import re
 
+__all__ = ["parse_interfaces", "parse_bgp_summary", "parse_ospf_neighbors"]
+
 
 def parse_interfaces(output: str) -> list[dict]:
-
-__all__ = ["parse_interfaces", "parse_bgp_summary", "parse_ospf_neighbors"]
     """Parse ``show port`` output into a list of interface dicts.
 
     Each dict contains:
 
     * ``name``     – port identifier (e.g. ``'1/1/1'``, ``'1/1/c3/1'``)
     * ``status``   – administrative state: ``'Up'`` or ``'Down'``
+    * ``link``     – Layer 1 link state: ``True`` when the physical link is up
     * ``protocol`` – operational state: ``'Up'`` or ``'Down'``
     * ``up``       – ``True`` when both admin and oper state are ``'Up'``
 
