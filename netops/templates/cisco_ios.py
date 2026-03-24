@@ -27,6 +27,10 @@ HEALTH = {
     "memory": "show processes memory sorted | head 20",
     "interface_errors": "show interfaces | include errors|drops|CRC",
     "log_errors": "show logging | include %",
+    "bgp_summary": "show ip bgp summary",
+    "ospf_neighbors": "show ip ospf neighbor",
+    "environment": "show environment all",
+    "version": "show version",
 }
 
 VLAN = {
