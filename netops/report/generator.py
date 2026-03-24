@@ -213,6 +213,17 @@ class ReportGenerator:
         return pdf_bytes
 
     # ------------------------------------------------------------------
+    # Public property
+    # ------------------------------------------------------------------
+
+    @property
+    def custom_template_path(self) -> str | None:
+        """Return the custom template path, or *None* if using the built-in."""
+        if self._template_path == _BUILTIN_TEMPLATE:
+            return None
+        return str(self._template_path)
+
+    # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
 

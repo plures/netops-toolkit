@@ -27,6 +27,7 @@ Usage::
 from __future__ import annotations
 
 import logging
+import re
 import smtplib
 from email import encoders
 from email.mime.base import MIMEBase
@@ -205,8 +206,6 @@ class ReportMailer:
 
 def _html_to_plain(html: str) -> str:
     """Very lightweight HTML → plain text conversion (strip tags only)."""
-    import re  # noqa: PLC0415
-
     text = re.sub(r"<[^>]+>", " ", html)
     text = re.sub(r"[ \t]+", " ", text)
     text = re.sub(r"\n{3,}", "\n\n", text)

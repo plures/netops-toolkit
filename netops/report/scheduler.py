@@ -302,10 +302,7 @@ class ReportScheduler:
                 sections=sections,
                 title=job.title,
                 output_dir=job.output_dir,
-                template_path=self._generator._template_path
-                if self._generator._template_path != self._generator._template_path.parent
-                / "default.html.j2"
-                else None,
+                template_path=self._generator.custom_template_path,
                 html_output="auto",
                 pdf_output="auto" if job.pdf else None,
             )
