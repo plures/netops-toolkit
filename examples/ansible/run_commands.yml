@@ -1,0 +1,41 @@
+---
+# Ansible playbook: run arbitrary show commands with netops_command
+#
+# Usage:
+#   ansible-playbook -i inventory.yaml run_commands.yml
+#
+# Requirements:
+#   pip install netops-toolkit[ansible]
+
+- name: Run show commands via netops_command
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Collect show version and BGP summary
+      netops_command:
+        host: "{{ ansible_host }}"
+        vendor: "{{ ansible_network_os }}"
+        username: "{{ ansible_user }}"
+        password: "{{ ansible_password }}"
+        port: "{{ ansible_port | default(22) }}"
+        commands:
+          - show version
+          - show bgp summary
+      register: cmd_result
+
+    - name: Show version output
+      debug:
+        msg: "{{ cmd_result.output[0] }}"
+
+    - name: Show BGP summary output
+      debug:
+        msg: "{{ cmd_result.output[1] }}"
+
+    - name: Save outputs to files
+      copy:
+        content: "{{ item.content }}"
+        dest: "/tmp/{{ inventory_hostname }}_{{ item.name }}.txt"
+      loop:
+        - { name: "show_version", content: "{{ cmd_result.output[0] }}" }
+        - { name: "bgp_summary",  content: "{{ cmd_result.output[1] }}" }

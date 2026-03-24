@@ -2,6 +2,11 @@
 Device inventory management.
 
 Simple YAML/JSON inventory that maps to Ansible inventory format.
+
+CLI usage::
+
+    python -m netops.core.inventory export --format ansible --output ansible_inventory.yaml
+    python -m netops.core.inventory export --format ansible-json --output ansible_inventory.json
 """
 
 from __future__ import annotations
@@ -118,18 +123,31 @@ class Inventory:
         return inv
 
     def to_ansible(self) -> dict:
-        """Export as Ansible inventory format (JSON)."""
-        ansible_inv = {"all": {"hosts": {}, "children": {}}}
+        """Export as Ansible inventory format (JSON-compatible dict).
+
+        The returned structure follows the Ansible JSON inventory spec:
+        https://docs.ansible.com/ansible/latest/dev_guide/developing_inventory.html
+        """
+        ansible_inv: dict = {"all": {"hosts": {}, "children": {}}}
 
         for hostname, device in self.devices.items():
-            ansible_inv["all"]["hosts"][hostname] = {
+            host_vars: dict = {
                 "ansible_host": device.host,
                 "ansible_network_os": device.vendor,
                 "ansible_connection": "ansible.netcommon.network_cli",
                 "ansible_port": device.port or (23 if device.transport == "telnet" else 22),
+                "netops_vendor": device.vendor,
+                "netops_transport": device.transport,
             }
             if device.username:
-                ansible_inv["all"]["hosts"][hostname]["ansible_user"] = device.username
+                host_vars["ansible_user"] = device.username
+            if device.site:
+                host_vars["netops_site"] = device.site
+            if device.role:
+                host_vars["netops_role"] = device.role
+            if device.tags:
+                host_vars["netops_tags"] = device.tags
+            ansible_inv["all"]["hosts"][hostname] = host_vars
 
         for group, hostnames in self.groups.items():
             ansible_inv["all"]["children"][group] = {
@@ -137,6 +155,18 @@ class Inventory:
             }
 
         return ansible_inv
+
+    def to_ansible_yaml(self) -> str:
+        """Export as Ansible inventory in YAML format."""
+        try:
+            import yaml
+        except ImportError as exc:
+            raise ImportError("PyYAML required for YAML export: pip install pyyaml") from exc
+        return yaml.dump(self.to_ansible(), default_flow_style=False, sort_keys=False)
+
+    def to_ansible_json(self) -> str:
+        """Export as Ansible inventory in JSON format."""
+        return json.dumps(self.to_ansible(), indent=2)
 
     def to_file(self, path: str | Path, format: str = "yaml"):
         """Save inventory to file."""
@@ -153,3 +183,71 @@ class Inventory:
                 format = "json"
         if format == "json":
             path.write_text(json.dumps(data, indent=2))
+
+
+def main():
+    """CLI entry point: python -m netops.core.inventory export ..."""
+    import argparse
+    import sys
+
+    parser = argparse.ArgumentParser(
+        prog="python -m netops.core.inventory",
+        description="netops inventory management",
+    )
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    exp = sub.add_parser("export", help="Export inventory to various formats")
+    exp.add_argument("--inventory", "-i", default="inventory.yaml", help="Source inventory file")
+    exp.add_argument(
+        "--format",
+        "-f",
+        choices=["ansible", "ansible-json", "ansible-yaml", "json", "yaml"],
+        default="ansible",
+        help=(
+            "Output format: 'ansible'/'ansible-yaml' → Ansible YAML, "
+            "'ansible-json' → Ansible JSON, 'json'/'yaml' → netops native"
+        ),
+    )
+    exp.add_argument("--output", "-o", default="-", help="Output file (- for stdout)")
+
+    args = parser.parse_args()
+
+    if args.command == "export":
+        inv = Inventory.from_file(args.inventory)
+
+        fmt = args.format
+        if fmt in ("ansible", "ansible-yaml"):
+            content = inv.to_ansible_yaml()
+        elif fmt == "ansible-json":
+            content = inv.to_ansible_json()
+        elif fmt == "json":
+            content = json.dumps(
+                {"defaults": inv.defaults,
+                 "devices": {n: d.to_dict() for n, d in inv.devices.items()}},
+                indent=2,
+            )
+        else:  # yaml / native
+            try:
+                import yaml
+                content = yaml.dump(
+                    {"defaults": inv.defaults,
+                     "devices": {n: d.to_dict() for n, d in inv.devices.items()}},
+                    default_flow_style=False,
+                )
+            except ImportError:
+                print("PyYAML not installed; falling back to JSON", file=sys.stderr)
+                content = json.dumps(
+                    {"defaults": inv.defaults,
+                     "devices": {n: d.to_dict() for n, d in inv.devices.items()}},
+                    indent=2,
+                )
+
+        if args.output == "-":
+            print(content, end="")
+        else:
+            Path(args.output).write_text(content)
+            print(f"Written to {args.output}")
+
+
+if __name__ == "__main__":
+    main()

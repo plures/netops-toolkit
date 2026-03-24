@@ -1,0 +1,61 @@
+---
+# Ansible playbook: collect device facts with netops_facts module
+#
+# Usage:
+#   ansible-playbook -i inventory.yaml collect_facts.yml
+#   ansible-playbook -i dynamic_inventory.py collect_facts.yml
+#
+# Requirements:
+#   pip install netops-toolkit[ansible]
+
+- name: Collect network device facts using netops
+  hosts: all
+  gather_facts: false   # skip SSH-based facts; we collect via netops_facts
+
+  vars:
+    netops_inventory: "{{ playbook_dir }}/inventory.yaml"
+
+  tasks:
+    - name: Gather structured device facts
+      netops_facts:
+        host: "{{ ansible_host }}"
+        vendor: "{{ ansible_network_os }}"
+        username: "{{ ansible_user }}"
+        password: "{{ ansible_password }}"
+        port: "{{ ansible_port | default(22) }}"
+        gather:
+          - health
+          - interfaces
+          - bgp
+      register: device_facts
+
+    - name: Show CPU usage
+      debug:
+        msg: "{{ inventory_hostname }} CPU: {{ ansible_facts.netops.health.cpu_percent | default('N/A') }}%"
+
+    - name: Show memory usage
+      debug:
+        msg: >-
+          {{ inventory_hostname }}
+          Memory: {{ ansible_facts.netops.health.memory_percent | default('N/A') }}%
+          ({{ ansible_facts.netops.health.memory_used_bytes | default(0) | filesizeformat }}
+          /
+          {{ ansible_facts.netops.health.memory_total_bytes | default(0) | filesizeformat }})
+
+    - name: List interfaces
+      debug:
+        msg: "{{ inventory_hostname }} interfaces: {{ ansible_facts.netops.interfaces | length }}"
+
+    - name: Report down interfaces
+      debug:
+        msg: "DOWN interface on {{ inventory_hostname }}: {{ item.name }}"
+      loop: "{{ ansible_facts.netops.interfaces | default([]) }}"
+      when: item.status != 'up'
+
+    - name: Report BGP peer count
+      debug:
+        msg: >-
+          {{ inventory_hostname }}
+          BGP peers: {{ ansible_facts.netops.bgp | default([]) | length }},
+          established: {{ ansible_facts.netops.bgp
+            | default([]) | selectattr('state','eq','Established') | list | length }}
