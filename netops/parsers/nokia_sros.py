@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import re
 
+__all__ = ["parse_interfaces", "parse_bgp_summary", "parse_ospf_neighbors"]
+
 
 def parse_interfaces(output: str) -> list[dict]:
-
-__all__ = ["parse_interfaces", "parse_bgp_summary", "parse_ospf_neighbors"]
     """Parse ``show port`` output into a list of interface dicts.
 
     Each dict contains:
