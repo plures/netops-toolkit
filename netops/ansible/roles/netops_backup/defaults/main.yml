@@ -1,0 +1,30 @@
+---
+# defaults/main.yml — netops_backup role
+#
+# All variables have sensible defaults and can be overridden in inventory,
+# group_vars, host_vars or at the play level.
+
+# Directory where backups are stored on the Ansible control node.
+netops_backup_dir: /var/backups/netops
+
+# Number of backup copies to retain per device (older files are pruned).
+netops_backup_retention: 10
+
+# Timestamp format appended to the backup filename.
+netops_backup_timestamp_format: "%Y%m%d_%H%M%S"
+
+# Connection credentials (fall through to ansible_user / ansible_password when unset).
+netops_backup_username: "{{ ansible_user | default(omit) }}"
+netops_backup_password: "{{ ansible_password | default(omit) }}"
+
+# SSH port used for backup connections.
+netops_backup_port: "{{ ansible_port | default(22) }}"
+
+# Network OS / vendor string understood by netops modules (e.g. cisco_ios).
+netops_backup_vendor: "{{ ansible_network_os | default('cisco_ios') }}"
+
+# When true, skip devices that do not respond rather than failing the play.
+netops_backup_ignore_unreachable: false
+
+# Optional prefix added to each backup filename (empty = no prefix).
+netops_backup_file_prefix: ""

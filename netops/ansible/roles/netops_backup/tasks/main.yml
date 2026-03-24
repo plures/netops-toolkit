@@ -1,0 +1,56 @@
+---
+# tasks/main.yml — netops_backup role
+#
+# Retrieves the running configuration from each device and writes it to the
+# control node, then prunes old backups to honour the retention policy.
+
+- name: Ensure backup directory exists
+  ansible.builtin.file:
+    path: "{{ netops_backup_dir }}/{{ inventory_hostname }}"
+    state: directory
+    mode: "0750"
+  delegate_to: localhost
+  run_once: false
+
+- name: Collect running configuration via netops_command
+  netops_command:
+    host: "{{ ansible_host }}"
+    vendor: "{{ netops_backup_vendor }}"
+    username: "{{ netops_backup_username }}"
+    password: "{{ netops_backup_password }}"
+    port: "{{ netops_backup_port }}"
+    commands:
+      - show running-config
+  register: _backup_cmd
+  ignore_errors: "{{ netops_backup_ignore_unreachable }}"
+
+- name: Write configuration to backup file
+  ansible.builtin.copy:
+    content: "{{ _backup_cmd.output[0] }}"
+    dest: >-
+      {{ netops_backup_dir }}/{{ inventory_hostname }}/
+      {{- netops_backup_file_prefix -}}
+      {{- inventory_hostname -}}_
+      {{- lookup('pipe', 'date +' + netops_backup_timestamp_format) }}.cfg
+    mode: "0640"
+  delegate_to: localhost
+  when: _backup_cmd is success
+
+- name: Prune old backups beyond retention count
+  ansible.builtin.shell: |
+    set -o pipefail
+    ls -1t {{ netops_backup_dir }}/{{ inventory_hostname }}/*.cfg 2>/dev/null \
+      | tail -n +{{ (netops_backup_retention | int) + 1 }} \
+      | xargs -r rm -f
+  args:
+    executable: /bin/bash
+  delegate_to: localhost
+  when: _backup_cmd is success
+  changed_when: false
+
+- name: Emit backup summary
+  ansible.builtin.debug:
+    msg: >-
+      Backup completed for {{ inventory_hostname }}.
+      Retention policy: keep {{ netops_backup_retention }} copies.
+  when: _backup_cmd is success

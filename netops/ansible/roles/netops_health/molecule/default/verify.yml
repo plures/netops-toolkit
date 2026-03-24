@@ -1,0 +1,15 @@
+---
+# molecule/default/verify.yml — netops_health
+
+- name: Verify — netops_health
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Confirm mock health facts were set
+      ansible.builtin.assert:
+        that:
+          - _health_facts is defined
+          - _health_facts.ansible_facts.netops_cpu | int < 90
+        fail_msg: "Health facts not populated or CPU above threshold."
+        success_msg: "Health check mock data verified successfully."

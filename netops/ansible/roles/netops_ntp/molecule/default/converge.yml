@@ -1,0 +1,28 @@
+---
+# molecule/default/converge.yml — netops_ntp
+# Disables validate_sync so no real device is needed.
+
+- name: Converge — netops_ntp
+  hosts: all
+  gather_facts: false
+
+  pre_tasks:
+    - name: Inject mock NTP command result
+      ansible.builtin.set_fact:
+        _ntp_before:
+          output:
+            - |
+              Clock is synchronised, stratum 3, reference is 192.0.2.1
+              nominal freq is 250.0000 Hz, actual freq is 249.9990 Hz
+              precision is 2**10
+          failed: false
+          changed: false
+
+  roles:
+    - role: netops_ntp
+      vars:
+        netops_ntp_servers:
+          - 192.0.2.1
+          - 192.0.2.2
+        netops_ntp_validate_sync: false
+        netops_ntp_timezone: "UTC"

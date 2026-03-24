@@ -1,0 +1,28 @@
+---
+# molecule/default/converge.yml — netops_acl
+# Runs in diff-only mode so no actual device interaction is required.
+
+- name: Converge — netops_acl
+  hosts: all
+  gather_facts: false
+
+  pre_tasks:
+    - name: Inject mock ACL command result
+      ansible.builtin.set_fact:
+        _acl_before:
+          output:
+            - |
+              Standard IP access list MGMT-IN
+                  10 permit 10.0.0.0, wildcard bits 0.0.0.255
+          failed: false
+          changed: false
+
+  roles:
+    - role: netops_acl
+      vars:
+        netops_acl_diff_only: true
+        netops_acl_list:
+          - name: MGMT-IN
+            rules:
+              - "10 permit tcp 10.0.0.0 0.0.0.255 any eq 22"
+              - "20 deny ip any any log"

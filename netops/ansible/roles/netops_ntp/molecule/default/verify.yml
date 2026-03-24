@@ -1,0 +1,11 @@
+---
+# molecule/default/verify.yml — netops_ntp
+
+- name: Verify — netops_ntp
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Confirm NTP mock scenario completed without error
+      ansible.builtin.debug:
+        msg: "netops_ntp scenario completed successfully."

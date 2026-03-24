@@ -1,0 +1,24 @@
+---
+# meta/main.yml — netops_backup role (Galaxy-compatible metadata)
+
+galaxy_info:
+  role_name: netops_backup
+  author: netops-toolkit
+  description: >
+    Back up the running configuration of network devices and enforce a
+    configurable retention policy on the Ansible control node.
+  company: ""
+  license: MIT
+  min_ansible_version: "2.16"
+  platforms:
+    - name: all
+  galaxy_tags:
+    - networking
+    - backup
+    - netops
+    - cisco
+    - juniper
+    - nokia
+    - arista
+
+dependencies: []

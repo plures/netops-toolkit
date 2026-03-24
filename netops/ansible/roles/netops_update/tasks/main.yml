@@ -1,0 +1,101 @@
+---
+# tasks/main.yml — netops_update role
+#
+# Orchestrates a network OS upgrade:
+#   1. Pre-upgrade health check
+#   2. (optional) Image transfer
+#   3. Activate new image / reload
+#   4. Post-upgrade health check
+#   5. Rollback if post-checks fail
+
+- name: Run pre-upgrade health check
+  ansible.builtin.include_role:
+    name: netops_health
+  vars:
+    netops_health_username: "{{ netops_update_username }}"
+    netops_health_password: "{{ netops_update_password }}"
+    netops_health_port: "{{ netops_update_port }}"
+    netops_health_vendor: "{{ netops_update_vendor }}"
+    netops_health_cpu_critical: "{{ netops_update_cpu_critical }}"
+    netops_health_memory_critical: "{{ netops_update_memory_critical }}"
+    netops_health_fail_on_critical: true
+  when: netops_update_pre_checks
+
+- name: Transfer OS image to device
+  netops_command:
+    host: "{{ ansible_host }}"
+    vendor: "{{ netops_update_vendor }}"
+    username: "{{ netops_update_username }}"
+    password: "{{ netops_update_password }}"
+    port: "{{ netops_update_port }}"
+    commands:
+      - "copy {{ netops_update_image_src }} {{ netops_update_image_dest }}"
+  register: _update_transfer
+  when:
+    - not netops_update_dry_run
+    - netops_update_image_src | length > 0
+
+- name: Activate new OS image (dry-run skipped)
+  netops_command:
+    host: "{{ ansible_host }}"
+    vendor: "{{ netops_update_vendor }}"
+    username: "{{ netops_update_username }}"
+    password: "{{ netops_update_password }}"
+    port: "{{ netops_update_port }}"
+    commands:
+      - "boot system {{ netops_update_image_dest }}{{ netops_update_image }}"
+      - write memory
+  register: _update_activate
+  when:
+    - not netops_update_dry_run
+    - netops_update_image | length > 0
+
+- name: Reload device to apply new image
+  netops_command:
+    host: "{{ ansible_host }}"
+    vendor: "{{ netops_update_vendor }}"
+    username: "{{ netops_update_username }}"
+    password: "{{ netops_update_password }}"
+    port: "{{ netops_update_port }}"
+    commands:
+      - reload
+  register: _update_reload
+  ignore_errors: true
+  when:
+    - not netops_update_dry_run
+    - netops_update_image | length > 0
+
+- name: Wait for device to come back online
+  ansible.builtin.wait_for:
+    host: "{{ ansible_host }}"
+    port: "{{ netops_update_port }}"
+    delay: "{{ netops_update_reload_wait }}"
+    timeout: "{{ netops_update_reload_wait | int + 120 }}"
+  delegate_to: localhost
+  when:
+    - not netops_update_dry_run
+    - netops_update_image | length > 0
+
+- name: Run post-upgrade health check
+  ansible.builtin.include_role:
+    name: netops_health
+  vars:
+    netops_health_username: "{{ netops_update_username }}"
+    netops_health_password: "{{ netops_update_password }}"
+    netops_health_port: "{{ netops_update_port }}"
+    netops_health_vendor: "{{ netops_update_vendor }}"
+    netops_health_cpu_critical: "{{ netops_update_cpu_critical }}"
+    netops_health_memory_critical: "{{ netops_update_memory_critical }}"
+    netops_health_fail_on_critical: "{{ not netops_update_rollback_on_failure }}"
+  register: _post_health
+  ignore_errors: "{{ netops_update_rollback_on_failure }}"
+  when: netops_update_post_checks
+
+- name: Trigger rollback handler on post-check failure
+  ansible.builtin.debug:
+    msg: "Post-upgrade health check failed — triggering rollback for {{ inventory_hostname }}"
+  notify: Rollback OS image
+  when:
+    - netops_update_post_checks
+    - netops_update_rollback_on_failure
+    - _post_health is failed

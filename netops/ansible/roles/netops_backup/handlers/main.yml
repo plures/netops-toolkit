@@ -1,0 +1,12 @@
+---
+# handlers/main.yml — netops_backup role
+
+- name: Verify backup integrity
+  ansible.builtin.stat:
+    path: >-
+      {{ netops_backup_dir }}/{{ inventory_hostname }}/
+      {{- netops_backup_file_prefix -}}
+      {{- inventory_hostname -}}_*.cfg
+  delegate_to: localhost
+  register: _backup_stat
+  listen: Verify backup integrity

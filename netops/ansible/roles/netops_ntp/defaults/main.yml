@@ -1,0 +1,31 @@
+---
+# defaults/main.yml — netops_ntp role
+
+# List of NTP server addresses to configure.
+netops_ntp_servers: []
+
+# Optional list of NTP servers to remove from the device configuration.
+netops_ntp_servers_absent: []
+
+# NTP source interface (leave blank to use device default).
+netops_ntp_source_interface: ""
+
+# NTP authentication key (leave blank to disable authentication).
+netops_ntp_auth_key_id: ""
+netops_ntp_auth_key_type: "md5"   # md5 | sha1
+netops_ntp_auth_key_value: ""
+
+# When true validate that at least one NTP peer is synchronised after config.
+netops_ntp_validate_sync: true
+
+# Seconds to wait for NTP sync before validation times out.
+netops_ntp_sync_timeout: 60
+
+# Timezone string to configure on the device (empty = skip timezone config).
+netops_ntp_timezone: ""
+
+# Connection parameters.
+netops_ntp_username: "{{ ansible_user | default(omit) }}"
+netops_ntp_password: "{{ ansible_password | default(omit) }}"
+netops_ntp_port: "{{ ansible_port | default(22) }}"
+netops_ntp_vendor: "{{ ansible_network_os | default('cisco_ios') }}"

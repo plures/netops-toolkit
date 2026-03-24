@@ -1,0 +1,16 @@
+---
+# molecule/default/converge.yml — netops_update
+# Runs in dry-run mode so no actual device interaction is required.
+
+- name: Converge — netops_update
+  hosts: all
+  gather_facts: false
+
+  roles:
+    - role: netops_update
+      vars:
+        netops_update_dry_run: true
+        netops_update_pre_checks: false
+        netops_update_post_checks: false
+        netops_update_image: ""
+        netops_update_image_src: ""

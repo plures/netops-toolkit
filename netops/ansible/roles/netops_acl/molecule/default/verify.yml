@@ -1,0 +1,11 @@
+---
+# molecule/default/verify.yml — netops_acl
+
+- name: Verify — netops_acl
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Confirm diff-only mode completed without error
+      ansible.builtin.debug:
+        msg: "netops_acl diff-only scenario completed successfully."

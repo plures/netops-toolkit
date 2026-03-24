@@ -1,0 +1,11 @@
+---
+# molecule/default/verify.yml — netops_update
+
+- name: Verify — netops_update
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Confirm dry-run completes without error
+      ansible.builtin.debug:
+        msg: "netops_update dry-run scenario completed successfully."
