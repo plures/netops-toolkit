@@ -125,10 +125,12 @@ class TestParseInterfaces:
         assert iface["status"] == "Up"
         assert iface["protocol"] == "Up"
         assert iface["up"] is True
+        assert iface["link"] is True
 
     def test_link_down_interface(self):
         iface = parse_interfaces(SHOW_PORT_OUTPUT)[1]
         assert iface["name"] == "1/1/2"
+        assert iface["link"] is False
         assert iface["status"] == "Up"
         assert iface["protocol"] == "Down"
         assert iface["up"] is False
@@ -136,6 +138,7 @@ class TestParseInterfaces:
     def test_admin_down_interface(self):
         iface = parse_interfaces(SHOW_PORT_OUTPUT)[2]
         assert iface["name"] == "1/1/3"
+        assert iface["link"] is False
         assert iface["status"] == "Down"
         assert iface["up"] is False
 
@@ -145,6 +148,7 @@ class TestParseInterfaces:
             assert "status" in iface
             assert "protocol" in iface
             assert "up" in iface
+            assert "link" in iface
 
     def test_empty_port_table_returns_empty_list(self):
         assert parse_interfaces(SHOW_PORT_EMPTY) == []

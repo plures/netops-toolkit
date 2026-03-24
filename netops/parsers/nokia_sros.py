@@ -6,6 +6,8 @@ import re
 
 
 def parse_interfaces(output: str) -> list[dict]:
+
+__all__ = ["parse_interfaces", "parse_bgp_summary", "parse_ospf_neighbors"]
     """Parse ``show port`` output into a list of interface dicts.
 
     Each dict contains:
@@ -27,11 +29,13 @@ def parse_interfaces(output: str) -> list[dict]:
         )
         if match:
             admin = match.group(2)
+            link = match.group(3) == "Yes"
             oper = match.group(4)
             interfaces.append(
                 {
                     "name": match.group(1),
                     "status": admin,
+                    "link": link,
                     "protocol": oper,
                     "up": admin == "Up" and oper == "Up",
                 }
