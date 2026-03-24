@@ -236,6 +236,55 @@ def run_health_check(
     return result
 
 
+def build_health_report(results: list[dict]) -> dict:
+    """Build an aggregated health report from a list of per-device results.
+
+    Parameters
+    ----------
+    results:
+        List of dicts returned by :func:`run_health_check`.
+
+    Returns a summary dict with keys:
+
+    * ``devices``                  – total devices polled
+    * ``devices_reachable``        – devices successfully reached
+    * ``devices_with_alerts``      – count of devices with at least one alert
+    * ``cpu_alerts``               – count of devices with a CPU alert
+    * ``memory_alerts``            – count of devices with a memory alert
+    * ``interface_error_alerts``   – count of devices with interface error alerts
+    * ``log_alerts``               – count of devices with log alerts
+    * ``overall_alert``            – ``True`` when any device triggered an alert
+    * ``results``                  – original per-device result list
+    """
+    reachable = [r for r in results if r.get("success")]
+
+    cpu_alerts = sum(
+        1 for r in reachable if r.get("checks", {}).get("cpu", {}).get("alert")
+    )
+    memory_alerts = sum(
+        1 for r in reachable if r.get("checks", {}).get("memory", {}).get("alert")
+    )
+    interface_error_alerts = sum(
+        1 for r in reachable if r.get("checks", {}).get("interface_errors", {}).get("alert")
+    )
+    log_alerts = sum(
+        1 for r in reachable if r.get("checks", {}).get("logs", {}).get("alert")
+    )
+    devices_with_alerts = sum(1 for r in reachable if r.get("overall_alert"))
+
+    return {
+        "devices": len(results),
+        "devices_reachable": len(reachable),
+        "devices_with_alerts": devices_with_alerts,
+        "cpu_alerts": cpu_alerts,
+        "memory_alerts": memory_alerts,
+        "interface_error_alerts": interface_error_alerts,
+        "log_alerts": log_alerts,
+        "overall_alert": devices_with_alerts > 0,
+        "results": results,
+    }
+
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
