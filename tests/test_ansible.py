@@ -300,25 +300,344 @@ class TestBuildInventory:
     def test_meta_structure(self, sample_inventory_file: Path):
         from netops.ansible.dynamic_inventory import build_inventory
 
-        result = build_inventory(str(sample_inventory_file))
+        result = build_inventory(str(sample_inventory_file), no_cache=True)
         assert "_meta" in result
         assert "hostvars" in result["_meta"]
 
     def test_all_hosts_listed(self, sample_inventory_file: Path):
         from netops.ansible.dynamic_inventory import build_inventory
 
-        result = build_inventory(str(sample_inventory_file))
+        result = build_inventory(str(sample_inventory_file), no_cache=True)
         assert set(result["all"]["hosts"]) >= {"router1", "router2", "pe1"}
 
     def test_groups_listed(self, sample_inventory_file: Path):
         from netops.ansible.dynamic_inventory import build_inventory
 
-        result = build_inventory(str(sample_inventory_file))
+        result = build_inventory(str(sample_inventory_file), no_cache=True)
         assert "routers" in result["all"]["children"]
 
     def test_group_members(self, sample_inventory_file: Path):
         from netops.ansible.dynamic_inventory import build_inventory
 
-        result = build_inventory(str(sample_inventory_file))
+        result = build_inventory(str(sample_inventory_file), no_cache=True)
         assert "router1" in result["routers"]["hosts"]
         assert "router2" in result["routers"]["hosts"]
+
+
+# ===========================================================================
+# Auto-group generation
+# ===========================================================================
+
+
+class TestAutoGroups:
+    """Auto-generated groups from vendor / site / role metadata."""
+
+    def _build(self, tmp_path: Path) -> dict:
+        from netops.ansible.dynamic_inventory import build_inventory
+
+        inv_file = tmp_path / "inventory.yaml"
+        inv_file.write_text(SAMPLE_INVENTORY_YAML)
+        return build_inventory(str(inv_file), no_cache=True)
+
+    def test_vendor_groups_created(self, tmp_path: Path):
+        result = self._build(tmp_path)
+        assert "vendor_cisco_ios" in result
+        assert "vendor_nokia_sros" in result
+
+    def test_vendor_group_in_all_children(self, tmp_path: Path):
+        result = self._build(tmp_path)
+        assert "vendor_cisco_ios" in result["all"]["children"]
+        assert "vendor_nokia_sros" in result["all"]["children"]
+
+    def test_vendor_group_members(self, tmp_path: Path):
+        result = self._build(tmp_path)
+        assert "router1" in result["vendor_cisco_ios"]["hosts"]
+        assert "router2" in result["vendor_cisco_ios"]["hosts"]
+        assert "pe1" in result["vendor_nokia_sros"]["hosts"]
+        assert "router1" not in result["vendor_nokia_sros"]["hosts"]
+
+    def test_site_groups_created(self, tmp_path: Path):
+        result = self._build(tmp_path)
+        assert "site_dc1" in result
+        assert "site_dc2" in result
+
+    def test_site_group_members(self, tmp_path: Path):
+        result = self._build(tmp_path)
+        assert "router1" in result["site_dc1"]["hosts"]
+        assert "router2" in result["site_dc2"]["hosts"]
+        # pe1 has no site — should not appear in any site group
+        assert "pe1" not in result["site_dc1"]["hosts"]
+        assert "pe1" not in result["site_dc2"]["hosts"]
+
+    def test_role_groups_created(self, tmp_path: Path):
+        result = self._build(tmp_path)
+        assert "role_core" in result
+        assert "role_edge" in result
+
+    def test_role_group_members(self, tmp_path: Path):
+        result = self._build(tmp_path)
+        assert "router1" in result["role_core"]["hosts"]
+        assert "pe1" in result["role_edge"]["hosts"]
+
+    def test_no_duplicate_auto_group_overrides_explicit(self, tmp_path: Path):
+        """Explicit groups are never overwritten by an auto-group with the same name."""
+        from netops.ansible.dynamic_inventory import build_inventory
+        import textwrap
+
+        yaml_text = textwrap.dedent("""\
+            devices:
+              sw1:
+                host: 1.1.1.1
+                vendor: cisco_ios
+                groups:
+                  - vendor_cisco_ios
+        """)
+        inv_file = tmp_path / "inventory.yaml"
+        inv_file.write_text(yaml_text)
+        result = build_inventory(str(inv_file), no_cache=True)
+        # Group exists and sw1 is in it
+        assert "vendor_cisco_ios" in result
+        assert "sw1" in result["vendor_cisco_ios"]["hosts"]
+
+    def test_safe_group_name_normalisation(self):
+        from netops.ansible.dynamic_inventory import _safe_group_name
+
+        assert _safe_group_name("Cisco IOS") == "cisco_ios"
+        assert _safe_group_name("dc-1") == "dc_1"
+        assert _safe_group_name("SPINE/LEAF") == "spine_leaf"
+
+
+# ===========================================================================
+# Cache layer
+# ===========================================================================
+
+
+class TestCache:
+    def test_cache_written_on_build(self, sample_inventory_file: Path, tmp_path: Path):
+        from netops.ansible.dynamic_inventory import build_inventory
+
+        cache_file = tmp_path / "cache.json"
+        build_inventory(str(sample_inventory_file), cache_path=str(cache_file))
+        assert cache_file.exists()
+
+    def test_cache_contains_valid_json(self, sample_inventory_file: Path, tmp_path: Path):
+        from netops.ansible.dynamic_inventory import build_inventory
+
+        cache_file = tmp_path / "cache.json"
+        build_inventory(str(sample_inventory_file), cache_path=str(cache_file))
+        data = json.loads(cache_file.read_text())
+        assert "_meta" in data
+
+    def test_cache_hit_returns_same_result(self, sample_inventory_file: Path, tmp_path: Path):
+        from netops.ansible.dynamic_inventory import build_inventory
+
+        cache_file = tmp_path / "cache.json"
+        first = build_inventory(str(sample_inventory_file), cache_path=str(cache_file))
+        second = build_inventory(str(sample_inventory_file), cache_path=str(cache_file))
+        assert first == second
+
+    def test_no_cache_skips_read_and_write(
+        self, sample_inventory_file: Path, tmp_path: Path
+    ):
+        from netops.ansible.dynamic_inventory import build_inventory
+
+        cache_file = tmp_path / "cache.json"
+        build_inventory(str(sample_inventory_file), cache_path=str(cache_file), no_cache=True)
+        assert not cache_file.exists()
+
+    def test_refresh_cache_ignores_existing(
+        self, sample_inventory_file: Path, tmp_path: Path
+    ):
+        import time
+        from netops.ansible.dynamic_inventory import build_inventory
+
+        cache_file = tmp_path / "cache.json"
+        # Write a stale cache manually
+        cache_file.write_text(json.dumps({"_meta": {"hostvars": {}}, "stale": True}))
+        # A small sleep ensures mtime differs
+        time.sleep(0.01)
+        result = build_inventory(
+            str(sample_inventory_file),
+            cache_path=str(cache_file),
+            refresh_cache=True,
+        )
+        # Result should be the real inventory, not the stale one
+        assert "stale" not in result
+        assert "router1" in result["all"]["hosts"]
+
+    def test_expired_cache_triggers_rebuild(
+        self, sample_inventory_file: Path, tmp_path: Path
+    ):
+        import time
+        from netops.ansible.dynamic_inventory import build_inventory
+
+        cache_file = tmp_path / "cache.json"
+        # Write a fake cache and immediately expire it via a zero TTL
+        cache_file.write_text(json.dumps({"_meta": {"hostvars": {}}, "stale": True}))
+        time.sleep(0.01)
+        result = build_inventory(
+            str(sample_inventory_file),
+            cache_path=str(cache_file),
+            cache_ttl=0,  # always expired
+        )
+        assert "stale" not in result
+        assert "router1" in result["all"]["hosts"]
+
+    def test_missing_inventory_raises_even_with_valid_cache(
+        self, tmp_path: Path
+    ):
+        from netops.ansible.dynamic_inventory import build_inventory
+
+        cache_file = tmp_path / "cache.json"
+        # Seed a valid-looking cache
+        cache_file.write_text(json.dumps({"_meta": {"hostvars": {}}}))
+        with pytest.raises(FileNotFoundError):
+            build_inventory(
+                str(tmp_path / "nonexistent.yaml"),
+                cache_path=str(cache_file),
+                cache_ttl=9999,
+            )
+
+
+# ===========================================================================
+# CLI new flags
+# ===========================================================================
+
+
+class TestDynamicInventoryCLIExtended:
+    def _run(self, args: list[str]) -> "subprocess.CompletedProcess":  # type: ignore[name-defined]  # noqa: F821
+        import subprocess
+        import sys
+
+        return subprocess.run(
+            [sys.executable, "-m", "netops.ansible.dynamic_inventory"] + args,
+            capture_output=True,
+            text=True,
+        )
+
+    def test_list_no_cache_flag(self, sample_inventory_file: Path, tmp_path: Path):
+        result = self._run(
+            ["--list", "--inventory", str(sample_inventory_file), "--no-cache"]
+        )
+        assert result.returncode == 0
+        parsed = json.loads(result.stdout)
+        assert "_meta" in parsed
+
+    def test_list_refresh_cache_flag(self, sample_inventory_file: Path, tmp_path: Path):
+        cache_file = tmp_path / "cache.json"
+        result = self._run(
+            [
+                "--list",
+                "--inventory",
+                str(sample_inventory_file),
+                "--refresh-cache",
+                "--cache-path",
+                str(cache_file),
+            ]
+        )
+        assert result.returncode == 0
+        assert cache_file.exists()
+
+    def test_list_custom_cache_ttl(self, sample_inventory_file: Path, tmp_path: Path):
+        cache_file = tmp_path / "cache.json"
+        result = self._run(
+            [
+                "--list",
+                "--inventory",
+                str(sample_inventory_file),
+                "--cache-ttl",
+                "600",
+                "--cache-path",
+                str(cache_file),
+            ]
+        )
+        assert result.returncode == 0
+        parsed = json.loads(result.stdout)
+        assert "vendor_cisco_ios" in parsed
+
+    def test_auto_groups_present_in_list(self, sample_inventory_file: Path):
+        result = self._run(
+            ["--list", "--inventory", str(sample_inventory_file), "--no-cache"]
+        )
+        assert result.returncode == 0
+        parsed = json.loads(result.stdout)
+        assert "vendor_cisco_ios" in parsed
+        assert "site_dc1" in parsed
+        assert "role_core" in parsed
+
+    def test_auto_groups_in_all_children(self, sample_inventory_file: Path):
+        result = self._run(
+            ["--list", "--inventory", str(sample_inventory_file), "--no-cache"]
+        )
+        parsed = json.loads(result.stdout)
+        children = parsed["all"]["children"]
+        assert "vendor_cisco_ios" in children
+        assert "site_dc1" in children
+        assert "role_core" in children
+
+
+# ===========================================================================
+# Vault credential injection
+# ===========================================================================
+
+
+class TestVaultInjection:
+    """Vault credentials are injected into hostvars when available."""
+
+    def _make_vault(self, tmp_path: Path, password: str = "test123") -> Path:
+        """Create a vault with one device entry and return its path."""
+        from netops.core.vault import CredentialVault
+
+        vault_path = tmp_path / "vault.yaml"
+        vault = CredentialVault(vault_path=str(vault_path))
+        vault.init(password)
+        vault.set_device("router1", username="vaultuser", password="vaultpass")
+        vault.save(password)
+        return vault_path
+
+    def test_vault_credentials_injected(
+        self, sample_inventory_file: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        from netops.ansible.dynamic_inventory import build_inventory
+
+        vault_path = self._make_vault(tmp_path)
+        monkeypatch.setenv("NETOPS_VAULT_PASSWORD", "test123")
+
+        result = build_inventory(
+            str(sample_inventory_file),
+            vault_path=str(vault_path),
+            no_cache=True,
+        )
+        hv = result["_meta"]["hostvars"]["router1"]
+        assert hv["ansible_user"] == "vaultuser"
+        assert hv["ansible_password"] == "vaultpass"
+
+    def test_vault_missing_password_env_skips_injection(
+        self, sample_inventory_file: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        from netops.ansible.dynamic_inventory import build_inventory
+
+        vault_path = self._make_vault(tmp_path)
+        monkeypatch.delenv("NETOPS_VAULT_PASSWORD", raising=False)
+
+        result = build_inventory(
+            str(sample_inventory_file),
+            vault_path=str(vault_path),
+            no_cache=True,
+        )
+        # Without the password env var the vault is not opened; no credentials added
+        hv = result["_meta"]["hostvars"]["router1"]
+        assert "ansible_password" not in hv
+
+    def test_no_vault_path_no_injection(
+        self, sample_inventory_file: Path, tmp_path: Path
+    ):
+        from netops.ansible.dynamic_inventory import build_inventory
+
+        result = build_inventory(
+            str(sample_inventory_file),
+            vault_path=None,
+            no_cache=True,
+        )
+        hv = result["_meta"]["hostvars"]["router1"]
+        assert "ansible_password" not in hv
