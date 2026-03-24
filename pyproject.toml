@@ -29,6 +29,13 @@ ansible = [
     "ansible-core>=2.16",
     "ansible.netcommon>=6.0",
 ]
+report = [
+    "jinja2>=3.1.0",
+]
+report-pdf = [
+    "jinja2>=3.1.0",
+    "weasyprint>=62.0",
+]
 
 [tool.ruff]
 line-length = 100
