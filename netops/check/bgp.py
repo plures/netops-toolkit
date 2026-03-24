@@ -194,7 +194,10 @@ def check_bgp_peers(
                 output = conn.send("show router bgp summary")
                 raw_peers = parse_bgp_summary_nokia(output)
             else:
-                output = conn.send("show ip bgp summary")
+                if params.device_type == "cisco_xr":
+                    output = conn.send("show bgp summary")
+                else:
+                    output = conn.send("show ip bgp summary")
                 raw_peers = parse_bgp_summary_cisco(output)
     except Exception as exc:  # noqa: BLE001
         result["error"] = str(exc)
