@@ -12,9 +12,11 @@ __all__ = [
     "parse_cpu_cisco",
     "parse_cpu_nokia",
     "parse_cpu_brocade",
+    "parse_cpu_paloalto",
     "parse_memory_cisco",
     "parse_memory_nokia",
     "parse_memory_brocade",
+    "parse_memory_paloalto",
     "parse_interface_errors_cisco",
     "parse_interface_errors_nokia",
     "parse_interface_errors_brocade",
@@ -524,3 +526,92 @@ def parse_logs_brocade(output: str) -> list[dict]:
                 }
             )
     return events
+
+
+# ---------------------------------------------------------------------------
+# Palo Alto PAN-OS parsers
+# ---------------------------------------------------------------------------
+
+
+def parse_cpu_paloalto(output: str) -> dict:
+    """Parse ``show system resources follow duration 1`` output from PAN-OS.
+
+    PAN-OS runs on a Linux kernel and exposes a ``top``-style resource
+    snapshot.  This parser extracts the CPU idle percentage and derives
+    utilization.
+
+    Returns a dict with keys:
+
+    * ``user``        – user-space CPU % (``float``)
+    * ``system``      – kernel CPU % (``float``)
+    * ``idle``        – idle CPU % (``float``)
+    * ``utilization`` – used CPU % = 100 - idle (``float``)
+
+    Returns an empty dict when the output cannot be parsed.
+
+    Example input line::
+
+        %Cpu(s):  5.0 us,  1.5 sy,  0.0 ni, 92.5 id,  0.5 wa,  0.0 hi,  0.5 si
+    """
+    m = re.search(
+        r"%Cpu\(s\):\s+(\d+(?:\.\d+)?)\s+us,\s+(\d+(?:\.\d+)?)\s+sy,"
+        r"[^,]*,\s+(\d+(?:\.\d+)?)\s+id",
+        output,
+    )
+    if m:
+        user = float(m.group(1))
+        sys_ = float(m.group(2))
+        idle = float(m.group(3))
+        return {
+            "user": user,
+            "system": sys_,
+            "idle": idle,
+            "utilization": round(100.0 - idle, 2),
+        }
+    return {}
+
+
+def parse_memory_paloalto(output: str) -> dict:
+    """Parse ``show system resources follow duration 1`` output from PAN-OS.
+
+    Extracts the memory summary line from the ``top``-style output.
+
+    Returns a dict with keys:
+
+    * ``total``       – total bytes (``int``)
+    * ``used``        – used bytes (``int``)
+    * ``free``        – free bytes (``int``)
+    * ``utilization`` – percentage used (``float``, 0–100)
+
+    Returns an empty dict when the output cannot be parsed.
+
+    Example input line::
+
+        MiB Mem : 16384.0 total,  8192.0 free,  6144.0 used,  2048.0 buff/cache
+    """
+    # MiB Mem line (modern kernels / PAN-OS 10+)
+    m = re.search(
+        r"MiB Mem\s*:\s*(\d+(?:\.\d+)?)\s+total,\s*(\d+(?:\.\d+)?)\s+free,\s*"
+        r"(\d+(?:\.\d+)?)\s+used",
+        output,
+    )
+    if m:
+        total = int(float(m.group(1)) * 1024 * 1024)
+        free = int(float(m.group(2)) * 1024 * 1024)
+        used = int(float(m.group(3)) * 1024 * 1024)
+        utilization = round((used / total * 100) if total else 0.0, 2)
+        return {"total": total, "used": used, "free": free, "utilization": utilization}
+
+    # Older ``Mem:`` line (KiB values)
+    m2 = re.search(
+        r"Mem:\s+(\d+)\s+total,\s+(\d+)\s+used,\s+(\d+)\s+free",
+        output,
+    )
+    if m2:
+        total = int(m2.group(1)) * 1024
+        used = int(m2.group(2)) * 1024
+        free = int(m2.group(3)) * 1024
+        utilization = round((used / total * 100) if total else 0.0, 2)
+        return {"total": total, "used": used, "free": free, "utilization": utilization}
+
+    return {}
