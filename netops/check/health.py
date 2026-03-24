@@ -30,6 +30,7 @@ from netops.parsers.health import (
     parse_cpu_brocade,
     parse_cpu_cisco,
     parse_cpu_nokia,
+    parse_cpu_paloalto,
     parse_interface_errors_brocade,
     parse_interface_errors_cisco,
     parse_interface_errors_nokia,
@@ -39,6 +40,7 @@ from netops.parsers.health import (
     parse_memory_brocade,
     parse_memory_cisco,
     parse_memory_nokia,
+    parse_memory_paloalto,
 )
 
 logger = logging.getLogger(__name__)
@@ -61,6 +63,10 @@ def _is_brocade(device_type: str) -> bool:
     return "brocade" in device_type.lower()
 
 
+def _is_paloalto(device_type: str) -> bool:
+    return "paloalto" in device_type.lower() or "panos" in device_type.lower()
+
+
 def check_cpu(conn: DeviceConnection, device_type: str, threshold: float) -> dict:
     """Return CPU utilisation check result."""
     try:
@@ -72,6 +78,10 @@ def check_cpu(conn: DeviceConnection, device_type: str, threshold: float) -> dic
             output = conn.send("show cpu")
             data = parse_cpu_brocade(output)
             utilization = data.get("one_minute", data.get("five_seconds", 0.0))
+        elif _is_paloalto(device_type):
+            output = conn.send("show system resources follow duration 1")
+            data = parse_cpu_paloalto(output)
+            utilization = data.get("utilization", 0.0)
         else:
             output = conn.send("show processes cpu")
             data = parse_cpu_cisco(output)
@@ -97,6 +107,9 @@ def check_memory(conn: DeviceConnection, device_type: str, threshold: float) -> 
         elif _is_brocade(device_type):
             output = conn.send("show memory")
             data = parse_memory_brocade(output)
+        elif _is_paloalto(device_type):
+            output = conn.send("show system resources follow duration 1")
+            data = parse_memory_paloalto(output)
         else:
             output = conn.send("show processes memory")
             data = parse_memory_cisco(output)

@@ -140,6 +140,7 @@ class DeviceConnection:
             "nokia_srl": "nokia_srl",
             "juniper_junos": "juniper_junos",
             "arista_eos": "arista_eos",
+            "paloalto_panos": "paloalto_panos",
             "autodetect": "autodetect",
         }
         return mapping.get(self.params.device_type, self.params.device_type)

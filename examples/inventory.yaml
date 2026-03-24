@@ -62,3 +62,27 @@ devices:
     tags:
       environment: production
       platform: VDX6740
+
+  # Palo Alto Networks firewall example (Active unit)
+  paloalto-fw-01:
+    host: 10.0.4.1
+    vendor: paloalto_panos
+    role: edge
+    site: dc1
+    groups: [firewalls, edge, dc1, paloalto]
+    tags:
+      environment: production
+      platform: PA-3220
+      ha_role: active
+
+  # Palo Alto Networks firewall example (Passive/HA peer)
+  paloalto-fw-02:
+    host: 10.0.4.2
+    vendor: paloalto_panos
+    role: edge
+    site: dc1
+    groups: [firewalls, edge, dc1, paloalto]
+    tags:
+      environment: production
+      platform: PA-3220
+      ha_role: passive
