@@ -1,0 +1,58 @@
+---
+# Sample netops inventory for use with Ansible examples.
+#
+# Use this as a starting point.  Fill in real hostnames/IPs and credentials.
+#
+# Export to Ansible format:
+#   python -m netops.core.inventory export --format ansible --output ansible_inventory.yaml
+#
+# Use as dynamic inventory:
+#   ansible-playbook -i netops/ansible/dynamic_inventory.py collect_facts.yml
+
+defaults:
+  transport: ssh
+  username: admin
+
+devices:
+  core-router-1:
+    host: 10.0.0.1
+    vendor: cisco_ios
+    groups:
+      - core
+      - routers
+    site: dc1
+    role: core
+    tags:
+      environment: production
+
+  core-router-2:
+    host: 10.0.0.2
+    vendor: cisco_ios
+    groups:
+      - core
+      - routers
+    site: dc1
+    role: core
+    tags:
+      environment: production
+
+  distribution-sw-1:
+    host: 10.0.1.1
+    vendor: cisco_ios
+    groups:
+      - distribution
+      - switches
+    site: dc1
+    role: distribution
+    tags:
+      environment: production
+
+  nokia-pe-1:
+    host: 10.1.0.1
+    vendor: nokia_sros
+    groups:
+      - pe_routers
+    site: dc2
+    role: edge
+    tags:
+      environment: production
