@@ -1,6 +1,7 @@
 """Parsers for health-check CLI output (CPU, memory, interface errors, logs).
 
-Supports Cisco IOS/XE/XR/NXOS and Nokia SR-OS output formats.
+Supports Cisco IOS/XE/XR/NXOS, Nokia SR-OS, and Brocade FastIron/NOS output
+formats.
 """
 
 from __future__ import annotations
@@ -10,12 +11,16 @@ import re
 __all__ = [
     "parse_cpu_cisco",
     "parse_cpu_nokia",
+    "parse_cpu_brocade",
     "parse_memory_cisco",
     "parse_memory_nokia",
+    "parse_memory_brocade",
     "parse_interface_errors_cisco",
     "parse_interface_errors_nokia",
+    "parse_interface_errors_brocade",
     "parse_logs_cisco",
     "parse_logs_nokia",
+    "parse_logs_brocade",
 ]
 
 
@@ -333,6 +338,188 @@ def parse_logs_nokia(output: str) -> list[dict]:
                     "timestamp": match.group("timestamp"),
                     "severity": match.group("severity"),
                     "subject": match.group("subject"),
+                    "message": match.group("message").strip(),
+                }
+            )
+    return events
+
+
+# ---------------------------------------------------------------------------
+# Brocade parsers
+# ---------------------------------------------------------------------------
+
+
+def parse_cpu_brocade(output: str) -> dict:
+    """Parse ``show cpu`` output from Brocade FastIron/ICX.
+
+    Returns a dict with keys:
+    * ``one_second``  – CPU % over the last 1 second (``float``)
+    * ``five_seconds`` – CPU % over the last 5 seconds (``float``)
+    * ``one_minute``  – CPU % over the last 60 seconds (``float``)
+
+    Returns an empty dict when the output cannot be parsed.
+
+    Example input lines::
+
+        CPU Utilization:
+          1-second average:  12 percent
+          5-second average:  10 percent
+         60-second average:   8 percent
+    """
+    result: dict = {}
+
+    one_sec = re.search(r"1[- ]second\s+average[:\s]+(\d+(?:\.\d+)?)\s+percent", output)
+    five_sec = re.search(r"5[- ]second\s+average[:\s]+(\d+(?:\.\d+)?)\s+percent", output)
+    sixty_sec = re.search(r"60[- ]second\s+average[:\s]+(\d+(?:\.\d+)?)\s+percent", output)
+
+    if one_sec:
+        result["one_second"] = float(one_sec.group(1))
+    if five_sec:
+        result["five_seconds"] = float(five_sec.group(1))
+    if sixty_sec:
+        result["one_minute"] = float(sixty_sec.group(1))
+
+    return result
+
+
+def parse_memory_brocade(output: str) -> dict:
+    """Parse ``show memory`` output from Brocade FastIron/ICX.
+
+    Returns a dict with keys:
+    * ``total``       – total bytes (``int``)
+    * ``used``        – used bytes (``int``)
+    * ``free``        – free bytes (``int``)
+    * ``utilization`` – percentage used (``float``, 0–100)
+
+    Returns an empty dict when the output cannot be parsed.
+
+    Example input lines::
+
+        System memory information:
+          Total DRAM: 1048576 KBytes
+          Used DRAM:   512000 KBytes
+          Free DRAM:   536576 KBytes
+    """
+    total_match = re.search(r"Total DRAM[:\s]+(\d+)\s+KBytes", output, re.IGNORECASE)
+    used_match = re.search(r"Used DRAM[:\s]+(\d+)\s+KBytes", output, re.IGNORECASE)
+    free_match = re.search(r"Free DRAM[:\s]+(\d+)\s+KBytes", output, re.IGNORECASE)
+
+    if total_match and used_match and free_match:
+        # Convert KBytes → bytes for a consistent interface with other parsers
+        total = int(total_match.group(1)) * 1024
+        used = int(used_match.group(1)) * 1024
+        free = int(free_match.group(1)) * 1024
+        utilization = round((used / total * 100) if total else 0.0, 2)
+        return {"total": total, "used": used, "free": free, "utilization": utilization}
+    return {}
+
+
+def parse_interface_errors_brocade(output: str) -> list[dict]:
+    """Parse ``show interfaces`` output for error counters on Brocade FastIron/ICX.
+
+    Each returned dict contains:
+    * ``name``          – interface name (e.g. ``'GigabitEthernet1/1/1'``)
+    * ``input_errors``  – total input errors (``int``)
+    * ``output_errors`` – total output errors (``int``)
+    * ``crc``           – CRC/alignment errors (``int``)
+    * ``drops``         – input/output discards (``int``)
+    * ``has_errors``    – ``True`` when any counter is non-zero
+
+    Returns an empty list when no interfaces are parsed.
+
+    Example input lines::
+
+        GigabitEthernet1/1/1 is up, line protocol is up
+          0 input errors, 0 CRC, 0 alignment errors, 0 runts, 0 giants
+          0 output errors, 0 output discards
+    """
+    interfaces: list[dict] = []
+    current: dict | None = None
+
+    for line in output.splitlines():
+        # New interface header: "GigabitEthernet1/1/1 is up, line protocol is up"
+        iface_match = re.match(
+            r"^(\S+) is (?:up|down|administratively down)", line, re.IGNORECASE
+        )
+        if iface_match:
+            if current is not None:
+                current["has_errors"] = _has_errors(current)
+                interfaces.append(current)
+            current = {
+                "name": iface_match.group(1),
+                "input_errors": 0,
+                "output_errors": 0,
+                "crc": 0,
+                "drops": 0,
+            }
+            continue
+
+        if current is None:
+            continue
+
+        in_err = re.search(r"(\d+) input errors", line)
+        if in_err:
+            current["input_errors"] = int(in_err.group(1))
+
+        crc_match = re.search(r"(\d+) CRC", line)
+        if crc_match:
+            current["crc"] = int(crc_match.group(1))
+
+        out_err = re.search(r"(\d+) output errors", line)
+        if out_err:
+            current["output_errors"] = int(out_err.group(1))
+
+        # Brocade calls drops "discards"
+        in_disc = re.search(r"(\d+) input discards?", line)
+        if in_disc:
+            current["drops"] += int(in_disc.group(1))
+
+        out_disc = re.search(r"(\d+) output discards?", line)
+        if out_disc:
+            current["drops"] += int(out_disc.group(1))
+
+    if current is not None:
+        current["has_errors"] = _has_errors(current)
+        interfaces.append(current)
+
+    return interfaces
+
+
+_BROCADE_LOG_PATTERN = re.compile(
+    r"(?P<timestamp>\w{3}\s+\d{1,2}\s+[\d:]+)\s+"
+    r"(?P<severity>CRIT|WARN|ERR)\w*\s+"
+    r"(?P<message>.*)"
+)
+
+# Normalise abbreviated severity tokens
+_BROCADE_SEVERITY_MAP = {
+    "CRIT": "CRITICAL",
+    "ERR": "ERROR",
+    "WARN": "WARNING",
+}
+
+
+def parse_logs_brocade(output: str) -> list[dict]:
+    """Scan ``show logging`` output for critical/error severity events on Brocade.
+
+    Each returned dict contains:
+    * ``timestamp`` – event timestamp string (e.g. ``'Mar 15 12:34:56'``)
+    * ``severity``  – normalised severity: ``'CRITICAL'``, ``'ERROR'``, or
+                      ``'WARNING'``
+    * ``message``   – event description
+
+    Returns an empty list when no matching events are found.
+    """
+    events: list[dict] = []
+    for line in output.splitlines():
+        match = _BROCADE_LOG_PATTERN.search(line)
+        if match:
+            raw_sev = match.group("severity").upper()
+            severity = _BROCADE_SEVERITY_MAP.get(raw_sev, raw_sev)
+            events.append(
+                {
+                    "timestamp": match.group("timestamp"),
+                    "severity": severity,
                     "message": match.group("message").strip(),
                 }
             )

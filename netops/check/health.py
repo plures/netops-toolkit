@@ -27,12 +27,16 @@ from netops.core.connection import ConnectionParams, Transport
 from netops.core import DeviceConnection
 from netops.core.inventory import Inventory
 from netops.parsers.health import (
+    parse_cpu_brocade,
     parse_cpu_cisco,
     parse_cpu_nokia,
+    parse_interface_errors_brocade,
     parse_interface_errors_cisco,
     parse_interface_errors_nokia,
+    parse_logs_brocade,
     parse_logs_cisco,
     parse_logs_nokia,
+    parse_memory_brocade,
     parse_memory_cisco,
     parse_memory_nokia,
 )
@@ -53,6 +57,10 @@ def _is_nokia(device_type: str) -> bool:
     return "nokia" in device_type.lower()
 
 
+def _is_brocade(device_type: str) -> bool:
+    return "brocade" in device_type.lower()
+
+
 def check_cpu(conn: DeviceConnection, device_type: str, threshold: float) -> dict:
     """Return CPU utilisation check result."""
     try:
@@ -60,6 +68,10 @@ def check_cpu(conn: DeviceConnection, device_type: str, threshold: float) -> dic
             output = conn.send("show system cpu")
             data = parse_cpu_nokia(output)
             utilization = data.get("avg", 0.0)
+        elif _is_brocade(device_type):
+            output = conn.send("show cpu")
+            data = parse_cpu_brocade(output)
+            utilization = data.get("one_minute", data.get("five_seconds", 0.0))
         else:
             output = conn.send("show processes cpu")
             data = parse_cpu_cisco(output)
@@ -82,6 +94,9 @@ def check_memory(conn: DeviceConnection, device_type: str, threshold: float) -> 
         if _is_nokia(device_type):
             output = conn.send("show system memory-pools")
             data = parse_memory_nokia(output)
+        elif _is_brocade(device_type):
+            output = conn.send("show memory")
+            data = parse_memory_brocade(output)
         else:
             output = conn.send("show processes memory")
             data = parse_memory_cisco(output)
@@ -104,6 +119,9 @@ def check_interface_errors(conn: DeviceConnection, device_type: str) -> dict:
         if _is_nokia(device_type):
             output = conn.send("show port detail")
             interfaces = parse_interface_errors_nokia(output)
+        elif _is_brocade(device_type):
+            output = conn.send("show interfaces")
+            interfaces = parse_interface_errors_brocade(output)
         else:
             output = conn.send("show interfaces")
             interfaces = parse_interface_errors_cisco(output)
@@ -128,6 +146,11 @@ def check_logs(conn: DeviceConnection, device_type: str) -> dict:
             events = parse_logs_nokia(output)
             critical = sum(1 for e in events if e.get("severity") == "CRITICAL")
             major = sum(1 for e in events if e.get("severity") == "MAJOR")
+        elif _is_brocade(device_type):
+            output = conn.send("show logging")
+            events = parse_logs_brocade(output)
+            critical = sum(1 for e in events if e.get("severity") == "CRITICAL")
+            major = sum(1 for e in events if e.get("severity") == "ERROR")
         else:
             output = conn.send("show logging")
             events = parse_logs_cisco(output)

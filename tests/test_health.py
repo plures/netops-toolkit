@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 from netops.parsers.health import (
+    parse_cpu_brocade,
     parse_cpu_cisco,
     parse_cpu_nokia,
+    parse_interface_errors_brocade,
     parse_interface_errors_cisco,
     parse_interface_errors_nokia,
+    parse_logs_brocade,
     parse_logs_cisco,
     parse_logs_nokia,
+    parse_memory_brocade,
     parse_memory_cisco,
     parse_memory_nokia,
 )
@@ -123,6 +127,45 @@ NOKIA_LOG_OUTPUT = """\
 """
 
 NOKIA_LOG_EMPTY = "No log events found.\n"
+
+BROCADE_CPU_OUTPUT = """\
+CPU Utilization:
+  1-second average:  15 percent
+  5-second average:  12 percent
+ 60-second average:   8 percent
+"""
+
+BROCADE_CPU_EMPTY = "ICX7550> show cpu\n"
+
+BROCADE_MEM_OUTPUT = """\
+System memory information:
+  Total DRAM: 1048576 KBytes
+  Used DRAM:   512000 KBytes
+  Free DRAM:   536576 KBytes
+"""
+
+BROCADE_MEM_EMPTY = "ICX7550> show memory\n"
+
+BROCADE_INTERFACES_OUTPUT = """\
+GigabitEthernet1/1/1 is up, line protocol is up
+  Hardware is GigabitEthernet, address is aabb.cc00.0001
+  0 input errors, 0 CRC, 0 alignment errors, 0 runts, 0 giants
+  0 output errors, 0 output discards
+GigabitEthernet1/1/2 is up, line protocol is up
+  Hardware is GigabitEthernet, address is aabb.cc00.0002
+  7 input errors, 4 CRC, 0 alignment errors, 0 runts, 0 giants
+  2 output errors, 5 output discards
+"""
+
+BROCADE_INTERFACES_EMPTY = ""
+
+BROCADE_LOG_OUTPUT = """\
+Mar 15 12:34:56 CRIT system Fan failure detected on module 1
+Mar 15 12:35:00 ERR ospf OSPF adjacency lost with 10.0.0.1
+Mar 15 12:36:00 WARN bgp BGP route dampening applied
+"""
+
+BROCADE_LOG_EMPTY = "No log messages.\n"
 
 
 # ===========================================================================
@@ -698,3 +741,226 @@ class TestRunHealthCheck:
 
         assert result["checks"]["cpu"]["threshold"] == DEFAULT_CPU_THRESHOLD
         assert result["checks"]["memory"]["threshold"] == DEFAULT_MEM_THRESHOLD
+
+
+# ===========================================================================
+# parse_cpu_brocade
+# ===========================================================================
+
+
+class TestParseCpuBrocade:
+    def test_returns_dict(self):
+        assert isinstance(parse_cpu_brocade(BROCADE_CPU_OUTPUT), dict)
+
+    def test_all_fields_present(self):
+        result = parse_cpu_brocade(BROCADE_CPU_OUTPUT)
+        assert "one_second" in result
+        assert "five_seconds" in result
+        assert "one_minute" in result
+
+    def test_correct_values(self):
+        result = parse_cpu_brocade(BROCADE_CPU_OUTPUT)
+        assert result["one_second"] == 15.0
+        assert result["five_seconds"] == 12.0
+        assert result["one_minute"] == 8.0
+
+    def test_empty_returns_empty_dict(self):
+        assert parse_cpu_brocade(BROCADE_CPU_EMPTY) == {}
+
+    def test_blank_string_returns_empty_dict(self):
+        assert parse_cpu_brocade("") == {}
+
+
+# ===========================================================================
+# parse_memory_brocade
+# ===========================================================================
+
+
+class TestParseMemoryBrocade:
+    def test_returns_dict(self):
+        assert isinstance(parse_memory_brocade(BROCADE_MEM_OUTPUT), dict)
+
+    def test_all_fields_present(self):
+        result = parse_memory_brocade(BROCADE_MEM_OUTPUT)
+        for key in ("total", "used", "free", "utilization"):
+            assert key in result
+
+    def test_correct_values(self):
+        result = parse_memory_brocade(BROCADE_MEM_OUTPUT)
+        assert result["total"] == 1048576 * 1024
+        assert result["used"] == 512000 * 1024
+        assert result["free"] == 536576 * 1024
+
+    def test_utilization_is_percentage(self):
+        result = parse_memory_brocade(BROCADE_MEM_OUTPUT)
+        assert 0.0 <= result["utilization"] <= 100.0
+
+    def test_utilization_calculation(self):
+        result = parse_memory_brocade(BROCADE_MEM_OUTPUT)
+        expected = round(512000 / 1048576 * 100, 2)
+        assert result["utilization"] == expected
+
+    def test_empty_returns_empty_dict(self):
+        assert parse_memory_brocade(BROCADE_MEM_EMPTY) == {}
+
+    def test_blank_string_returns_empty_dict(self):
+        assert parse_memory_brocade("") == {}
+
+
+# ===========================================================================
+# parse_interface_errors_brocade
+# ===========================================================================
+
+
+class TestParseInterfaceErrorsBrocade:
+    def test_returns_list(self):
+        assert isinstance(parse_interface_errors_brocade(BROCADE_INTERFACES_OUTPUT), list)
+
+    def test_correct_interface_count(self):
+        result = parse_interface_errors_brocade(BROCADE_INTERFACES_OUTPUT)
+        assert len(result) == 2
+
+    def test_clean_interface_no_errors(self):
+        iface = parse_interface_errors_brocade(BROCADE_INTERFACES_OUTPUT)[0]
+        assert iface["name"] == "GigabitEthernet1/1/1"
+        assert iface["input_errors"] == 0
+        assert iface["crc"] == 0
+        assert iface["output_errors"] == 0
+        assert iface["drops"] == 0
+        assert iface["has_errors"] is False
+
+    def test_interface_with_errors(self):
+        iface = parse_interface_errors_brocade(BROCADE_INTERFACES_OUTPUT)[1]
+        assert iface["name"] == "GigabitEthernet1/1/2"
+        assert iface["input_errors"] == 7
+        assert iface["crc"] == 4
+        assert iface["output_errors"] == 2
+        assert iface["drops"] == 5
+        assert iface["has_errors"] is True
+
+    def test_required_keys_present(self):
+        for iface in parse_interface_errors_brocade(BROCADE_INTERFACES_OUTPUT):
+            for key in ("name", "input_errors", "output_errors", "crc", "drops", "has_errors"):
+                assert key in iface
+
+    def test_empty_input_returns_empty_list(self):
+        assert parse_interface_errors_brocade(BROCADE_INTERFACES_EMPTY) == []
+
+    def test_blank_string_returns_empty_list(self):
+        assert parse_interface_errors_brocade("") == []
+
+
+# ===========================================================================
+# parse_logs_brocade
+# ===========================================================================
+
+
+class TestParseLogsBrocade:
+    def test_returns_list(self):
+        assert isinstance(parse_logs_brocade(BROCADE_LOG_OUTPUT), list)
+
+    def test_correct_event_count(self):
+        # CRIT, ERR, WARN all match
+        events = parse_logs_brocade(BROCADE_LOG_OUTPUT)
+        assert len(events) == 3
+
+    def test_critical_normalised(self):
+        events = parse_logs_brocade(BROCADE_LOG_OUTPUT)
+        assert events[0]["severity"] == "CRITICAL"
+
+    def test_error_normalised(self):
+        events = parse_logs_brocade(BROCADE_LOG_OUTPUT)
+        assert events[1]["severity"] == "ERROR"
+
+    def test_warning_normalised(self):
+        events = parse_logs_brocade(BROCADE_LOG_OUTPUT)
+        assert events[2]["severity"] == "WARNING"
+
+    def test_event_fields(self):
+        events = parse_logs_brocade(BROCADE_LOG_OUTPUT)
+        for event in events:
+            for key in ("timestamp", "severity", "message"):
+                assert key in event
+
+    def test_empty_returns_empty_list(self):
+        assert parse_logs_brocade(BROCADE_LOG_EMPTY) == []
+
+    def test_blank_string_returns_empty_list(self):
+        assert parse_logs_brocade("") == []
+
+
+# ===========================================================================
+# check_* Brocade branches
+# ===========================================================================
+
+
+class TestCheckCpuBrocade:
+    def test_brocade_below_threshold(self):
+        conn = _MockConn({"show cpu": BROCADE_CPU_OUTPUT})
+        result = check_cpu(conn, "brocade_fastiron", threshold=80.0)
+        assert result["utilization"] == 8.0
+        assert result["alert"] is False
+
+    def test_brocade_nos_below_threshold(self):
+        conn = _MockConn({"show cpu": BROCADE_CPU_OUTPUT})
+        result = check_cpu(conn, "brocade_nos", threshold=80.0)
+        assert result["utilization"] == 8.0
+        assert result["alert"] is False
+
+    def test_brocade_threshold_included(self):
+        conn = _MockConn({"show cpu": BROCADE_CPU_OUTPUT})
+        result = check_cpu(conn, "brocade_fastiron", threshold=80.0)
+        assert result["threshold"] == 80.0
+
+
+class TestCheckMemoryBrocade:
+    def test_brocade_utilization(self):
+        conn = _MockConn({"show memory": BROCADE_MEM_OUTPUT})
+        result = check_memory(conn, "brocade_fastiron", threshold=85.0)
+        expected = round(512000 / 1048576 * 100, 2)
+        assert result["utilization"] == expected
+        assert result["alert"] is False
+
+    def test_brocade_threshold_included(self):
+        conn = _MockConn({"show memory": BROCADE_MEM_OUTPUT})
+        result = check_memory(conn, "brocade_fastiron", threshold=85.0)
+        assert result["threshold"] == 85.0
+
+
+class TestCheckInterfaceErrorsBrocade:
+    def test_brocade_no_errors(self):
+        clean = (
+            "GigabitEthernet1/1/1 is up, line protocol is up\n"
+            "  0 input errors, 0 CRC, 0 alignment errors, 0 runts, 0 giants\n"
+            "  0 output errors, 0 output discards\n"
+        )
+        conn = _MockConn({"show interfaces": clean})
+        result = check_interface_errors(conn, "brocade_fastiron")
+        assert result["with_errors"] == 0
+        assert result["alert"] is False
+
+    def test_brocade_errors_trigger_alert(self):
+        conn = _MockConn({"show interfaces": BROCADE_INTERFACES_OUTPUT})
+        result = check_interface_errors(conn, "brocade_fastiron")
+        assert result["with_errors"] == 1
+        assert result["alert"] is True
+
+
+class TestCheckLogsBrocade:
+    def test_brocade_critical_and_error_events(self):
+        conn = _MockConn({"show logging": BROCADE_LOG_OUTPUT})
+        result = check_logs(conn, "brocade_fastiron")
+        assert result["critical_count"] == 1   # CRITICAL
+        assert result["major_count"] == 1       # ERROR maps to major
+        assert result["alert"] is True
+
+    def test_brocade_no_alert_for_empty_log(self):
+        conn = _MockConn({"show logging": BROCADE_LOG_EMPTY})
+        result = check_logs(conn, "brocade_fastiron")
+        assert result["alert"] is False
+
+    def test_brocade_result_keys_present(self):
+        conn = _MockConn({"show logging": BROCADE_LOG_OUTPUT})
+        result = check_logs(conn, "brocade_fastiron")
+        for key in ("critical_count", "major_count", "events", "alert"):
+            assert key in result

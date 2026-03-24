@@ -40,3 +40,25 @@ devices:
     role: access
     site: office1
     groups: [switches, access, office1]
+
+  # Brocade FastIron/ICX router example
+  brocade-rtr-01:
+    host: 10.0.3.1
+    vendor: brocade_fastiron
+    role: core
+    site: dc1
+    groups: [routers, core, dc1, brocade]
+    tags:
+      environment: production
+      platform: ICX7550
+
+  # Brocade Network OS (VDX) switch example
+  brocade-vdx-01:
+    host: 10.0.3.2
+    vendor: brocade_nos
+    role: distribution
+    site: dc1
+    groups: [switches, distribution, dc1, brocade]
+    tags:
+      environment: production
+      platform: VDX6740

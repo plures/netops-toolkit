@@ -87,6 +87,21 @@ class TestIdentifyVendor:
     def test_fallback_oid_arista(self):
         assert identify_vendor("Linux", ".1.3.6.1.4.1.30065.1") == "arista_eos"
 
+    def test_fallback_oid_brocade_fastiron(self):
+        assert identify_vendor("Linux", ".1.3.6.1.4.1.1991.1") == "brocade_fastiron"
+
+    def test_fallback_oid_brocade_nos(self):
+        assert identify_vendor("Linux", ".1.3.6.1.4.1.1588.1") == "brocade_nos"
+
+    def test_brocade_fastiron_descr(self):
+        assert identify_vendor("Brocade FastIron ICX Switch") == "brocade_fastiron"
+
+    def test_brocade_foundry_descr(self):
+        assert identify_vendor("Foundry Networks FastIron GS") == "brocade_fastiron"
+
+    def test_brocade_nos_descr(self):
+        assert identify_vendor("Brocade Network OS VDX6740") == "brocade_nos"
+
     def test_case_insensitive(self):
         assert identify_vendor("CISCO IOS XE SOFTWARE") == "cisco_xe"
 
