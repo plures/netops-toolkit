@@ -397,6 +397,8 @@ This shows per-host ping results and SNMP errors.
 
 ## Integration with Inventory Management
 
+> **Full pipeline walkthrough:** [Auto-Inventory Generation Pipeline](auto-inventory.md) explains every stage from scan to Ansible — vendor detection, deduplication, vault integration, and more.
+
 After scanning, the fragment slots directly into your inventory workflow:
 
 ```bash

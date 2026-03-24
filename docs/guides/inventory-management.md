@@ -241,4 +241,4 @@ Instead of building your inventory by hand, you can scan a subnet to discover de
 python -m netops.inventory.scan --subnet 10.0.0.0/24 --merge my-inventory.yaml
 ```
 
-See the [Network Scanner Guide](scan.md) for full details.
+See the [Network Scanner Guide](scan.md) for full CLI details, and the [Auto-Inventory Generation Pipeline](auto-inventory.md) for a deep-dive into vendor detection, deduplication, vault integration, and the full scan-to-Ansible data flow.

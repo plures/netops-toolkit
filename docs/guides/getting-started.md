@@ -121,3 +121,4 @@ python -m netops.collect.config --host 10.0.0.1 --vendor cisco_ios --user admin
 - [Config Collector](config-collector.md) — back up configs from all your devices
 - [Interface Checker](interface-checker.md) — check what's up and what's down
 - [Inventory Management](inventory-management.md) — organize your devices into groups
+- [Auto-Inventory Pipeline](auto-inventory.md) — automatically discover devices via scan and feed them to Ansible
