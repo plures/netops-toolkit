@@ -12,6 +12,7 @@ Requires optional dependencies::
 """
 
 from netops.report.generator import ReportGenerator, default_output_filename, generate_report
+from netops.report.health_dashboard import aggregate_dashboard, format_table, render_html
 from netops.report.mailer import ReportMailer
 from netops.report.scheduler import ReportScheduler
 
@@ -21,4 +22,7 @@ __all__ = [
     "ReportScheduler",
     "generate_report",
     "default_output_filename",
+    "aggregate_dashboard",
+    "format_table",
+    "render_html",
 ]
