@@ -28,3 +28,8 @@ HEALTH = {
     "interface_errors": "show interfaces | include errors|drops|CRC",
     "log_errors": "show logging | include %",
 }
+
+VLAN = {
+    "vlan_brief": "show vlan brief",
+    "interfaces_trunk": "show interfaces trunk",
+}
