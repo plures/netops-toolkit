@@ -13,6 +13,7 @@ dependencies = [
     "netmiko>=4.3.0",
     "paramiko>=3.4.0",
     "pyyaml>=6.0",
+    "cryptography>=41.0.0",
 ]
 
 [project.optional-dependencies]
