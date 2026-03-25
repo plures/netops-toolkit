@@ -186,6 +186,7 @@ class ReportMailer:
 
     def _deliver(self, msg: MIMEMultipart, recipients: list[str]) -> None:
         """Open an SMTP connection and send *msg*."""
+        smtp_cls: type[smtplib.SMTP]
         if self.use_ssl:
             smtp_cls = smtplib.SMTP_SSL
         else:

@@ -95,7 +95,7 @@ def _run_commands(params: dict) -> list[str]:
     return outputs
 
 
-def run_module():
+def run_module() -> None:
     """Entry point called by Ansible."""
     from ansible.module_utils.basic import AnsibleModule  # type: ignore[import]
 
