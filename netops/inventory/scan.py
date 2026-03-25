@@ -774,6 +774,56 @@ def _parse_serial_from_inventory(output: str, vendor: str) -> str | None:
     return None
 
 
+def _score_result(r: dict) -> int:
+    """Score a scan result: 1 point per non-None field (version, model, serial)."""
+    return sum(1 for k in ("version", "model", "serial") if r.get(k))
+
+
+def _try_vendor_commands(conn, vendor: str) -> dict:
+    """Run a vendor's command set on an existing connection, return parsed results."""
+    commands = _DEEP_COMMANDS.get(vendor, _DEEP_COMMANDS["cisco_ios"])
+    r: dict = {"vendor": vendor, "version": None, "model": None, "serial": None}
+
+    try:
+        ver_output = conn.send(commands["version"])
+        parsed = _parse_version_generic(ver_output, vendor)
+        r["version"] = parsed.get("version")
+        r["model"] = parsed.get("model")
+        r["serial"] = parsed.get("serial")
+    except Exception as e:
+        logger.debug(f"    vendor={vendor} version cmd failed: {e}")
+
+    if not r["serial"]:
+        try:
+            inv_output = conn.send(commands["inventory"])
+            sn = _parse_serial_from_inventory(inv_output, vendor)
+            if sn:
+                r["serial"] = sn
+        except Exception as e:
+            logger.debug(f"    vendor={vendor} inventory cmd failed: {e}")
+
+    return r
+
+
+# Group vendors into families — once logged in with one, try all in the family
+_VENDOR_FAMILIES: dict[str, list[str]] = {
+    "cisco": ["cisco_ios", "cisco_xe", "cisco_xr", "cisco_nxos"],
+    "nokia": ["nokia_sros", "nokia_srl"],
+    "juniper": ["juniper_junos"],
+    "arista": ["arista_eos"],
+    "brocade": ["brocade_fastiron", "brocade_nos"],
+}
+
+
+def _get_family_vendors(vendor: str) -> list[str]:
+    """Return all vendors in the same family, with *vendor* first."""
+    for family_vendors in _VENDOR_FAMILIES.values():
+        if vendor in family_vendors:
+            others = [v for v in family_vendors if v != vendor]
+            return [vendor] + others
+    return [vendor]
+
+
 def _deep_scan_host(
     host: str,
     username: str,
@@ -782,6 +832,10 @@ def _deep_scan_host(
     timeout: int = 15,
 ) -> dict:
     """SSH into a host, auto-detect vendor if needed, pull version+serial.
+
+    Once connected, tries command sets from all vendors in the same family
+    (e.g. cisco_ios, cisco_xe, cisco_xr, cisco_nxos) and keeps whichever
+    produces the most complete result (version + model + serial).
 
     Returns dict with keys: vendor, version, model, serial, error.
     """
@@ -795,11 +849,10 @@ def _deep_scan_host(
         "error": None,
     }
 
-    # --- Step 1: Determine vendor ---
+    # --- Step 1: Determine vendor for login ---
     if known_vendor and known_vendor != "unknown":
         vendors_to_try = [known_vendor]
     else:
-        # Try netmiko autodetect first
         try:
             from netmiko import SSHDetect
 
@@ -822,43 +875,52 @@ def _deep_scan_host(
             logger.debug(f"  {host}: autodetect failed ({e}), trying probe order")
             vendors_to_try = list(_VENDOR_PROBE_ORDER)
 
-    # --- Step 2: Connect and collect ---
-    for vendor in vendors_to_try:
+    # --- Step 2: Connect, then try all vendor command sets in the family ---
+    for login_vendor in vendors_to_try:
         try:
             params = ConnectionParams(
                 host=host,
                 username=username,
                 password=password,
-                device_type=vendor,
+                device_type=login_vendor,
                 timeout=timeout,
             )
             with DeviceConnection(params) as conn:
-                result["vendor"] = vendor
-                commands = _DEEP_COMMANDS.get(vendor, _DEEP_COMMANDS["cisco_ios"])
+                logger.info(f"  {host}: connected as {login_vendor}")
 
-                # show version
-                try:
-                    ver_output = conn.send(commands["version"])
-                    parsed = _parse_version_generic(ver_output, vendor)
-                    result["version"] = parsed.get("version")
-                    result["model"] = parsed.get("model")
-                    if parsed.get("serial"):
-                        result["serial"] = parsed["serial"]
-                except Exception as e:
-                    logger.debug(f"  {host}: version command failed: {e}")
+                family_vendors = _get_family_vendors(login_vendor)
+                best_result = None
+                best_score = -1
 
-                # show inventory / chassis
-                if not result["serial"]:
+                for cmd_vendor in family_vendors:
+                    logger.debug(f"  {host}: trying command set for {cmd_vendor}")
                     try:
-                        inv_output = conn.send(commands["inventory"])
-                        sn = _parse_serial_from_inventory(inv_output, vendor)
-                        if sn:
-                            result["serial"] = sn
+                        candidate = _try_vendor_commands(conn, cmd_vendor)
+                        score = _score_result(candidate)
+                        logger.info(
+                            f"  {host}: vendor={cmd_vendor} → "
+                            f"version={candidate['version']}, model={candidate['model']}, "
+                            f"serial={candidate['serial']} (score={score}/3)"
+                        )
+                        if score > best_score:
+                            best_score = score
+                            best_result = candidate
+                        if score == 3:
+                            break
                     except Exception as e:
-                        logger.debug(f"  {host}: inventory command failed: {e}")
+                        logger.debug(f"  {host}: command set {cmd_vendor} error: {e}")
+                        continue
+
+                if best_result:
+                    result["vendor"] = best_result["vendor"]
+                    result["version"] = best_result["version"]
+                    result["model"] = best_result["model"]
+                    result["serial"] = best_result["serial"]
+                else:
+                    result["vendor"] = login_vendor
 
                 logger.info(
-                    f"  {host}: vendor={vendor}, version={result['version']}, "
+                    f"  {host}: FINAL vendor={result['vendor']}, version={result['version']}, "
                     f"model={result['model']}, serial={result['serial']}"
                 )
                 return result
