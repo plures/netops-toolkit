@@ -1016,7 +1016,7 @@ def _deep_scan_host(
 
     Returns dict with keys: vendor, version, model, serial, error.
     """
-    from netops.core.connection import ConnectionParams, DeviceConnection, Transport
+    from netops.core.connection import ConnectionParams, DeviceConnection
 
     result: dict = {
         "vendor": known_vendor,
