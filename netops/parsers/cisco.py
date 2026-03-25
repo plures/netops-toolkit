@@ -246,3 +246,75 @@ def parse_version_cisco(output: str) -> dict:
                 result["image"] = image_match.group(1)
 
     return result
+
+
+def parse_inventory_cisco(output: str) -> list[dict]:
+    """Parse ``show inventory`` output from Cisco IOS/NX-OS/IOS-XE.
+
+    Returns a list of dicts, each with:
+
+    * ``name``   – component name (e.g. "Chassis", "Slot 1")
+    * ``descr``  – description string
+    * ``pid``    – product ID
+    * ``vid``    – version ID
+    * ``sn``     – serial number
+
+    Example input::
+
+        NAME: "Chassis", DESCR: "Nexus 9000 Series Chassis"
+        PID: N9K-C93180YC-FX3, VID: V01, SN: FDO23456789
+    """
+    entries: list[dict] = []
+    current_name = None
+    current_descr = None
+
+    for line in output.splitlines():
+        # NAME: "...", DESCR: "..."
+        name_match = re.match(
+            r'^NAME:\s*"([^"]*)".*?DESCR:\s*"([^"]*)"', line, re.IGNORECASE
+        )
+        if name_match:
+            current_name = name_match.group(1)
+            current_descr = name_match.group(2)
+            continue
+
+        # PID: ..., VID: ..., SN: ...
+        pid_match = re.match(
+            r"^PID:\s*(\S*)\s*,\s*VID:\s*(\S*)\s*,\s*SN:\s*(\S*)", line, re.IGNORECASE
+        )
+        if pid_match and current_name is not None:
+            entries.append({
+                "name": current_name,
+                "descr": current_descr or "",
+                "pid": pid_match.group(1),
+                "vid": pid_match.group(2),
+                "sn": pid_match.group(3),
+            })
+            current_name = None
+            current_descr = None
+
+    return entries
+
+
+def parse_serial_cisco(output: str) -> str | None:
+    """Extract the chassis serial number from ``show inventory`` output.
+
+    Returns the serial number string for the first entry whose name contains
+    "chassis" (case-insensitive), or the first entry if no chassis is found.
+    Returns ``None`` if parsing fails.
+    """
+    entries = parse_inventory_cisco(output)
+    if not entries:
+        return None
+
+    # Prefer the chassis entry
+    for e in entries:
+        if "chassis" in e["name"].lower() and e["sn"]:
+            return e["sn"]
+
+    # Fall back to first entry with a serial
+    for e in entries:
+        if e["sn"]:
+            return e["sn"]
+
+    return None
