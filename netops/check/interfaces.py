@@ -82,6 +82,7 @@ def check_interfaces(params: ConnectionParams, down_only: bool = False) -> dict:
 
 
 def main():
+    """CLI entry point for the interface status checker."""
     parser = argparse.ArgumentParser(description="Check interface status")
     parser.add_argument("--host", required=True)
     parser.add_argument("--vendor", default="cisco_ios")

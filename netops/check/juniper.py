@@ -572,6 +572,7 @@ def _print_result(result: dict) -> None:
 
 
 def main() -> None:
+    """CLI entry point for JunOS health checks."""
     parser = argparse.ArgumentParser(
         description="JunOS health checks — RE CPU/mem, FPC, interfaces, BGP, OSPF, alarms, environment"
     )

@@ -327,6 +327,7 @@ def get_host_vars(
 
 
 def main(argv: list[str] | None = None) -> int:
+    """CLI entry point for the Ansible dynamic inventory script."""
     import argparse
 
     parser = argparse.ArgumentParser(

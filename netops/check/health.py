@@ -354,6 +354,7 @@ def _print_result(result: dict) -> None:
 
 
 def main() -> None:
+    """CLI entry point for composable device health checks."""
     parser = argparse.ArgumentParser(
         description="Run composable health checks (CPU, memory, interface errors, logs)"
     )

@@ -299,6 +299,7 @@ def run_backup(
 
 
 def main():
+    """CLI entry point for bulk configuration backup."""
     parser = argparse.ArgumentParser(
         description="Bulk configuration backup with diff tracking"
     )

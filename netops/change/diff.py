@@ -453,14 +453,17 @@ class DiffResult:
 
     @property
     def added(self) -> list[DiffEntry]:
+        """Return only entries representing newly added lines."""
         return [e for e in self.entries if e.kind == ChangeKind.ADDED]
 
     @property
     def removed(self) -> list[DiffEntry]:
+        """Return only entries representing removed lines."""
         return [e for e in self.entries if e.kind == ChangeKind.REMOVED]
 
     @property
     def changed(self) -> list[DiffEntry]:
+        """Return only entries representing modified lines."""
         return [e for e in self.entries if e.kind == ChangeKind.CHANGED]
 
 
@@ -624,8 +627,8 @@ def format_json(result: DiffResult) -> str:
 
 
 def main() -> None:
+    """CLI entry point for the semantic config diff engine."""
     parser = argparse.ArgumentParser(
-        description="Semantic config diff engine — understands network config structure.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:

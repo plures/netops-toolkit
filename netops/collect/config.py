@@ -51,6 +51,7 @@ def collect_config(params: ConnectionParams) -> dict:
 
 
 def main():
+    """CLI entry point for device configuration collection."""
     parser = argparse.ArgumentParser(description="Collect device configurations")
     parser.add_argument("--inventory", "-i", help="Inventory file (YAML/JSON)")
     parser.add_argument("--group", "-g", help="Inventory group to target")

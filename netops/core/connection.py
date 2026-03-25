@@ -16,12 +16,16 @@ logger = logging.getLogger(__name__)
 
 
 class Transport(Enum):
+    """Supported connection transports for device communication."""
+
     SSH = "ssh"
     SSH2 = "ssh2"  # Legacy SSH implementations
     TELNET = "telnet"
 
 
 class AuthMethod(Enum):
+    """Authentication mechanisms accepted when connecting to a device."""
+
     PASSWORD = "password"
     KEY = "key"
     KEY_PASSWORD = "key_password"  # Key + passphrase
@@ -45,6 +49,7 @@ class ConnectionParams:
 
     @property
     def effective_port(self) -> int:
+        """Return the resolved TCP port (explicit override, or 23 for Telnet, 22 otherwise)."""
         if self.port:
             return self.port
         return 23 if self.transport == Transport.TELNET else 22

@@ -681,6 +681,7 @@ def _build_arg_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Optional[list[str]] = None) -> int:
+    """CLI entry point for Arista EOS health checks."""
     parser = _build_arg_parser()
     args = parser.parse_args(argv)
 
