@@ -5,6 +5,8 @@ Usage:
     python -m netops.inventory.scan --subnet 10.0.0.0/24 --community public
     python -m netops.inventory.scan --subnet 10.0.0.0/24 --output fragment.json
     python -m netops.inventory.scan --subnet 10.0.0.0/24 --merge existing.yaml
+    python -m netops.inventory.scan --csv hosts.csv --deep --user admin
+    python -m netops.inventory.scan --hosts-file ips.txt --deep --user admin
 """
 
 from __future__ import annotations
@@ -12,7 +14,9 @@ from __future__ import annotations
 import argparse
 import asyncio
 import concurrent.futures
+import csv
 import ipaddress
+import io
 import json
 import logging
 import platform
@@ -20,7 +24,7 @@ import subprocess
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -1198,6 +1202,59 @@ def deep_enrich(
     )
     return fragment
 
+def _parse_hosts_file(path: str) -> List[str]:
+    """Parse a CSV or plain-text file of IPs/hostnames.
+
+    Supported formats:
+    - CSV with 'ip', 'host', 'hostname', or 'address' column header
+    - CSV with no header (first column treated as IP/host)
+    - Plain text: one IP or hostname per line (comments with #, blank lines skipped)
+    """
+    text = Path(path).read_text(encoding="utf-8-sig")  # utf-8-sig strips BOM
+    lines = text.strip().splitlines()
+    if not lines:
+        return []
+
+    # Detect CSV by checking for comma or common header names
+    first_line = lines[0].strip().lower()
+    csv_headers = {"ip", "host", "hostname", "address", "ip_address", "target", "device"}
+
+    if "," in first_line or first_line in csv_headers:
+        reader = csv.DictReader(io.StringIO(text))
+        if reader.fieldnames:
+            # Find the best column
+            fields_lower = {f.strip().lower(): f for f in reader.fieldnames}
+            col = None
+            for candidate in ("ip", "ip_address", "address", "host", "hostname", "target", "device"):
+                if candidate in fields_lower:
+                    col = fields_lower[candidate]
+                    break
+            if col:
+                hosts = []
+                for row in reader:
+                    val = (row.get(col) or "").strip()
+                    if val and not val.startswith("#"):
+                        hosts.append(val)
+                return hosts
+        # Fallback: no recognized header — re-read as plain CSV, first column
+        reader2 = csv.reader(io.StringIO(text))
+        hosts = []
+        for row in reader2:
+            if row:
+                val = row[0].strip()
+                if val and not val.startswith("#"):
+                    hosts.append(val)
+        return hosts
+
+    # Plain text: one per line
+    hosts = []
+    for line in lines:
+        val = line.strip().split("#")[0].strip()  # strip inline comments
+        if val:
+            hosts.append(val)
+    return hosts
+
+
 def main():
     """CLI entry point for the network device discovery scanner."""
     parser = argparse.ArgumentParser(
@@ -1206,11 +1263,21 @@ def main():
         epilog="""Examples:
   python -m netops.inventory.scan --subnet 10.0.0.0/24
   python -m netops.inventory.scan --subnet 10.0.0.0/24 --community public
+  python -m netops.inventory.scan --csv hosts.csv --deep --user admin
+  python -m netops.inventory.scan --hosts-file ips.txt --deep --user admin
   python -m netops.inventory.scan --subnet 10.0.0.0/24 --output fragment.json
   python -m netops.inventory.scan --subnet 10.0.0.0/24 --merge existing.yaml
 """,
     )
-    parser.add_argument("--subnet", required=True, help="Subnet in CIDR notation (e.g. 10.0.0.0/24)")
+    parser.add_argument("--subnet", help="Subnet in CIDR notation (e.g. 10.0.0.0/24)")
+    parser.add_argument(
+        "--csv", dest="hosts_file_csv",
+        help="CSV file with IPs/hostnames (columns: ip, host, hostname, or address)",
+    )
+    parser.add_argument(
+        "--hosts-file",
+        help="Plain text file with one IP/hostname per line (also accepts CSV)",
+    )
     parser.add_argument(
         "--community", default="public", help="SNMPv2c community string (default: public)"
     )
@@ -1270,18 +1337,37 @@ def main():
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
 
-    results = scan_subnet(
-        subnet=args.subnet,
-        community=args.community,
-        snmp_port=args.snmp_port,
-        snmp_timeout=args.snmp_timeout,
-        ping_workers=args.ping_workers,
-        snmp_concurrency=args.snmp_concurrency,
-        skip_ping=args.skip_ping,
-        skip_snmp=args.skip_snmp,
-    )
+    # Determine scan targets: --subnet, --csv, or --hosts-file
+    hosts_file = args.hosts_file_csv or args.hosts_file
+    if not args.subnet and not hosts_file:
+        parser.error("one of --subnet, --csv, or --hosts-file is required")
+    if args.subnet and hosts_file:
+        parser.error("--subnet cannot be combined with --csv / --hosts-file")
 
-    fragment = results_to_inventory_fragment(results)
+    if hosts_file:
+        # File-based scan: parse hosts, build ScanResult for each, skip subnet sweep
+        host_list = _parse_hosts_file(hosts_file)
+        if not host_list:
+            parser.error(f"no hosts found in {hosts_file}")
+        print(
+            f"📋 Loaded {len(host_list)} hosts from {hosts_file}",
+            file=sys.stderr,
+        )
+        # Create minimal ScanResults — mark all as reachable (file implies intent to scan)
+        results = [ScanResult(host=h, reachable=True) for h in host_list]
+        fragment = results_to_inventory_fragment(results)
+    else:
+        results = scan_subnet(
+            subnet=args.subnet,
+            community=args.community,
+            snmp_port=args.snmp_port,
+            snmp_timeout=args.snmp_timeout,
+            ping_workers=args.ping_workers,
+            snmp_concurrency=args.snmp_concurrency,
+            skip_ping=args.skip_ping,
+            skip_snmp=args.skip_snmp,
+        )
+        fragment = results_to_inventory_fragment(results)
 
     # Deep scan enrichment (SSH login for vendor/version/serial/model)
     if args.deep:
