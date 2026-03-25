@@ -610,6 +610,346 @@ def merge_inventory(existing_path: str, fragment: dict) -> dict:
 # ---------------------------------------------------------------------------
 
 
+
+# ---------------------------------------------------------------------------
+# Deep scan — SSH login to enrich inventory with vendor, version, serial, model
+# ---------------------------------------------------------------------------
+
+# Vendor-specific show commands for deep scan enrichment
+_DEEP_COMMANDS: dict[str, dict[str, str]] = {
+    "cisco_ios": {
+        "version": "show version",
+        "inventory": "show inventory",
+    },
+    "cisco_nxos": {
+        "version": "show version",
+        "inventory": "show inventory",
+    },
+    "cisco_xe": {
+        "version": "show version",
+        "inventory": "show inventory",
+    },
+    "cisco_xr": {
+        "version": "show version",
+        "inventory": "show inventory",
+    },
+    "nokia_sros": {
+        "version": "show version",
+        "inventory": "show chassis detail",
+    },
+    "nokia_srl": {
+        "version": "info from state /system/information",
+        "inventory": "info from state /platform/chassis",
+    },
+    "juniper_junos": {
+        "version": "show version",
+        "inventory": "show chassis hardware",
+    },
+    "arista_eos": {
+        "version": "show version",
+        "inventory": "show inventory",
+    },
+    "brocade_fastiron": {
+        "version": "show version",
+        "inventory": "show inventory",
+    },
+    "brocade_nos": {
+        "version": "show version",
+        "inventory": "show inventory",
+    },
+}
+
+# Vendor types to try during auto-detection (most common first)
+_VENDOR_PROBE_ORDER: list[str] = [
+    "cisco_ios",
+    "cisco_nxos",
+    "nokia_sros",
+    "juniper_junos",
+    "arista_eos",
+    "cisco_xe",
+    "cisco_xr",
+    "nokia_srl",
+    "brocade_fastiron",
+    "brocade_nos",
+]
+
+
+def _parse_version_generic(output: str, vendor: str) -> dict:
+    """Extract version, model, and serial from show version output.
+
+    Works across vendors by looking for common patterns.
+    Returns dict with keys: version, model, serial (any may be None).
+    """
+    import re
+
+    result: dict = {"version": None, "model": None, "serial": None}
+
+    for line in output.splitlines():
+        # Version patterns
+        if result["version"] is None:
+            # Cisco: "Version 15.2(4)E8" or "system:  version 10.3(4a)"
+            ver = re.search(r"\bVersion\s+([\d().a-zA-Z]+)", line, re.IGNORECASE)
+            if ver:
+                result["version"] = ver.group(1)
+            # Nokia TiMOS: "TiMOS-B-22.10.R3"
+            timos = re.search(r"TiMOS-\S+-([\d.]+\S*)", line)
+            if timos:
+                result["version"] = timos.group(1)
+            # Juniper: "Junos: 22.4R2.8"
+            junos = re.search(r"Junos:\s+(\S+)", line)
+            if junos:
+                result["version"] = junos.group(1)
+            # Arista: "Software image version: 4.29.2F"
+            eos = re.search(r"image version:\s+(\S+)", line, re.IGNORECASE)
+            if eos:
+                result["version"] = eos.group(1)
+
+        # Model/platform patterns
+        if result["model"] is None:
+            # Cisco: "cisco WS-C3750X-48P (PowerPC405) processor"
+            plat = re.match(r"^[Cc]isco\s+(\S+)\s+.*processor", line)
+            if plat:
+                result["model"] = plat.group(1)
+            # Cisco NX-OS: "Hardware\n  cisco Nexus9000..."
+            nxos = re.match(r"^\s*cisco\s+(Nexus\S+|N\d\S+)", line, re.IGNORECASE)
+            if nxos:
+                result["model"] = nxos.group(1)
+            # Nokia: "7250 IXR" or "7750 SR"
+            nokia = re.search(r"\b(7\d{3}\s+\S+)", line)
+            if nokia and "nokia" in vendor.lower():
+                result["model"] = nokia.group(1)
+            # Juniper: "Model: mx240"
+            junmod = re.search(r"^Model:\s+(\S+)", line, re.IGNORECASE)
+            if junmod:
+                result["model"] = junmod.group(1)
+            # Arista: "Hardware version: ..."  or "Arista DCS-..."
+            ari = re.search(r"Arista\s+(DCS-\S+)", line)
+            if ari:
+                result["model"] = ari.group(1)
+
+        # Serial number patterns (from show version)
+        if result["serial"] is None:
+            # Cisco: "Processor board ID FOC12345678"
+            bid = re.search(r"Processor board ID\s+(\S+)", line)
+            if bid:
+                result["serial"] = bid.group(1)
+            # Cisco NX-OS: "Processor Board ID SAL..."
+            nbid = re.search(r"Processor Board ID\s+(\S+)", line, re.IGNORECASE)
+            if nbid:
+                result["serial"] = nbid.group(1)
+            # Juniper: "Chassis serial number"
+            jser = re.search(r"Chassis\s+\S+\s+\S+\s+\S+\s+(\S+)", line)
+            if jser and "juniper" in vendor.lower():
+                result["serial"] = jser.group(1)
+            # Arista: "Serial number: ..."
+            aser = re.search(r"Serial number:\s+(\S+)", line, re.IGNORECASE)
+            if aser:
+                result["serial"] = aser.group(1)
+
+    return result
+
+
+def _parse_serial_from_inventory(output: str, vendor: str) -> str | None:
+    """Extract chassis serial from show inventory / show chassis output."""
+    import re
+
+    # Cisco-style: PID: ..., VID: ..., SN: ...
+    for line in output.splitlines():
+        sn_match = re.search(r"\bSN:\s*(\S+)", line)
+        if sn_match and sn_match.group(1):
+            return sn_match.group(1)
+
+    # Nokia: "Serial number  : NS..."
+    for line in output.splitlines():
+        nokia_sn = re.search(r"Serial number\s*:\s*(\S+)", line, re.IGNORECASE)
+        if nokia_sn:
+            return nokia_sn.group(1)
+
+    # Juniper: "Chassis  ... REV ... <serial>"
+    for line in output.splitlines():
+        jun_sn = re.search(r"^Chassis\s+\S+\s+\S+\s+\S+\s+(\S+)", line)
+        if jun_sn:
+            return jun_sn.group(1)
+
+    return None
+
+
+def _deep_scan_host(
+    host: str,
+    username: str,
+    password: str,
+    known_vendor: str | None = None,
+    timeout: int = 15,
+) -> dict:
+    """SSH into a host, auto-detect vendor if needed, pull version+serial.
+
+    Returns dict with keys: vendor, version, model, serial, error.
+    """
+    from netops.core.connection import ConnectionParams, DeviceConnection, Transport
+
+    result: dict = {
+        "vendor": known_vendor,
+        "version": None,
+        "model": None,
+        "serial": None,
+        "error": None,
+    }
+
+    # --- Step 1: Determine vendor ---
+    if known_vendor and known_vendor != "unknown":
+        vendors_to_try = [known_vendor]
+    else:
+        # Try netmiko autodetect first
+        try:
+            from netmiko import SSHDetect
+
+            detect = SSHDetect(
+                device_type="autodetect",
+                host=host,
+                username=username,
+                password=password,
+                timeout=timeout,
+            )
+            best = detect.autodetect()
+            detect.connection.disconnect()
+            if best and best != "autodetect":
+                vendors_to_try = [best]
+                result["vendor"] = best
+                logger.info(f"  {host}: auto-detected vendor={best}")
+            else:
+                vendors_to_try = list(_VENDOR_PROBE_ORDER)
+        except Exception as e:
+            logger.debug(f"  {host}: autodetect failed ({e}), trying probe order")
+            vendors_to_try = list(_VENDOR_PROBE_ORDER)
+
+    # --- Step 2: Connect and collect ---
+    for vendor in vendors_to_try:
+        try:
+            params = ConnectionParams(
+                host=host,
+                username=username,
+                password=password,
+                device_type=vendor,
+                timeout=timeout,
+            )
+            with DeviceConnection(params) as conn:
+                result["vendor"] = vendor
+                commands = _DEEP_COMMANDS.get(vendor, _DEEP_COMMANDS["cisco_ios"])
+
+                # show version
+                try:
+                    ver_output = conn.send(commands["version"])
+                    parsed = _parse_version_generic(ver_output, vendor)
+                    result["version"] = parsed.get("version")
+                    result["model"] = parsed.get("model")
+                    if parsed.get("serial"):
+                        result["serial"] = parsed["serial"]
+                except Exception as e:
+                    logger.debug(f"  {host}: version command failed: {e}")
+
+                # show inventory / chassis
+                if not result["serial"]:
+                    try:
+                        inv_output = conn.send(commands["inventory"])
+                        sn = _parse_serial_from_inventory(inv_output, vendor)
+                        if sn:
+                            result["serial"] = sn
+                    except Exception as e:
+                        logger.debug(f"  {host}: inventory command failed: {e}")
+
+                logger.info(
+                    f"  {host}: vendor={vendor}, version={result['version']}, "
+                    f"model={result['model']}, serial={result['serial']}"
+                )
+                return result
+
+        except Exception as e:
+            logger.debug(f"  {host}: vendor={vendor} failed: {e}")
+            continue
+
+    result["error"] = "Could not connect with any vendor type"
+    return result
+
+
+def deep_enrich(
+    fragment: dict,
+    username: str,
+    password: str,
+    concurrency: int = 5,
+    timeout: int = 15,
+) -> dict:
+    """Enrich an inventory fragment with SSH-gathered details.
+
+    Connects to each device in the fragment, auto-detects vendor if unknown,
+    and updates vendor, version, model, serial in-place.
+
+    Args:
+        fragment: Inventory fragment (``{"devices": {...}}``).
+        username: SSH username for all devices.
+        password: SSH password for all devices.
+        concurrency: Max parallel SSH sessions.
+        timeout: Per-device connection timeout in seconds.
+
+    Returns:
+        The enriched fragment (modified in-place and returned).
+    """
+    devices = fragment.get("devices", {})
+    if not devices:
+        return fragment
+
+    enriched = 0
+    failed = 0
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=concurrency) as pool:
+        futures = {}
+        for name, info in devices.items():
+            host = info.get("host", name)
+            known_vendor = info.get("vendor")
+            if known_vendor == "unknown":
+                known_vendor = None
+            fut = pool.submit(
+                _deep_scan_host, host, username, password, known_vendor, timeout
+            )
+            futures[fut] = (name, info)
+
+        for fut in concurrent.futures.as_completed(futures):
+            name, info = futures[fut]
+            try:
+                result = fut.result()
+                updated = False
+
+                if result.get("vendor") and info.get("vendor", "unknown") == "unknown":
+                    info["vendor"] = result["vendor"]
+                    updated = True
+
+                tags = info.setdefault("tags", {})
+                if result.get("version") and not tags.get("version"):
+                    tags["version"] = result["version"]
+                    updated = True
+                if result.get("model") and not tags.get("model"):
+                    tags["model"] = result["model"]
+                    updated = True
+                if result.get("serial") and not tags.get("serial"):
+                    tags["serial"] = result["serial"]
+                    updated = True
+
+                if updated:
+                    enriched += 1
+                    logger.info(f"Enriched {name}: {result}")
+                if result.get("error"):
+                    failed += 1
+
+            except Exception as e:
+                logger.warning(f"Deep scan failed for {name}: {e}")
+                failed += 1
+
+    print(
+        f"🔬 Deep scan: {enriched} enriched, {failed} failed, "
+        f"{len(devices) - enriched - failed} unchanged",
+        file=sys.stderr,
+    )
+    return fragment
+
 def main():
     parser = argparse.ArgumentParser(
         description="Discover devices on a subnet via ping sweep + SNMP/CDP/LLDP",
@@ -653,6 +993,27 @@ def main():
         help="Skip SNMP identification — perform a ping sweep only",
     )
     parser.add_argument("--verbose", "-v", action="store_true", help="Enable debug logging")
+    parser.add_argument(
+        "--deep",
+        action="store_true",
+        help="SSH into discovered hosts to detect vendor, version, model, and serial number",
+    )
+    parser.add_argument("--user", "-u", help="SSH username for deep scan")
+    parser.add_argument(
+        "--password", help="SSH password for deep scan (or set NETOPS_PASSWORD env var)"
+    )
+    parser.add_argument(
+        "--ssh-timeout",
+        type=int,
+        default=15,
+        help="Per-host SSH timeout in seconds for deep scan (default: 15)",
+    )
+    parser.add_argument(
+        "--ssh-concurrency",
+        type=int,
+        default=5,
+        help="Max parallel SSH sessions for deep scan (default: 5)",
+    )
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -672,6 +1033,30 @@ def main():
     )
 
     fragment = results_to_inventory_fragment(results)
+
+    # Deep scan enrichment (SSH login for vendor/version/serial/model)
+    if args.deep:
+        import os as _os
+
+        deep_user = args.user
+        deep_pass = args.password or _os.environ.get("NETOPS_PASSWORD")
+        if not deep_user:
+            parser.error("--deep requires --user (SSH username)")
+        if not deep_pass:
+            parser.error("--deep requires --password or NETOPS_PASSWORD env var")
+        reachable_n = sum(1 for r in results if r.reachable)
+        print(
+            f"🔬 Starting deep scan of {reachable_n} hosts "
+            f"({args.ssh_concurrency} parallel sessions)...",
+            file=sys.stderr,
+        )
+        fragment = deep_enrich(
+            fragment,
+            username=deep_user,
+            password=deep_pass,
+            concurrency=args.ssh_concurrency,
+            timeout=args.ssh_timeout,
+        )
 
     reachable_count = sum(1 for r in results if r.reachable)
     snmp_count = sum(1 for r in results if r.sys_descr)
