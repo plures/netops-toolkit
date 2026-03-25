@@ -290,6 +290,7 @@ def _print_summary(record: ChangeRecord) -> None:
 
 
 def main() -> None:
+    """CLI entry point for safe config-push with pre/post diff and optional auto-rollback."""
     parser = argparse.ArgumentParser(
         description="Push config changes safely with pre/post diff and auto-rollback."
     )

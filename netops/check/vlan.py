@@ -383,6 +383,7 @@ def _parse_vlan_db(path: str) -> tuple[set[int], dict[int, str]]:
 
 
 def main() -> None:
+    """CLI entry point for the VLAN configuration auditor."""
     parser = argparse.ArgumentParser(
         description="Audit VLAN configurations: compare declared vs actual across switches"
     )

@@ -39,6 +39,7 @@ class Device:
     role: Optional[str] = None  # core, distribution, access, edge
 
     def to_dict(self) -> dict:
+        """Return a dict representation of the device, omitting ``None`` fields."""
         return {k: v for k, v in asdict(self).items() if v is not None}
 
 
@@ -59,11 +60,13 @@ class Inventory:
         self.defaults: dict = {}  # Default connection params
 
     def add(self, device: Device):
+        """Add *device* to the inventory, registering it under all its groups."""
         self.devices[device.hostname] = device
         for group in device.groups:
             self.groups.setdefault(group, []).append(device.hostname)
 
     def get(self, hostname: str) -> Optional[Device]:
+        """Look up a device by hostname; returns ``None`` if not found."""
         return self.devices.get(hostname)
 
     def filter(self, group: str = None, vendor: str = None,

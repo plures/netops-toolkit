@@ -379,6 +379,7 @@ def _print_health(result: dict) -> None:
 
 
 def main() -> None:
+    """CLI entry point for the Palo Alto PAN-OS security policy auditor."""
     parser = argparse.ArgumentParser(
         description="Palo Alto PAN-OS security policy audit and health checks"
     )

@@ -364,6 +364,7 @@ def _print_summary(record: RollbackRecord) -> None:
 
 
 def main() -> None:
+    """CLI entry point for config push with health-validated auto-rollback."""
     parser = argparse.ArgumentParser(
         description=(
             "Push config changes with pre/post health validation and auto-rollback."

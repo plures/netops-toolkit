@@ -97,6 +97,7 @@ class DeviceRole(str, Enum):
     # Numeric weight used when computing the risk score (higher = more risky).
     @property
     def weight(self) -> int:
+        """Return the numeric risk weight for this role (higher value = greater risk)."""
         return {
             DeviceRole.ACCESS: 1,
             DeviceRole.DISTRIBUTION: 2,
@@ -761,6 +762,7 @@ def _handle_apply_command(args: argparse.Namespace) -> None:
 
 
 def main() -> None:
+    """CLI entry point for the change-plan generator and applier."""
     parser = _build_parser()
     args = parser.parse_args()
 

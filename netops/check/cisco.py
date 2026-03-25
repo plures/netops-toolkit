@@ -538,6 +538,7 @@ def _print_result(result: dict) -> None:
 
 
 def main() -> None:
+    """CLI entry point for Cisco IOS/IOS-XE health checks."""
     parser = argparse.ArgumentParser(
         description="Cisco IOS/IOS-XE health checks (CPU, memory, interfaces, BGP, OSPF, env)"
     )

@@ -506,6 +506,7 @@ def _build_parser():
 
 
 def main(argv=None) -> int:
+    """CLI entry point for the credential vault management tool."""
     parser = _build_parser()
     args = parser.parse_args(argv)
 

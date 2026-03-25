@@ -632,6 +632,7 @@ def _handle_generate(args: argparse.Namespace) -> None:
 
 
 def main() -> None:
+    """CLI entry point for the remediation playbook generator."""
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     parser = _build_parser()
     args = parser.parse_args()

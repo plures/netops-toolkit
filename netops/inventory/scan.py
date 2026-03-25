@@ -444,6 +444,7 @@ async def _scan_subnet_async(
     sem = asyncio.Semaphore(snmp_concurrency)
 
     async def bounded_scan(host: str) -> ScanResult:
+        """Scan a single host, respecting the global SNMP concurrency semaphore."""
         async with sem:
             try:
                 return await _scan_host_async(engine, host, community, snmp_port, snmp_timeout)
@@ -459,6 +460,7 @@ async def _scan_subnet_async(
     results: list[ScanResult] = []
 
     async def worker() -> None:
+        """Async queue worker that processes hosts from the scan queue until it receives a sentinel."""
         while True:
             host = await queue.get()
             if host is None:
@@ -1197,6 +1199,7 @@ def deep_enrich(
     return fragment
 
 def main():
+    """CLI entry point for the network device discovery scanner."""
     parser = argparse.ArgumentParser(
         description="Discover devices on a subnet via ping sweep + SNMP/CDP/LLDP",
         formatter_class=argparse.RawDescriptionHelpFormatter,

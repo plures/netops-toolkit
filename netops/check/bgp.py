@@ -355,6 +355,7 @@ def _parse_expected_prefixes(raw: Optional[str]) -> dict[str, int]:
 
 
 def main() -> None:
+    """CLI entry point for the BGP session monitor."""
     parser = argparse.ArgumentParser(
         description="Monitor BGP sessions: peer status, prefix counts, flap detection"
     )
