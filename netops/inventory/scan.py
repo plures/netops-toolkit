@@ -62,6 +62,22 @@ class ScanResult:
     cdp_neighbors: list[dict] = field(default_factory=list)
     lldp_neighbors: list[dict] = field(default_factory=list)
     error: Optional[str] = None
+    # Deep-scan fields (populated via SSH when --deep is used)
+    version: Optional[str] = None
+    model: Optional[str] = None
+    serial: Optional[str] = None
+    uptime: Optional[str] = None
+    image: Optional[str] = None
+    hardware_revision: Optional[str] = None
+    total_memory: Optional[str] = None
+    free_memory: Optional[str] = None
+    reload_reason: Optional[str] = None
+    mac_address: Optional[str] = None
+    config_register: Optional[str] = None
+    cpu_type: Optional[str] = None
+    flash_size: Optional[str] = None
+    domain_name: Optional[str] = None
+    interface_count: Optional[str] = None
 
     def to_inventory_entry(self) -> dict:
         """Convert to an inventory device dict (compatible with core.Inventory)."""
@@ -71,6 +87,29 @@ class ScanResult:
         }
         if self.location:
             entry["site"] = self.location
+        # Deep-scan fields
+        _optional = {
+            "version": self.version,
+            "model": self.model,
+            "serial": self.serial,
+            "uptime": self.uptime,
+            "image": self.image,
+            "hardware_revision": self.hardware_revision,
+            "total_memory": self.total_memory,
+            "free_memory": self.free_memory,
+            "reload_reason": self.reload_reason,
+            "mac_address": self.mac_address,
+            "config_register": self.config_register,
+            "cpu_type": self.cpu_type,
+            "flash_size": self.flash_size,
+            "domain_name": self.domain_name,
+            "interface_count": self.interface_count,
+        }
+        for k, v in _optional.items():
+            if v is not None:
+                entry[k] = v
+        if self.hostname:
+            entry["hostname"] = self.hostname
         if self.sys_descr:
             entry.setdefault("tags", {})["sys_descr"] = self.sys_descr
         return entry
@@ -675,76 +714,198 @@ _VENDOR_PROBE_ORDER: list[str] = [
 
 
 def _parse_version_generic(output: str, vendor: str) -> dict:
-    """Extract version, model, and serial from show version output.
+    """Extract device info from show version (and related) output.
 
     Works across vendors by looking for common patterns.
-    Returns dict with keys: version, model, serial (any may be None).
+    Returns dict with all discoverable inventory fields.
     """
     import re
 
-    result: dict = {"version": None, "model": None, "serial": None}
+    result: dict = {
+        "version": None,
+        "model": None,
+        "serial": None,
+        "hostname": None,
+        "uptime": None,
+        "image": None,
+        "hardware_revision": None,
+        "total_memory": None,
+        "free_memory": None,
+        "reload_reason": None,
+        "mac_address": None,
+        "config_register": None,
+        "domain_name": None,
+        "interface_count": None,
+        "cpu_type": None,
+        "flash_size": None,
+    }
 
     for line in output.splitlines():
-        # Version patterns
+        stripped = line.strip()
+
+        # --- Version ---
         if result["version"] is None:
-            # Cisco: "Version 15.2(4)E8" or "system:  version 10.3(4a)"
-            ver = re.search(r"\bVersion\s+([\d().a-zA-Z]+)", line, re.IGNORECASE)
+            ver = re.search(r"\bVersion\s+([\d().a-zA-Z/:-]+)", line, re.IGNORECASE)
             if ver:
-                result["version"] = ver.group(1)
-            # Nokia TiMOS: "TiMOS-B-22.10.R3"
+                result["version"] = ver.group(1).rstrip(",")
             timos = re.search(r"TiMOS-\S+-([\d.]+\S*)", line)
             if timos:
                 result["version"] = timos.group(1)
-            # Juniper: "Junos: 22.4R2.8"
             junos = re.search(r"Junos:\s+(\S+)", line)
             if junos:
                 result["version"] = junos.group(1)
-            # Arista: "Software image version: 4.29.2F"
             eos = re.search(r"image version:\s+(\S+)", line, re.IGNORECASE)
             if eos:
                 result["version"] = eos.group(1)
 
-        # Model/platform patterns
+        # --- Model/platform ---
         if result["model"] is None:
             # Cisco: "cisco WS-C3750X-48P (PowerPC405) processor"
             plat = re.match(r"^[Cc]isco\s+(\S+)\s+.*processor", line)
             if plat:
                 result["model"] = plat.group(1)
-            # Cisco NX-OS: "Hardware\n  cisco Nexus9000..."
+            # Cisco "Model number : ISR4331/K9"
+            mnum = re.search(r"[Mm]odel\s+(?:number\s*)?[:\s]+(\S+)", stripped)
+            if mnum:
+                result["model"] = mnum.group(1)
+            # Cisco NX-OS
             nxos = re.match(r"^\s*cisco\s+(Nexus\S+|N\d\S+)", line, re.IGNORECASE)
             if nxos:
                 result["model"] = nxos.group(1)
-            # Nokia: "7250 IXR" or "7750 SR"
+            # Nokia
             nokia = re.search(r"\b(7\d{3}\s+\S+)", line)
             if nokia and "nokia" in vendor.lower():
                 result["model"] = nokia.group(1)
-            # Juniper: "Model: mx240"
+            # Juniper
             junmod = re.search(r"^Model:\s+(\S+)", line, re.IGNORECASE)
             if junmod:
                 result["model"] = junmod.group(1)
-            # Arista: "Hardware version: ..."  or "Arista DCS-..."
+            # Arista
             ari = re.search(r"Arista\s+(DCS-\S+)", line)
             if ari:
                 result["model"] = ari.group(1)
 
-        # Serial number patterns (from show version)
+        # --- Serial ---
         if result["serial"] is None:
-            # Cisco: "Processor board ID FOC12345678"
-            bid = re.search(r"Processor board ID\s+(\S+)", line)
+            bid = re.search(r"Processor [Bb]oard ID\s+(\S+)", line)
             if bid:
                 result["serial"] = bid.group(1)
-            # Cisco NX-OS: "Processor Board ID SAL..."
-            nbid = re.search(r"Processor Board ID\s+(\S+)", line, re.IGNORECASE)
-            if nbid:
-                result["serial"] = nbid.group(1)
-            # Juniper: "Chassis serial number"
-            jser = re.search(r"Chassis\s+\S+\s+\S+\s+\S+\s+(\S+)", line)
-            if jser and "juniper" in vendor.lower():
-                result["serial"] = jser.group(1)
-            # Arista: "Serial number: ..."
+            sysser = re.search(r"System serial number\s*[:\s]+(\S+)", line, re.IGNORECASE)
+            if sysser:
+                result["serial"] = sysser.group(1)
             aser = re.search(r"Serial number:\s+(\S+)", line, re.IGNORECASE)
             if aser:
                 result["serial"] = aser.group(1)
+            # Juniper chassis serial
+            jser = re.search(r"Chassis\s+\S+\s+\S+\s+\S+\s+(\S+)", line)
+            if jser and "juniper" in vendor.lower():
+                result["serial"] = jser.group(1)
+
+        # --- Hostname ---
+        if result["hostname"] is None:
+            # Cisco: "router-01 uptime is ..."
+            hup = re.match(r"^(\S+)\s+uptime\s+is", stripped)
+            if hup:
+                result["hostname"] = hup.group(1)
+            # Nokia: "System Name : router-01"
+            sname = re.search(r"System Name\s*:\s*(\S+)", stripped)
+            if sname:
+                result["hostname"] = sname.group(1)
+            # Juniper: "Hostname: router-01"
+            jhost = re.search(r"^Hostname:\s+(\S+)", stripped, re.IGNORECASE)
+            if jhost:
+                result["hostname"] = jhost.group(1)
+
+        # --- Uptime ---
+        if result["uptime"] is None:
+            upt = re.search(r"uptime\s+is\s+(.+)", stripped, re.IGNORECASE)
+            if upt:
+                result["uptime"] = upt.group(1).strip()
+            # Nokia: "System Up Time : 42 days, 03:15:22"
+            nupt = re.search(r"System Up Time\s*:\s*(.+)", stripped)
+            if nupt:
+                result["uptime"] = nupt.group(1).strip()
+
+        # --- Boot image ---
+        if result["image"] is None:
+            # Cisco: 'System image file is "flash:c2960-lanbasek9-mz.150-2.SE7.bin"'
+            img = re.search(r'[Ss]ystem image file is\s+"([^"]+)"', stripped)
+            if img:
+                result["image"] = img.group(1)
+            # Cisco: "BOOTLDR: ... (C2960-HBOOT-M), Version ..."
+            # Arista: "System image file is ..."
+            # NX-OS: "NXOS image file is: bootflash:///nxos.9.3.8.bin"
+            nximg = re.search(r"NXOS image file is:\s*(\S+)", stripped)
+            if nximg:
+                result["image"] = nximg.group(1)
+
+        # --- Hardware revision ---
+        if result["hardware_revision"] is None:
+            hrev = re.search(r"[Rr]evision\s+(\S+)", stripped)
+            if hrev and "processor" in stripped.lower():
+                result["hardware_revision"] = hrev.group(1).strip("()")
+
+        # --- Memory ---
+        if result["total_memory"] is None:
+            # Cisco: "with 65536K/12288K bytes of memory"
+            mem = re.search(r"with\s+([\d/K]+)\s+bytes of memory", stripped)
+            if mem:
+                result["total_memory"] = mem.group(1)
+            # Cisco: "cisco ... processor ... with 4194304K bytes"
+            mem2 = re.search(r"(\d+K)\s+bytes of (physical )?memory", stripped)
+            if mem2:
+                result["total_memory"] = mem2.group(1)
+            # Arista: "Total memory: 32 GB"
+            amem = re.search(r"Total memory:\s+(.+)", stripped, re.IGNORECASE)
+            if amem:
+                result["total_memory"] = amem.group(1)
+
+        if result["free_memory"] is None:
+            fmem = re.search(r"Free memory:\s+(.+)", stripped, re.IGNORECASE)
+            if fmem:
+                result["free_memory"] = fmem.group(1)
+
+        # --- Reload reason ---
+        if result["reload_reason"] is None:
+            rr = re.search(r"[Ll]ast (?:reset|reload|reboot) (?:reason|from)\s+(.+)", stripped)
+            if rr:
+                result["reload_reason"] = rr.group(1).strip()
+            rr2 = re.search(r"Reason:\s+(.+)", stripped)
+            if rr2 and result["reload_reason"] is None:
+                result["reload_reason"] = rr2.group(1).strip()
+
+        # --- MAC address ---
+        if result["mac_address"] is None:
+            mac = re.search(r"[Bb]ase (?:ethernet|MAC) (?:MAC )?[Aa]ddress\s*:\s*(\S+)", stripped)
+            if mac:
+                result["mac_address"] = mac.group(1)
+            mac2 = re.search(r"MAC [Aa]ddress\s*:\s*([0-9a-fA-F.:]+)", stripped)
+            if mac2:
+                result["mac_address"] = mac2.group(1)
+
+        # --- Config register (Cisco) ---
+        if result["config_register"] is None:
+            creg = re.search(r"[Cc]onfiguration register is\s+(\S+)", stripped)
+            if creg:
+                result["config_register"] = creg.group(1)
+
+        # --- CPU type ---
+        if result["cpu_type"] is None:
+            cpu = re.search(r"\((\w+)\)\s+processor", stripped)
+            if cpu:
+                result["cpu_type"] = cpu.group(1)
+
+        # --- Flash ---
+        if result["flash_size"] is None:
+            fl = re.search(r"(\d+K)\s+bytes of flash", stripped, re.IGNORECASE)
+            if fl:
+                result["flash_size"] = fl.group(1)
+
+        # --- Interface count ---
+        if result["interface_count"] is None:
+            ifc = re.search(r"(\d+)\s+(?:Ethernet|FastEthernet|GigabitEthernet|Ten\S+)\s+interface", stripped, re.IGNORECASE)
+            if ifc:
+                result["interface_count"] = ifc.group(1)
 
     return result
 
@@ -775,21 +936,31 @@ def _parse_serial_from_inventory(output: str, vendor: str) -> str | None:
 
 
 def _score_result(r: dict) -> int:
-    """Score a scan result: 1 point per non-None field (version, model, serial)."""
-    return sum(1 for k in ("version", "model", "serial") if r.get(k))
+    """Score a scan result: 1 point per non-None field."""
+    _SCORED_FIELDS = (
+        "version", "model", "serial", "hostname", "uptime", "image",
+        "mac_address", "total_memory", "reload_reason",
+    )
+    return sum(1 for k in _SCORED_FIELDS if r.get(k))
 
 
 def _try_vendor_commands(conn, vendor: str) -> dict:
     """Run a vendor's command set on an existing connection, return parsed results."""
     commands = _DEEP_COMMANDS.get(vendor, _DEEP_COMMANDS["cisco_ios"])
-    r: dict = {"vendor": vendor, "version": None, "model": None, "serial": None}
+    r: dict = {"vendor": vendor}
+    # Initialize all fields to None
+    for fld in ("version", "model", "serial", "hostname", "uptime", "image",
+                "hardware_revision", "total_memory", "free_memory", "reload_reason",
+                "mac_address", "config_register", "cpu_type", "flash_size",
+                "domain_name", "interface_count"):
+        r[fld] = None
 
     try:
         ver_output = conn.send(commands["version"])
         parsed = _parse_version_generic(ver_output, vendor)
-        r["version"] = parsed.get("version")
-        r["model"] = parsed.get("model")
-        r["serial"] = parsed.get("serial")
+        for k, v in parsed.items():
+            if v is not None:
+                r[k] = v
     except Exception as e:
         logger.debug(f"    vendor={vendor} version cmd failed: {e}")
 
@@ -846,6 +1017,19 @@ def _deep_scan_host(
         "version": None,
         "model": None,
         "serial": None,
+        "hostname": None,
+        "uptime": None,
+        "image": None,
+        "hardware_revision": None,
+        "total_memory": None,
+        "free_memory": None,
+        "reload_reason": None,
+        "mac_address": None,
+        "config_register": None,
+        "cpu_type": None,
+        "flash_size": None,
+        "domain_name": None,
+        "interface_count": None,
         "error": None,
     }
 
@@ -912,10 +1096,8 @@ def _deep_scan_host(
                         continue
 
                 if best_result:
-                    result["vendor"] = best_result["vendor"]
-                    result["version"] = best_result["version"]
-                    result["model"] = best_result["model"]
-                    result["serial"] = best_result["serial"]
+                    for k, v in best_result.items():
+                        result[k] = v
                 else:
                     result["vendor"] = login_vendor
 
@@ -984,16 +1166,18 @@ def deep_enrich(
                     info["vendor"] = result["vendor"]
                     updated = True
 
-                tags = info.setdefault("tags", {})
-                if result.get("version") and not tags.get("version"):
-                    tags["version"] = result["version"]
-                    updated = True
-                if result.get("model") and not tags.get("model"):
-                    tags["model"] = result["model"]
-                    updated = True
-                if result.get("serial") and not tags.get("serial"):
-                    tags["serial"] = result["serial"]
-                    updated = True
+                # Propagate all deep-scan fields as top-level inventory keys
+                _DEEP_FIELDS = (
+                    "version", "model", "serial", "hostname", "uptime", "image",
+                    "hardware_revision", "total_memory", "free_memory",
+                    "reload_reason", "mac_address", "config_register",
+                    "cpu_type", "flash_size", "domain_name", "interface_count",
+                )
+                for fld in _DEEP_FIELDS:
+                    val = result.get(fld)
+                    if val and not info.get(fld):
+                        info[fld] = val
+                        updated = True
 
                 if updated:
                     enriched += 1
