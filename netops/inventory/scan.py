@@ -570,7 +570,10 @@ def merge_inventory(existing_path: str, fragment: dict) -> dict:
     else:
         existing = {}
 
-    existing.setdefault("devices", {})
+    if existing.get("devices") is None:
+        existing["devices"] = {}
+    else:
+        existing.setdefault("devices", {})
     for hostname, info in fragment.get("devices", {}).items():
         if hostname not in existing["devices"]:
             existing["devices"][hostname] = info
