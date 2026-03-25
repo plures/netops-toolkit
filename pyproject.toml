@@ -13,7 +13,7 @@ dependencies = [
     "netmiko>=4.3.0",
     "paramiko>=3.4.0",
     "pyyaml>=6.0",
-    "cryptography>=41.0.0",
+    "cryptography>=46.0.5",
 ]
 
 [project.optional-dependencies]
@@ -30,10 +30,10 @@ ansible = [
     "ansible.netcommon>=6.0",
 ]
 report = [
-    "jinja2>=3.1.0",
+    "jinja2>=3.1.6",
 ]
 report-pdf = [
-    "jinja2>=3.1.0",
+    "jinja2>=3.1.6",
     "weasyprint>=62.0",
 ]
 
