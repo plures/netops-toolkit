@@ -14,7 +14,7 @@ import re
 import sys
 
 from netops.core import DeviceConnection
-from netops.core.connection import ConnectionParams, Transport
+from netops.core.connection import ConnectionParams
 from netops.parsers.nokia_sros import parse_interfaces as parse_nokia_interfaces
 
 

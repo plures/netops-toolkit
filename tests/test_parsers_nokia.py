@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
 
 from netops.parsers.nokia_sros import (
     parse_bgp_summary,
