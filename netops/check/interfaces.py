@@ -81,7 +81,7 @@ def check_interfaces(params: ConnectionParams, down_only: bool = False) -> dict:
     return result
 
 
-def main():
+def main() -> None:
     """CLI entry point for the interface status checker."""
     parser = argparse.ArgumentParser(description="Check interface status")
     parser.add_argument("--host", required=True)

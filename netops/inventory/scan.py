@@ -24,7 +24,7 @@ import subprocess
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -193,7 +193,7 @@ def _require_pysnmp() -> None:
 
 
 async def _snmp_get_async(
-    engine,
+    engine: Any,
     host: str,
     oid: str,
     community: str,
@@ -226,7 +226,7 @@ async def _snmp_get_async(
 
 
 async def _snmp_walk_async(
-    engine,
+    engine: Any,
     host: str,
     oid: str,
     community: str,
@@ -329,7 +329,7 @@ def identify_vendor(sys_descr: str, sys_obj_id: str = "") -> str:
 
 
 async def _scan_host_async(
-    engine,
+    engine: Any,
     host: str,
     community: str,
     snmp_port: int,
@@ -950,7 +950,7 @@ def _score_result(r: dict) -> int:
     return sum(1 for k in _SCORED_FIELDS if r.get(k))
 
 
-def _try_vendor_commands(conn, vendor: str) -> dict:
+def _try_vendor_commands(conn: Any, vendor: str) -> dict:
     """Run a vendor's command set on an existing connection, return parsed results."""
     commands = _DEEP_COMMANDS.get(vendor, _DEEP_COMMANDS["cisco_ios"])
     r: dict = {"vendor": vendor}
@@ -1114,7 +1114,7 @@ def _deep_scan_host(
                 return result
 
         except Exception as e:
-            logger.debug(f"  {host}: vendor={vendor} failed: {e}")
+            logger.debug(f"  {host}: vendor={login_vendor} failed: {e}")
             continue
 
     result["error"] = "Could not connect with any vendor type"
@@ -1239,9 +1239,9 @@ def _parse_hosts_file(path: str) -> List[str]:
         # Fallback: no recognized header — re-read as plain CSV, first column
         reader2 = csv.reader(io.StringIO(text))
         hosts = []
-        for row in reader2:
-            if row:
-                val = row[0].strip()
+        for csv_row in reader2:
+            if csv_row:
+                val = csv_row[0].strip()
                 if val and not val.startswith("#"):
                     hosts.append(val)
         return hosts
@@ -1255,7 +1255,7 @@ def _parse_hosts_file(path: str) -> List[str]:
     return hosts
 
 
-def main():
+def main() -> None:
     """CLI entry point for the network device discovery scanner."""
     parser = argparse.ArgumentParser(
         description="Discover devices on a subnet via ping sweep + SNMP/CDP/LLDP",

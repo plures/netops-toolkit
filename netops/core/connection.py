@@ -10,7 +10,8 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
+from types import TracebackType
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ class AuthMethod(Enum):
 class ConnectionParams:
     """Everything needed to connect to a device."""
     host: str
-    username: str
+    username: str | None = None
     password: Optional[str] = None
     transport: Transport = Transport.SSH
     auth_method: AuthMethod = AuthMethod.PASSWORD
@@ -66,18 +67,23 @@ class DeviceConnection:
             config = conn.send("show running-config")
     """
 
-    def __init__(self, params: ConnectionParams):
+    def __init__(self, params: ConnectionParams) -> None:
         self.params = params
-        self._connection = None
+        self._connection: Any = None
 
-    def __enter__(self):
+    def __enter__(self) -> DeviceConnection:
         self.connect()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         self.disconnect()
 
-    def connect(self):
+    def connect(self) -> None:
         """Establish connection using configured transport."""
         try:
             from netmiko import ConnectHandler
@@ -113,13 +119,13 @@ class DeviceConnection:
 
         logger.info(f"Connected to {self.params.host}")
 
-    def disconnect(self):
+    def disconnect(self) -> None:
         """Close the connection."""
         if self._connection:
             self._connection.disconnect()
             logger.info(f"Disconnected from {self.params.host}")
 
-    def send(self, command: str, expect_string: str = None) -> str:
+    def send(self, command: str, expect_string: str | None = None) -> str:
         """Send a command and return output."""
         if not self._connection:
             raise RuntimeError("Not connected")

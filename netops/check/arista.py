@@ -718,17 +718,17 @@ def main(argv: Optional[list[str]] = None) -> int:
             )
         ]
     else:
-        inv = Inventory(args.inventory)
-        devices = inv.get_group(args.group) if args.group else inv.all_devices()
+        inv = Inventory.from_file(args.inventory)
+        devices = inv.filter(group=args.group) if args.group else list(inv.devices.values())
         results = []
         for dev in devices:
             p = ConnectionParams(
-                host=dev["host"],
-                username=dev.get("username", args.user),
-                password=dev.get("password", args.password),
-                device_type=dev.get("device_type", "arista_eos"),
+                host=dev.host,
+                username=args.user or dev.username,
+                password=args.password or dev.password,
+                device_type=dev.vendor or "arista_eos",
                 transport=transport,
-                port=dev.get("port") or args.port,
+                port=dev.port or args.port,
             )
             results.append(
                 run_health_check(

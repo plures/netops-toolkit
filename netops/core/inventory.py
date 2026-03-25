@@ -54,12 +54,12 @@ class Inventory:
     - Export to Ansible inventory format
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.devices: dict[str, Device] = {}
         self.groups: dict[str, list[str]] = {}  # group -> [hostname]
         self.defaults: dict = {}  # Default connection params
 
-    def add(self, device: Device):
+    def add(self, device: Device) -> None:
         """Add *device* to the inventory, registering it under all its groups."""
         self.devices[device.hostname] = device
         for group in device.groups:
@@ -69,8 +69,8 @@ class Inventory:
         """Look up a device by hostname; returns ``None`` if not found."""
         return self.devices.get(hostname)
 
-    def filter(self, group: str = None, vendor: str = None,
-               role: str = None, site: str = None, tag: tuple = None) -> list[Device]:
+    def filter(self, group: str | None = None, vendor: str | None = None,
+               role: str | None = None, site: str | None = None, tag: tuple | None = None) -> list[Device]:
         """Filter devices by criteria."""
         results = list(self.devices.values())
         if group:
@@ -171,7 +171,7 @@ class Inventory:
         """Export as Ansible inventory in JSON format."""
         return json.dumps(self.to_ansible(), indent=2)
 
-    def to_file(self, path: str | Path, format: str = "yaml"):
+    def to_file(self, path: str | Path, format: str = "yaml") -> None:
         """Save inventory to file."""
         path = Path(path)
         data = {
@@ -188,7 +188,7 @@ class Inventory:
             path.write_text(json.dumps(data, indent=2))
 
 
-def main():
+def main() -> None:
     """CLI entry point: python -m netops.core.inventory export ..."""
     import argparse
     import sys

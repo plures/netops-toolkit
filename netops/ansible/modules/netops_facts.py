@@ -68,6 +68,8 @@ EXAMPLES
 
 from __future__ import annotations
 
+from typing import Any
+
 DOCUMENTATION = __doc__
 
 ANSIBLE_METADATA = {
@@ -87,7 +89,7 @@ ANSIBLE_METADATA = {
 _GATHER_ALL = {"health", "interfaces", "bgp", "vlans"}
 
 
-def _gather_health(conn) -> dict:
+def _gather_health(conn: Any) -> dict:
     """Collect CPU/memory health facts."""
     from netops.parsers.health import (
         parse_cpu_cisco,
@@ -139,7 +141,7 @@ def _gather_health(conn) -> dict:
     return facts
 
 
-def _gather_interfaces(conn) -> list[dict]:
+def _gather_interfaces(conn: Any) -> list[dict]:
     """Collect interface status facts."""
     from netops.parsers.health import parse_interface_errors_cisco
 
@@ -157,7 +159,7 @@ def _gather_interfaces(conn) -> list[dict]:
         return []
 
 
-def _gather_bgp(conn) -> list[dict]:
+def _gather_bgp(conn: Any) -> list[dict]:
     """Collect BGP peer facts."""
     try:
         if "nokia" in conn.device_type or "sros" in conn.device_type:
@@ -172,7 +174,7 @@ def _gather_bgp(conn) -> list[dict]:
         return []
 
 
-def _gather_vlans(conn) -> list[dict]:
+def _gather_vlans(conn: Any) -> list[dict]:
     """Collect VLAN facts (Cisco IOS / IOS-XE only)."""
     try:
         from netops.parsers.vlan import parse_vlan_brief
@@ -214,7 +216,7 @@ def _collect_facts(params: dict) -> dict:
     return facts
 
 
-def run_module():
+def run_module() -> None:
     """Entry point called by Ansible."""
     from ansible.module_utils.basic import AnsibleModule  # type: ignore[import]
 
@@ -250,6 +252,7 @@ def run_module():
         device = inv.get(params["host"])
         if device is None:
             module.fail_json(msg=f"Host '{params['host']}' not found in inventory")
+            return
         params.setdefault("username", device.username)
         params.setdefault("password", device.password)
         params["host"] = device.host

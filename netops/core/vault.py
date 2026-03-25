@@ -34,6 +34,7 @@ environment variable to avoid interactive prompts (useful in CI pipelines).
 
 from __future__ import annotations
 
+import argparse
 import base64
 import getpass
 import json
@@ -117,7 +118,7 @@ class CredentialVault:
 
     DEFAULT_VAULT_PATH = Path.home() / ".netops" / "vault.yaml"
 
-    def __init__(self, vault_path: str | Path | None = None):
+    def __init__(self, vault_path: str | Path | None = None) -> None:
         self._path = Path(vault_path) if vault_path else self.DEFAULT_VAULT_PATH
         self._key: Optional[bytes] = None
         # In-memory store: {"devices": {...}, "groups": {...}, "defaults": {...}}
@@ -361,7 +362,7 @@ def _prompt_credential_password(prompt: str = "Device password: ") -> str:
         print("Passwords do not match, try again.")
 
 
-def _cli_init(args) -> int:
+def _cli_init(args: argparse.Namespace) -> int:
     vault = CredentialVault(args.vault)
     try:
         pw = _prompt_password("New vault password: ")
@@ -373,7 +374,7 @@ def _cli_init(args) -> int:
     return 0
 
 
-def _cli_set(args) -> int:
+def _cli_set(args: argparse.Namespace) -> int:
     vault = CredentialVault(args.vault)
     master_pw = _prompt_password()
     try:
@@ -403,7 +404,7 @@ def _cli_set(args) -> int:
     return 0
 
 
-def _cli_get(args) -> int:
+def _cli_get(args: argparse.Namespace) -> int:
     vault = CredentialVault(args.vault)
     master_pw = _prompt_password()
     try:
@@ -425,7 +426,7 @@ def _cli_get(args) -> int:
     return 0
 
 
-def _cli_delete(args) -> int:
+def _cli_delete(args: argparse.Namespace) -> int:
     vault = CredentialVault(args.vault)
     master_pw = _prompt_password()
     try:
@@ -453,9 +454,7 @@ def _cli_delete(args) -> int:
     return 0
 
 
-def _build_parser():
-    import argparse
-
+def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="python -m netops.core.vault",
         description="Manage encrypted credential vault.",
@@ -505,7 +504,7 @@ def _build_parser():
     return parser
 
 
-def main(argv=None) -> int:
+def main(argv: list[str] | None = None) -> int:
     """CLI entry point for the credential vault management tool."""
     parser = _build_parser()
     args = parser.parse_args(argv)
