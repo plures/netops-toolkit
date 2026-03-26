@@ -24,7 +24,12 @@ import subprocess
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pysnmp.hlapi.v3arch.asyncio import SnmpEngine
+
+    from netops.core.connection import DeviceConnection
 
 from netops.parsers.nokia_sros import parse_bof as _parse_nokia_bof
 
@@ -195,7 +200,7 @@ def _require_pysnmp() -> None:
 
 
 async def _snmp_get_async(
-    engine: Any,
+    engine: SnmpEngine,
     host: str,
     oid: str,
     community: str,
@@ -228,7 +233,7 @@ async def _snmp_get_async(
 
 
 async def _snmp_walk_async(
-    engine: Any,
+    engine: SnmpEngine,
     host: str,
     oid: str,
     community: str,
@@ -331,7 +336,7 @@ def identify_vendor(sys_descr: str, sys_obj_id: str = "") -> str:
 
 
 async def _scan_host_async(
-    engine: Any,
+    engine: SnmpEngine,
     host: str,
     community: str,
     snmp_port: int,
@@ -967,7 +972,7 @@ def _score_result(r: dict) -> int:
     return sum(1 for k in _SCORED_FIELDS if r.get(k))
 
 
-def _try_vendor_commands(conn: Any, vendor: str) -> dict:
+def _try_vendor_commands(conn: DeviceConnection, vendor: str) -> dict:
     """Run a vendor's command set on an existing connection, return parsed results."""
     commands = _DEEP_COMMANDS.get(vendor, _DEEP_COMMANDS["cisco_ios"])
     r: dict = {"vendor": vendor}

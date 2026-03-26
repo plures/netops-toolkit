@@ -11,7 +11,10 @@ import logging
 from dataclasses import dataclass, field
 from enum import Enum
 from types import TracebackType
-from typing import Any
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from netmiko.base_connection import BaseConnection
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +73,7 @@ class DeviceConnection:
     def __init__(self, params: ConnectionParams) -> None:
         """Initialise the connection manager with the given connection parameters."""
         self.params = params
-        self._connection: Any = None
+        self._connection: BaseConnection | None = None
 
     def __enter__(self) -> DeviceConnection:
         """Connect on entering the context manager block."""

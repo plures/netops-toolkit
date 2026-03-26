@@ -36,12 +36,39 @@ import json
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import TypedDict
 
 logger = logging.getLogger(__name__)
 
 # Path to the built-in template shipped with the package
 _BUILTIN_TEMPLATE = Path(__file__).parent / "templates" / "default.html.j2"
+
+
+class ReportSection(TypedDict):
+    """A single section within a report, grouping data by type."""
+
+    name: str
+    type: str
+    data: dict[str, object]
+
+
+class ReportData(TypedDict):
+    """Assembled report data structure produced by :meth:`ReportGenerator.build_report`."""
+
+    title: str
+    generated_at: str
+    period: str | None
+    sections: list[ReportSection]
+    overall_alert: bool
+
+
+class ReportDataWithHtml(ReportData, total=False):
+    """Extension of :class:`ReportData` that includes the rendered HTML string.
+
+    Produced by the :func:`generate_report` convenience function.
+    """
+
+    html: str
 
 
 class ReportGenerator:
@@ -74,9 +101,9 @@ class ReportGenerator:
     def build_report(
         self,
         title: str = "Network Health Report",
-        sections: list[dict[str, Any]] | None = None,
+        sections: list[ReportSection] | None = None,
         period: str | None = None,
-    ) -> dict[str, Any]:
+    ) -> ReportData:
         """Assemble a report data structure ready for rendering.
 
         Parameters
@@ -115,7 +142,7 @@ class ReportGenerator:
 
     def generate_html(
         self,
-        report_data: dict[str, Any],
+        report_data: ReportData,
         output_path: str | None = None,
     ) -> str:
         """Render *report_data* as an HTML string.
@@ -170,7 +197,7 @@ class ReportGenerator:
 
     def generate_pdf(
         self,
-        report_data: dict[str, Any],
+        report_data: ReportData,
         output_path: str | None = None,
     ) -> bytes:
         """Render *report_data* as a PDF document.
@@ -250,14 +277,14 @@ def default_output_filename(prefix: str = "netops-report", fmt: str = "html") ->
 
 
 def generate_report(
-    sections: list[dict[str, Any]],
+    sections: list[ReportSection],
     title: str = "Network Health Report",
     period: str | None = None,
     output_dir: str | None = None,
     template_path: str | None = None,
     html_output: str | None = "auto",
     pdf_output: str | None = None,
-) -> dict[str, Any]:
+) -> ReportDataWithHtml:
     """High-level convenience wrapper: build report, render HTML (and PDF).
 
     Parameters
@@ -284,7 +311,7 @@ def generate_report(
     rendered HTML string.
     """
     gen = ReportGenerator(template_path=template_path, output_dir=output_dir)
-    report_data = gen.build_report(title=title, sections=sections, period=period)
+    base = gen.build_report(title=title, sections=sections, period=period)
 
     out_dir = Path(output_dir) if output_dir else Path.cwd()
 
@@ -294,8 +321,9 @@ def generate_report(
     elif html_output:
         html_path = html_output
 
-    html_str = gen.generate_html(report_data, output_path=html_path)
-    report_data["html"] = html_str
+    html_str = gen.generate_html(base, output_path=html_path)
+
+    result: ReportDataWithHtml = {**base, "html": html_str}
 
     if pdf_output is not None:
         pdf_path: str | None = None
@@ -303,6 +331,6 @@ def generate_report(
             pdf_path = str(out_dir / default_output_filename("netops-report", "pdf"))
         else:
             pdf_path = pdf_output
-        gen.generate_pdf(report_data, output_path=pdf_path)
+        gen.generate_pdf(base, output_path=pdf_path)
 
-    return report_data
+    return result
