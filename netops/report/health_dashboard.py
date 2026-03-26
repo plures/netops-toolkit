@@ -82,6 +82,7 @@ def _pct_status(value: float | None, threshold: float | None) -> str:
 
 
 def _detail_cpu(check: dict) -> tuple[str, str]:
+    """Return (status, detail) for a CPU utilisation check result."""
     util = check.get("utilization")
     thr = check.get("threshold")
     status = _pct_status(util, thr)
@@ -90,6 +91,7 @@ def _detail_cpu(check: dict) -> tuple[str, str]:
 
 
 def _detail_memory(check: dict) -> tuple[str, str]:
+    """Return (status, detail) for a memory utilisation check result."""
     util = check.get("utilization")
     thr = check.get("threshold")
     status = _pct_status(util, thr)
@@ -138,6 +140,7 @@ def _detail_routing_engine(check: dict) -> tuple[str, str]:
 
 
 def _detail_interfaces(check: dict) -> tuple[str, str]:
+    """Return (status, detail) for an interface error check result."""
     w = check.get("with_errors", 0)
     t = check.get("total", 0)
     status = "crit" if check.get("alert") else "ok"
@@ -146,6 +149,7 @@ def _detail_interfaces(check: dict) -> tuple[str, str]:
 
 
 def _detail_logs(check: dict) -> tuple[str, str]:
+    """Return (status, detail) for a syslog severity check result."""
     crit = check.get("critical_count", 0)
     major = check.get("major_count", 0)
     status = "crit" if check.get("alert") else "ok"
@@ -154,6 +158,7 @@ def _detail_logs(check: dict) -> tuple[str, str]:
 
 
 def _detail_bgp(check: dict) -> tuple[str, str]:
+    """Return (status, detail) for a BGP peer state check result."""
     ne = check.get("not_established", 0)
     total = check.get("total", 0)
     est = check.get("established", total - ne)
@@ -163,6 +168,7 @@ def _detail_bgp(check: dict) -> tuple[str, str]:
 
 
 def _detail_ospf(check: dict) -> tuple[str, str]:
+    """Return (status, detail) for an OSPF neighbor state check result."""
     nf = check.get("not_full", 0)
     total = check.get("total", 0)
     full = check.get("full", total - nf)
@@ -172,6 +178,7 @@ def _detail_ospf(check: dict) -> tuple[str, str]:
 
 
 def _detail_environment(check: dict) -> tuple[str, str]:
+    """Return (status, detail) for an environmental (power/fan/temp) check result."""
     status = "crit" if check.get("alert") else "ok"
     alerts = check.get("alerts", [])
     if alerts:
@@ -182,6 +189,7 @@ def _detail_environment(check: dict) -> tuple[str, str]:
 
 
 def _detail_fpc(check: dict) -> tuple[str, str]:
+    """Return (status, detail) for a Juniper FPC online/offline check result."""
     offline = check.get("offline", 0)
     total = check.get("total", 0)
     status = "crit" if check.get("alert") else "ok"
@@ -190,6 +198,7 @@ def _detail_fpc(check: dict) -> tuple[str, str]:
 
 
 def _detail_alarms(check: dict) -> tuple[str, str]:
+    """Return (status, detail) for a chassis alarm check result."""
     major = check.get("major_count", 0)
     minor = check.get("minor_count", 0)
     status = "crit" if check.get("alert") else ("warn" if minor else "ok")
@@ -198,6 +207,7 @@ def _detail_alarms(check: dict) -> tuple[str, str]:
 
 
 def _detail_mlag(check: dict) -> tuple[str, str]:
+    """Return (status, detail) for an Arista MLAG state check result."""
     status = "crit" if check.get("alert") else "ok"
     state = check.get("state", "unknown")
     detail = f"state={state}"
@@ -205,6 +215,7 @@ def _detail_mlag(check: dict) -> tuple[str, str]:
 
 
 def _detail_generic(check: dict) -> tuple[str, str]:
+    """Return (status, detail) for a generic check result with no structured fields."""
     status = "crit" if check.get("alert") else "ok"
     detail = "Alert" if check.get("alert") else "OK"
     return status, detail
@@ -481,6 +492,7 @@ def format_table(dashboard: dict, color: bool = True) -> str:
 
     # Column headers
     def _pad(s: str, w: int) -> str:
+        """Left-justify *s* truncated or padded to exactly *w* characters."""
         return str(s)[:w].ljust(w)
 
     header = "  ".join(
@@ -570,6 +582,7 @@ def render_html(dashboard: dict, output_path: str | None = None) -> str:
 
 
 def _parse_thresholds(raw: Optional[str]) -> dict[str, float]:
+    """Parse a ``key=value[,...]`` threshold string into a dict of floats."""
     thresholds: dict[str, float] = {}
     if not raw:
         return thresholds

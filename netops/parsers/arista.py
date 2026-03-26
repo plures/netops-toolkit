@@ -467,6 +467,7 @@ def parse_mlag_eos(data: dict) -> dict:
 
 
 def _empty_mlag() -> dict:
+    """Return a zeroed MLAG result dict for use when MLAG data is unavailable."""
     return {
         "state": "",
         "peer_state": "",

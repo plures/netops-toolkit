@@ -55,6 +55,7 @@ class Inventory:
     """
 
     def __init__(self) -> None:
+        """Initialise an empty inventory with no devices, groups, or defaults."""
         self.devices: dict[str, Device] = {}
         self.groups: dict[str, list[str]] = {}  # group -> [hostname]
         self.defaults: dict = {}  # Default connection params

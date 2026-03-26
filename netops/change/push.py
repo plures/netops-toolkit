@@ -130,6 +130,7 @@ def _wait_for_confirmation(timeout_seconds: int) -> bool:
     confirmed_event = threading.Event()
 
     def _reader() -> None:
+        """Read a single line from stdin and set the event if it equals 'confirm'."""
         try:
             line = sys.stdin.readline().strip().lower()
             if line == "confirm":

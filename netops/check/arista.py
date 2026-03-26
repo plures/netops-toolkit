@@ -515,6 +515,7 @@ def build_eos_health_report(results: list[dict]) -> dict:
     reachable = [r for r in results if r.get("success")]
 
     def _count_alert(key: str) -> int:
+        """Count how many reachable devices have an alert for check *key*."""
         return sum(1 for r in reachable if r.get("checks", {}).get(key, {}).get("alert"))
 
     devices_with_alerts = sum(1 for r in reachable if r.get("overall_alert"))
@@ -641,6 +642,7 @@ def _print_result(result: dict) -> None:
 
 
 def _build_arg_parser() -> argparse.ArgumentParser:
+    """Build and return the argument parser for the Arista EOS health check CLI."""
     parser = argparse.ArgumentParser(
         description="Arista EOS health checker",
         formatter_class=argparse.RawDescriptionHelpFormatter,

@@ -95,10 +95,12 @@ def _decrypt(nonce: bytes, ciphertext: bytes, key: bytes) -> bytes:
 # ---------------------------------------------------------------------------
 
 def _encode(data: bytes) -> str:
+    """Base64-encode *data* and return it as a UTF-8 string."""
     return base64.b64encode(data).decode()
 
 
 def _decode(s: str) -> bytes:
+    """Decode a base64-encoded string back to raw bytes."""
     return base64.b64decode(s)
 
 
@@ -119,6 +121,7 @@ class CredentialVault:
     DEFAULT_VAULT_PATH = Path.home() / ".netops" / "vault.yaml"
 
     def __init__(self, vault_path: str | Path | None = None) -> None:
+        """Initialise with an optional vault file path (defaults to ``~/.netops/vault.yaml``)."""
         self._path = Path(vault_path) if vault_path else self.DEFAULT_VAULT_PATH
         self._key: Optional[bytes] = None
         # In-memory store: {"devices": {...}, "groups": {...}, "defaults": {...}}
@@ -310,6 +313,7 @@ class CredentialVault:
 # ---------------------------------------------------------------------------
 
 def _check_vault_header(raw: object) -> None:
+    """Raise ``ValueError`` if *raw* is not a valid vault file structure."""
     if not isinstance(raw, dict) or raw.get("version") != 1:
         raise ValueError("Unrecognised vault format")
     for field in ("salt", "nonce", "ciphertext"):
@@ -318,6 +322,7 @@ def _check_vault_header(raw: object) -> None:
 
 
 def _require_unlocked(key: Optional[bytes]) -> None:
+    """Raise ``RuntimeError`` if *key* is ``None`` (vault not yet unlocked)."""
     if key is None:
         raise RuntimeError("Vault is locked — call unlock() first")
 
@@ -354,6 +359,7 @@ def _prompt_password(prompt: str = "Vault password: ") -> str:
 
 
 def _prompt_credential_password(prompt: str = "Device password: ") -> str:
+    """Prompt for a device credential password with confirmation."""
     while True:
         pw = getpass.getpass(prompt)
         confirm = getpass.getpass("Confirm password: ")
@@ -363,6 +369,7 @@ def _prompt_credential_password(prompt: str = "Device password: ") -> str:
 
 
 def _cli_init(args: argparse.Namespace) -> int:
+    """CLI handler for the ``init`` sub-command — create a new vault."""
     vault = CredentialVault(args.vault)
     try:
         pw = _prompt_password("New vault password: ")
@@ -375,6 +382,7 @@ def _cli_init(args: argparse.Namespace) -> int:
 
 
 def _cli_set(args: argparse.Namespace) -> int:
+    """CLI handler for the ``set`` sub-command — store credentials in the vault."""
     vault = CredentialVault(args.vault)
     master_pw = _prompt_password()
     try:
@@ -405,6 +413,7 @@ def _cli_set(args: argparse.Namespace) -> int:
 
 
 def _cli_get(args: argparse.Namespace) -> int:
+    """CLI handler for the ``get`` sub-command — retrieve and display credentials."""
     vault = CredentialVault(args.vault)
     master_pw = _prompt_password()
     try:
@@ -427,6 +436,7 @@ def _cli_get(args: argparse.Namespace) -> int:
 
 
 def _cli_delete(args: argparse.Namespace) -> int:
+    """CLI handler for the ``delete`` sub-command — remove credentials from the vault."""
     vault = CredentialVault(args.vault)
     master_pw = _prompt_password()
     try:
@@ -455,6 +465,7 @@ def _cli_delete(args: argparse.Namespace) -> int:
 
 
 def _build_parser() -> argparse.ArgumentParser:
+    """Build and return the argument parser for the vault CLI."""
     parser = argparse.ArgumentParser(
         prog="python -m netops.core.vault",
         description="Manage encrypted credential vault.",

@@ -74,6 +74,7 @@ class ReportMailer:
         from_addr: Optional[str] = None,
         timeout: int = 30,
     ) -> None:
+        """Initialise the mailer with SMTP server connection settings."""
         self.host = host
         self.port = port
         self.username = username

@@ -56,14 +56,17 @@ DEFAULT_MEM_THRESHOLD = 85.0
 
 
 def _is_nokia(device_type: str) -> bool:
+    """Return ``True`` if *device_type* indicates a Nokia SR-OS device."""
     return "nokia" in device_type.lower()
 
 
 def _is_brocade(device_type: str) -> bool:
+    """Return ``True`` if *device_type* indicates a Brocade/FastIron device."""
     return "brocade" in device_type.lower()
 
 
 def _is_paloalto(device_type: str) -> bool:
+    """Return ``True`` if *device_type* indicates a Palo Alto PAN-OS device."""
     return "paloalto" in device_type.lower() or "panos" in device_type.lower()
 
 
