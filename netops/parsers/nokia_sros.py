@@ -7,7 +7,6 @@ handles common formatting variations across TiMOS releases.
 from __future__ import annotations
 
 import re
-from typing import Optional
 
 __all__ = [
     "parse_interfaces",
