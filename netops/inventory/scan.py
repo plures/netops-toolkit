@@ -26,6 +26,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, List, Optional
 
+from netops.parsers.nokia_sros import parse_bof as _parse_nokia_bof
+
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -290,9 +292,9 @@ def identify_vendor(sys_descr: str, sys_obj_id: str = "") -> str:
         return "cisco_nxos"
     if "cisco ios" in descr_lower:
         return "cisco_ios"
-    if "nokia" in descr_lower and "srl" in descr_lower:
+    if "nokia" in descr_lower and ("srl" in descr_lower or "sr linux" in descr_lower):
         return "nokia_srl"
-    if "nokia" in descr_lower or "timos" in descr_lower:
+    if "nokia" in descr_lower or "timos" in descr_lower or "alcatel" in descr_lower:
         return "nokia_sros"
     if "juniper" in descr_lower or "junos" in descr_lower:
         return "juniper_junos"
@@ -681,6 +683,9 @@ _DEEP_COMMANDS: dict[str, dict[str, str]] = {
     "nokia_sros": {
         "version": "show version",
         "inventory": "show chassis detail",
+        "system_info": "show system information",
+        "card": "show card",
+        "bof": "show bof",
     },
     "nokia_srl": {
         "version": "info from state /system/information",
@@ -778,10 +783,22 @@ def _parse_version_generic(output: str, vendor: str) -> dict:
             nxos = re.match(r"^\s*cisco\s+(Nexus\S+|N\d\S+)", line, re.IGNORECASE)
             if nxos:
                 result["model"] = nxos.group(1)
-            # Nokia
-            nokia = re.search(r"\b(7\d{3}\s+\S+)", line)
-            if nokia and "nokia" in vendor.lower():
-                result["model"] = nokia.group(1)
+            # Nokia — model from "show version" line or "Chassis Type" key-value
+            # Matches: 7750 SR-12, 7210 SAS-Sx, 7705 SAR-18, 7250 IXR-s,
+            #          7730 SXR-1d-32D, VSR-I, etc.
+            nokia = re.search(
+                r"(?:Nokia|Alcatel[- ]Lucent)\s+((?:7\d{3}|VSR)\s*[\w./-]+(?:\s+[\w./-]+)?)",
+                line,
+                re.IGNORECASE,
+            )
+            if nokia and ("nokia" in vendor.lower() or "sros" in vendor.lower()):
+                result["model"] = nokia.group(1).strip()
+            # Nokia Chassis Type : 7750 SR-12
+            nokia_ct = re.search(
+                r"Chassis Type\s*:\s*(.*\S)", stripped, re.IGNORECASE
+            )
+            if nokia_ct and result["model"] is None and ("nokia" in vendor.lower() or "sros" in vendor.lower()):
+                result["model"] = nokia_ct.group(1).strip()
             # Juniper
             junmod = re.search(r"^Model:\s+(\S+)", line, re.IGNORECASE)
             if junmod:
@@ -976,8 +993,41 @@ def _try_vendor_commands(conn: Any, vendor: str) -> dict:
             sn = _parse_serial_from_inventory(inv_output, vendor)
             if sn:
                 r["serial"] = sn
+            # Also parse model/mac from chassis output for Nokia
+            if "nokia" in vendor or "sros" in vendor:
+                parsed_inv = _parse_version_generic(inv_output, vendor)
+                for k, v in parsed_inv.items():
+                    if v is not None and not r.get(k):
+                        r[k] = v
         except Exception as e:
             logger.debug(f"    vendor={vendor} inventory cmd failed: {e}")
+
+    # --- Nokia-specific: extra commands for comprehensive enrichment ---
+    if ("nokia" in vendor or "sros" in vendor) and "system_info" in commands:
+        try:
+            sysinfo_output = conn.send(commands["system_info"])
+            # Parse key:value pairs from show system information
+            parsed_si = _parse_version_generic(sysinfo_output, vendor)
+            for k, v in parsed_si.items():
+                if v is not None and not r.get(k):
+                    r[k] = v
+        except Exception as e:
+            logger.debug(f"    vendor={vendor} system_info cmd failed: {e}")
+
+        # BOF for boot image
+        if not r.get("image") and "bof" in commands:
+            try:
+                bof_output = conn.send(commands["bof"])
+            except Exception as e:
+                logger.debug(f"    vendor={vendor} bof cmd failed: {e}")
+                bof_output = ""
+            if bof_output:
+                try:
+                    bof_parsed = _parse_nokia_bof(bof_output)
+                    if bof_parsed.get("primary_image"):
+                        r["image"] = bof_parsed["primary_image"]
+                except Exception as e:
+                    logger.debug(f"    vendor={vendor} bof parse failed: {e}")
 
     return r
 
