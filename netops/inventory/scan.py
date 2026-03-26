@@ -26,6 +26,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, List, Optional
 
+from netops.parsers.nokia_sros import parse_bof as _parse_nokia_bof
+
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -1016,17 +1018,16 @@ def _try_vendor_commands(conn: Any, vendor: str) -> dict:
         if not r.get("image") and "bof" in commands:
             try:
                 bof_output = conn.send(commands["bof"])
-                for bof_line in bof_output.splitlines():
-                    img_match = re.search(
-                        r"(?:primary-image|Primary Image)\s*:\s*(\S+)",
-                        bof_line,
-                        re.IGNORECASE,
-                    )
-                    if img_match:
-                        r["image"] = img_match.group(1)
-                        break
             except Exception as e:
                 logger.debug(f"    vendor={vendor} bof cmd failed: {e}")
+                bof_output = ""
+            if bof_output:
+                try:
+                    bof_parsed = _parse_nokia_bof(bof_output)
+                    if bof_parsed.get("primary_image"):
+                        r["image"] = bof_parsed["primary_image"]
+                except Exception as e:
+                    logger.debug(f"    vendor={vendor} bof parse failed: {e}")
 
     return r
 
