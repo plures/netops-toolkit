@@ -24,6 +24,7 @@ dev = [
     "ruff>=0.4.0",
     "mypy>=1.10",
     "pip-audit>=2.7",
+    "interrogate>=1.7.0",
 ]
 snmp = [
     "pysnmp>=7.0",
@@ -38,6 +39,10 @@ report = [
 report-pdf = [
     "jinja2>=3.1.6",
     "weasyprint>=62.0",
+]
+docs = [
+    "mkdocs>=1.6.0",
+    "mkdocs-material>=9.0",
 ]
 
 [tool.setuptools.packages.find]
@@ -76,3 +81,20 @@ target-version = "py310"
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "W"]
 ignore = ["E501"]
+
+[tool.interrogate]
+ignore-init-method = true
+ignore-init-module = false
+ignore-magic = false
+ignore-semiprivate = false
+ignore-private = false
+ignore-property-decorators = false
+ignore-module = false
+ignore-nested-functions = false
+fail-under = 90
+exclude = ["setup.py", "docs", "build", "tests"]
+ignore-regex = ["^get$", "^mock_.*", ".*BaseClass.*"]
+verbose = 0
+quiet = false
+whitelist-regex = []
+color = true

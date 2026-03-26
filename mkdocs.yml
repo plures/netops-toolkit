@@ -1,0 +1,73 @@
+site_name: netops-toolkit
+site_description: Modular network automation utilities for telco operations
+site_url: https://plures.github.io/netops-toolkit/
+repo_url: https://github.com/plures/netops-toolkit
+repo_name: plures/netops-toolkit
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Guides:
+    - Getting Started: guides/getting-started.md
+    - CLI Reference: guides/cli-reference.md
+    - Config Collector: guides/config-collector.md
+    - Interface Checker: guides/interface-checker.md
+    - Inventory Management: guides/inventory-management.md
+    - Auto-Inventory Pipeline: guides/auto-inventory.md
+    - Network Scanner: guides/scan.md
+    - Config Diff Engine: guides/config-diff.md
+    - Cisco Health Checks: guides/cisco-health.md
+    - Brocade Support: guides/brocade.md
+    - Palo Alto Support: guides/paloalto.md
+    - Juniper Support: guides/juniper.md
+  - API Reference:
+    - Overview: api/README.md
+    - Core: api/core.md
+    - Check: api/check.md
+    - Change: api/change.md
+    - Collect: api/collect.md
+    - Parsers: api/parsers.md
+    - Playbooks: api/playbooks.md
+    - Report: api/report.md
+    - Ansible: api/ansible.md
+    - Inventory: api/inventory.md
+
+docs_dir: docs
