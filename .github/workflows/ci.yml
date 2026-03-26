@@ -39,9 +39,4 @@ jobs:
         run: python -m pytest --tb=short -q
 
       - name: Audit dependencies (pip-audit)
-        # CVE-2026-4539: ReDoS in pygments AdlLexer; local-only attack vector,
-        # no fix available upstream yet. Ignored until pygments releases a patch.
-        # PYSEC-2022-42969: ReDoS in py package; transitive dep of interrogate;
-        # no fix available in py (deprecated upstream). Ignored until interrogate
-        # removes or replaces this dependency.
-        run: pip-audit --local --ignore-vuln CVE-2026-4539 --ignore-vuln PYSEC-2022-42969
+        run: pip-audit .

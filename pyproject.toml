@@ -10,11 +10,10 @@ requires-python = ">=3.10"
 license = {text = "MIT"}
 
 dependencies = [
-    "netmiko>=4.3.0",
+    "netmiko>=4.3.0,<4.5.0",
     "paramiko>=3.4.0",
     "pyyaml>=6.0",
     "cryptography>=46.0.5",
-    "pygments>=2.0.0,<2.19.0",
 ]
 
 [project.optional-dependencies]
