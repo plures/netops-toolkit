@@ -1319,8 +1319,6 @@ def _fragment_to_csv(fragment: dict, dest: Any) -> int:
     import io
 
     devices = fragment.get("devices", {})
-    if not devices:
-        return 0
 
     # Collect all possible field names across devices
     fieldnames_set: set[str] = {"name"}
