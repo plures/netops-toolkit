@@ -1529,6 +1529,9 @@ def main() -> None:
             fmt = "csv"
         if fmt == "csv":
             count = _fragment_to_csv(fragment, out_path)
+            # Ensure a CSV file exists even when no devices were discovered
+            if count == 0 and not out_path.exists():
+                out_path.touch()
             print(f"✅ CSV written to {args.output} ({count} devices)", file=sys.stderr)
         else:
             out_path.write_text(json.dumps(fragment, indent=2))
