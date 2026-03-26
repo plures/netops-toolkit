@@ -1,5 +1,4 @@
-"""
-Credential vault — encrypted storage for device credentials.
+"""Credential vault — encrypted storage for device credentials.
 
 Stores per-device, per-group, and default credentials in an AES-256-GCM
 encrypted YAML file.  The encryption key is derived from a master password
@@ -108,13 +107,13 @@ def _decode(s: str) -> bytes:
 # ---------------------------------------------------------------------------
 
 class CredentialVault:
-    """
-    Encrypted credential store backed by a YAML file.
+    """Encrypted credential store backed by a YAML file.
 
     Parameters
     ----------
     vault_path:
         Path to the vault file (will be created by :meth:`init`).
+
     """
 
     DEFAULT_VAULT_PATH = Path.home() / ".netops" / "vault.yaml"
@@ -246,8 +245,7 @@ class CredentialVault:
         hostname: str,
         groups: list[str] | None = None,
     ) -> dict | None:
-        """
-        Return a credentials dict for *hostname*, or ``None`` if nothing matches.
+        """Return a credentials dict for *hostname*, or ``None`` if nothing matches.
 
         Lookup priority:
 

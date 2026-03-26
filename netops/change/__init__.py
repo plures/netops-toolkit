@@ -1,5 +1,4 @@
-"""
-Configuration change management.
+"""Configuration change management.
 
 Provides a full safe-change workflow for network devices:
 

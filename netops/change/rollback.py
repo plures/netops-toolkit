@@ -1,5 +1,4 @@
-"""
-Automated rollback with pre/post health validation.
+r"""Automated rollback with pre/post health validation.
 
 Workflow:
 
@@ -184,8 +183,10 @@ def run_rollback_push(
     rollback_on_failure:
         When *True* automatically restore the pre-change config if validation
         fails.
-    cpu_threshold / mem_threshold:
-        Alert thresholds (percentages) forwarded to :func:`run_health_check`.
+    cpu_threshold:
+        CPU alert threshold percentage forwarded to :func:`run_health_check`.
+    mem_threshold:
+        Memory alert threshold percentage forwarded to :func:`run_health_check`.
     operator:
         Human-readable identifier of the person or system executing the change.
     reason:
@@ -196,6 +197,7 @@ def run_rollback_push(
     snapshot_dir:
         Optional directory where pre-change snapshots are saved via the backup
         integration.
+
     """
     started_at = datetime.now(timezone.utc).isoformat()
     change_id = str(uuid.uuid4())

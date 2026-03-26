@@ -1,5 +1,4 @@
-"""
-netops.report — HTML/PDF network health report generation.
+"""netops.report — HTML/PDF network health report generation.
 
 Quick start::
 

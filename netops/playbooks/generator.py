@@ -1,6 +1,4 @@
-"""
-Playbook generator — auto-generate Ansible remediation playbooks from health
-check failures.
+r"""Playbook generator — auto-generate Ansible remediation playbooks from health check failures.
 
 Reads a health check report (produced by :func:`netops.check.health.run_health_check`
 or :func:`netops.check.health.build_health_report`) and generates valid Ansible
@@ -149,6 +147,7 @@ class GeneratedPlaybook:
         ISO-8601 UTC timestamp of generation.
     source_report_timestamp:
         Timestamp from the originating health check result.
+
     """
 
     playbook_id: str
@@ -380,6 +379,7 @@ def extract_failures(health_result: dict) -> list[tuple[FailureType, dict]]:
     list[tuple[FailureType, dict]]
         Ordered list of ``(failure_type, check_detail)`` pairs for every check
         where ``alert`` is ``True``.
+
     """
     failures: list[tuple[FailureType, dict]] = []
     seen: set[FailureType] = set()
@@ -438,6 +438,7 @@ def generate_playbook(
         A :class:`GeneratedPlaybook` when at least one alerting check is found.
         Returns ``None`` when the device has no active alerts or the result is
         not successful.
+
     """
     if not health_result.get("success", False):
         return None
@@ -503,6 +504,7 @@ def generate_playbooks_from_report(
     -------
     list[GeneratedPlaybook]
         One playbook per device that has at least one active alert.
+
     """
     if isinstance(health_report, list):
         results = health_report

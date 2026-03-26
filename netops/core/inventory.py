@@ -1,5 +1,4 @@
-"""
-Device inventory management.
+"""Device inventory management.
 
 Simple YAML/JSON inventory that maps to Ansible inventory format.
 
@@ -22,6 +21,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class Device:
     """A network device in the inventory."""
+
     hostname: str
     host: str  # IP or FQDN
     vendor: str  # cisco_ios, nokia_sros, etc.
@@ -43,8 +43,7 @@ class Device:
 
 
 class Inventory:
-    """
-    Device inventory with group support.
+    """Device inventory with group support.
 
     Supports:
     - YAML/JSON file loading

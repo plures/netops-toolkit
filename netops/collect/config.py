@@ -1,5 +1,4 @@
-"""
-Collect device configurations.
+"""Collect device configurations.
 
 Usage:
     python -m netops.collect.config --inventory inventory.yaml --group core

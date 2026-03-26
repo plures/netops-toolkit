@@ -1,5 +1,4 @@
-"""
-Report generator — produce HTML and PDF network health reports from check results.
+"""Report generator — produce HTML and PDF network health reports from check results.
 
 Combines results from :mod:`netops.check.health`, :mod:`netops.check.bgp`,
 :mod:`netops.check.vlan` (and any other check module) into formatted reports.
@@ -83,6 +82,7 @@ class ReportGenerator:
         Default directory for :meth:`generate_html` / :meth:`generate_pdf`
         when no explicit *output_path* is given.  Defaults to the current
         working directory.
+
     """
 
     def __init__(
@@ -125,6 +125,7 @@ class ReportGenerator:
 
         Returns a dict with keys ``title``, ``generated_at``, ``period``,
         ``sections``, and ``overall_alert``.
+
         """
         sections = sections or []
         overall_alert = any(s.get("data", {}).get("overall_alert") for s in sections)
@@ -163,6 +164,7 @@ class ReportGenerator:
         ImportError
             When ``jinja2`` is not installed (``pip install
             netops-toolkit[report]``).
+
         """
         try:
             import jinja2  # noqa: PLC0415
@@ -220,6 +222,7 @@ class ReportGenerator:
         ImportError
             When ``weasyprint`` is not installed (``pip install
             netops-toolkit[report-pdf]``).
+
         """
         try:
             from weasyprint import HTML as WeasyprintHTML  # noqa: PLC0415
@@ -309,6 +312,7 @@ def generate_report(
     Returns the assembled ``report_data`` dict (``sections``, ``title``,
     ``overall_alert``, etc.) with an additional ``html`` key containing the
     rendered HTML string.
+
     """
     gen = ReportGenerator(template_path=template_path, output_dir=output_dir)
     base = gen.build_report(title=title, sections=sections, period=period)

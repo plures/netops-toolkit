@@ -1,5 +1,4 @@
-"""
-Vendor-specific remediation templates for playbook generation.
+"""Vendor-specific remediation templates for playbook generation.
 
 Each :class:`RemediationTemplate` encapsulates the commands needed to:
 
@@ -92,6 +91,7 @@ class RemediationTemplate:
         cannot be rolled back (e.g. counter clearing).
     rollback_note:
         Human-readable note explaining rollback behaviour or limitations.
+
     """
 
     failure_type: str

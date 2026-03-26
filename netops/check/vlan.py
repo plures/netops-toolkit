@@ -1,5 +1,4 @@
-"""
-VLAN audit — compare declared vs actual VLAN configuration across switches.
+r"""VLAN audit — compare declared vs actual VLAN configuration across switches.
 
 Checks VLAN configuration on a switch fabric and reports:
 
@@ -159,6 +158,7 @@ def audit_vlans(
     * ``compliant``        – ``True`` when no discrepancies were found
     * ``alerts``           – human-readable list of alert messages
     * ``error``            – error message when the connection failed
+
     """
     if expected_names is None:
         expected_names = {}
@@ -248,6 +248,7 @@ def build_vlan_report(results: list[dict]) -> dict:
     * ``extra_vlan_switches``     – list of ``{host, extra_vlans}``
     * ``name_mismatch_switches``  – list of ``{host, name_mismatches}``
     * ``trunk_mismatch_switches`` – list of ``{host, trunk_mismatches}``
+
     """
     reachable = [r for r in results if r.get("success")]
     compliant = [r for r in reachable if r.get("compliant")]

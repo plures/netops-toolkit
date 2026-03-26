@@ -1,5 +1,4 @@
-"""
-Ansible integration for netops-toolkit.
+"""Ansible integration for netops-toolkit.
 
 Provides:
 - Dynamic inventory script compatible with Ansible's ``--inventory`` flag

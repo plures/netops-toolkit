@@ -1,5 +1,4 @@
-"""
-Subnet scanner — discover devices via SNMP/CDP/LLDP/ping sweep.
+"""Subnet scanner — discover devices via SNMP/CDP/LLDP/ping sweep.
 
 Usage:
     python -m netops.inventory.scan --subnet 10.0.0.0/24 --community public
@@ -156,13 +155,13 @@ def ping_sweep(
     max_workers: int = 50,
     timeout: int = 1,
 ) -> list[str]:
-    """
-    Ping sweep a subnet and return a sorted list of reachable IP address strings.
+    """Ping sweep a subnet and return a sorted list of reachable IP address strings.
 
     Args:
         subnet: CIDR notation subnet (e.g. ``"10.0.0.0/24"``).
         max_workers: Thread pool size for concurrent pings.
         timeout: Per-host ping timeout in seconds.
+
     """
     network = ipaddress.ip_network(subnet, strict=False)
     hosts = list(network.hosts())
@@ -240,8 +239,7 @@ async def _snmp_walk_async(
     port: int,
     timeout: int,
 ) -> list[tuple[str, str]]:
-    """
-    Async SNMP WALK over an OID subtree.
+    """Async SNMP WALK over an OID subtree.
 
     Returns a list of ``(oid_suffix, value)`` tuples where *oid_suffix* is
     the index portion after the base *oid*.
@@ -280,8 +278,7 @@ async def _snmp_walk_async(
 
 
 def identify_vendor(sys_descr: str, sys_obj_id: str = "") -> str:
-    """
-    Map *sysDescr* / *sysObjectID* to a Netmiko-compatible vendor string.
+    """Map *sysDescr* / *sysObjectID* to a Netmiko-compatible vendor string.
 
     Returns one of: ``cisco_ios``, ``cisco_xe``, ``cisco_xr``, ``cisco_nxos``,
     ``nokia_sros``, ``nokia_srl``, ``juniper_junos``, ``arista_eos``,
@@ -513,8 +510,7 @@ def scan_subnet(
     skip_ping: bool = False,
     skip_snmp: bool = False,
 ) -> list[ScanResult]:
-    """
-    Full subnet scan: ping sweep → SNMP identification → CDP/LLDP topology.
+    """Full subnet scan: ping sweep → SNMP identification → CDP/LLDP topology.
 
     Args:
         subnet: CIDR notation subnet (e.g. ``"10.0.0.0/24"``).
@@ -532,6 +528,7 @@ def scan_subnet(
 
     Requires:
         ``pysnmp >= 7.0``. Install with ``pip install 'netops-toolkit[snmp]'``.
+
     """
     return asyncio.run(
         _scan_subnet_async(
@@ -549,8 +546,7 @@ def scan_subnet(
 
 
 def results_to_inventory_fragment(results: list[ScanResult]) -> dict:
-    """
-    Convert scan results to an inventory fragment (``{"devices": {...}}`` dict).
+    """Convert scan results to an inventory fragment (``{"devices": {...}}`` dict).
 
     The fragment is compatible with :class:`netops.core.Inventory` and can be
     written directly as a JSON file or merged into an existing inventory.
@@ -598,8 +594,7 @@ def _dump_yaml(path: Path, data: dict) -> None:
 
 
 def merge_inventory(existing_path: str, fragment: dict) -> dict:
-    """
-    Merge a scan fragment into an existing inventory file.
+    """Merge a scan fragment into an existing inventory file.
 
     New devices are added. Existing entries are updated only where the
     current value is ``None``, ``"unknown"``, or ``""`` — manually-set
@@ -612,6 +607,7 @@ def merge_inventory(existing_path: str, fragment: dict) -> dict:
 
     Returns:
         Merged inventory dict.
+
     """
     path = Path(existing_path)
     if path.exists():
@@ -1197,6 +1193,7 @@ def deep_enrich(
 
     Returns:
         The enriched fragment (modified in-place and returned).
+
     """
     devices = fragment.get("devices", {})
     if not devices:

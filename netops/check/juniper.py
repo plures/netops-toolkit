@@ -1,5 +1,4 @@
-"""
-Juniper JunOS health checker.
+r"""Juniper JunOS health checker.
 
 Provides health checks for Juniper JunOS devices (MX, QFX, EX, SRX):
 
@@ -441,6 +440,7 @@ def build_junos_health_report(results: list[dict]) -> dict:
     * ``environment_alerts``     – count of devices with environment alerts
     * ``overall_alert``          – ``True`` when any device triggered an alert
     * ``results``                – original per-device result list
+
     """
     reachable = [r for r in results if r.get("success")]
 

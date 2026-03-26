@@ -1,5 +1,4 @@
-"""
-Ansible playbook generation from health check results.
+"""Ansible playbook generation from health check results.
 
 Provides auto-generation of vendor-specific Ansible remediation playbooks
 from health check failures:

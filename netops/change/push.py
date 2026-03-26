@@ -1,5 +1,4 @@
-"""
-Safe configuration push with pre/post diff and auto-rollback confirm timer.
+r"""Safe configuration push with pre/post diff and auto-rollback confirm timer.
 
 Workflow:
 
@@ -186,6 +185,7 @@ def run_push(
     changelog_path:
         Optional path to a JSON-lines changelog file.  Each call appends one
         record.
+
     """
     started_at = datetime.now(timezone.utc).isoformat()
     record = ChangeRecord(

@@ -1,5 +1,4 @@
-"""
-Cisco IOS/IOS-XE health checker.
+r"""Cisco IOS/IOS-XE health checker.
 
 Extends the generic health check with Cisco-specific checks:
 
@@ -357,6 +356,7 @@ def run_cisco_health_check(
         When ``True`` (default), run the OSPF adjacency check.
     include_environment:
         When ``True`` (default), run the environment check.
+
     """
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     result: dict = {
@@ -415,6 +415,7 @@ def build_cisco_health_report(results: list[dict]) -> dict:
     * ``environment_alerts``       – devices with environment alerts
     * ``overall_alert``            – ``True`` when any device triggered an alert
     * ``results``                  – original per-device result list
+
     """
     reachable = [r for r in results if r.get("success")]
 
