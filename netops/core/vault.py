@@ -42,7 +42,6 @@ import logging
 import os
 import re
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -58,8 +57,8 @@ _KEY_BYTES = 32  # AES-256
 
 def _derive_key(password: str, salt: bytes) -> bytes:
     """Derive a 256-bit AES key from *password* and *salt* via PBKDF2-HMAC-SHA256."""
-    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
     from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
@@ -81,8 +80,8 @@ def _encrypt(plaintext: bytes, key: bytes) -> tuple[bytes, bytes]:
 
 def _decrypt(nonce: bytes, ciphertext: bytes, key: bytes) -> bytes:
     """AES-256-GCM decrypt.  Raises :class:`ValueError` on authentication failure."""
-    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
     from cryptography.exceptions import InvalidTag
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
     try:
         return AESGCM(key).decrypt(nonce, ciphertext, None)
@@ -123,7 +122,7 @@ class CredentialVault:
     def __init__(self, vault_path: str | Path | None = None) -> None:
         """Initialise with an optional vault file path (defaults to ``~/.netops/vault.yaml``)."""
         self._path = Path(vault_path) if vault_path else self.DEFAULT_VAULT_PATH
-        self._key: Optional[bytes] = None
+        self._key: bytes | None = None
         # In-memory store: {"devices": {...}, "groups": {...}, "defaults": {...}}
         self._data: dict = {"devices": {}, "groups": {}, "defaults": {}}
 
@@ -185,7 +184,7 @@ class CredentialVault:
         hostname: str,
         username: str,
         password: str,
-        enable_password: Optional[str] = None,
+        enable_password: str | None = None,
     ) -> None:
         """Store credentials for a specific device *hostname*."""
         _require_unlocked(self._key)
@@ -199,7 +198,7 @@ class CredentialVault:
         group: str,
         username: str,
         password: str,
-        enable_password: Optional[str] = None,
+        enable_password: str | None = None,
     ) -> None:
         """Store credentials for all devices in *group*."""
         _require_unlocked(self._key)
@@ -212,7 +211,7 @@ class CredentialVault:
         self,
         username: str,
         password: str,
-        enable_password: Optional[str] = None,
+        enable_password: str | None = None,
     ) -> None:
         """Store fallback credentials used when no device or group entry matches."""
         _require_unlocked(self._key)
@@ -245,8 +244,8 @@ class CredentialVault:
     def get_credentials(
         self,
         hostname: str,
-        groups: Optional[list[str]] = None,
-    ) -> Optional[dict]:
+        groups: list[str] | None = None,
+    ) -> dict | None:
         """
         Return a credentials dict for *hostname*, or ``None`` if nothing matches.
 
@@ -321,7 +320,7 @@ def _check_vault_header(raw: object) -> None:
             raise ValueError(f"Vault file missing field: {field}")
 
 
-def _require_unlocked(key: Optional[bytes]) -> None:
+def _require_unlocked(key: bytes | None) -> None:
     """Raise ``RuntimeError`` if *key* is ``None`` (vault not yet unlocked)."""
     if key is None:
         raise RuntimeError("Vault is locked — call unlock() first")
@@ -332,7 +331,7 @@ def _env_key_prefix(hostname: str) -> str:
     return re.sub(r"[^A-Z0-9]", "_", hostname.upper())
 
 
-def _env_credentials(hostname: str) -> Optional[dict]:
+def _env_credentials(hostname: str) -> dict | None:
     """Return credentials sourced purely from environment variables, or ``None``."""
     prefix = f"NETOPS_CRED_{_env_key_prefix(hostname)}"
     user = os.environ.get(f"{prefix}_USER")
@@ -393,7 +392,7 @@ def _cli_set(args: argparse.Namespace) -> int:
 
     cred_user = args.user
     cred_pass = _prompt_credential_password()
-    enable_pw: Optional[str] = None
+    enable_pw: str | None = None
     if args.enable:
         enable_pw = getpass.getpass("Enable password (blank to skip): ") or None
 

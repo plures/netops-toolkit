@@ -43,7 +43,6 @@ import uuid
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
 
 from netops.change.push import (
     _push_commands,
@@ -77,17 +76,17 @@ class RollbackRecord:
     started_at: str  # ISO-8601 UTC
     commands: list[str]
     pre_config: str = ""
-    post_config: Optional[str] = None
-    diff: Optional[str] = None
-    pre_health: Optional[dict] = None  # result of run_health_check() before change
-    post_health: Optional[dict] = None  # result of run_health_check() after change
+    post_config: str | None = None
+    diff: str | None = None
+    pre_health: dict | None = None  # result of run_health_check() before change
+    post_health: dict | None = None  # result of run_health_check() after change
     committed: bool = False
-    validation_passed: Optional[bool] = None  # None = validation was skipped
+    validation_passed: bool | None = None  # None = validation was skipped
     rolled_back: bool = False
-    rollback_reason: Optional[str] = None
-    snapshot_path: Optional[str] = None  # path saved via backup integration
-    completed_at: Optional[str] = None
-    error: Optional[str] = None
+    rollback_reason: str | None = None
+    snapshot_path: str | None = None  # path saved via backup integration
+    completed_at: str | None = None
+    error: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -95,7 +94,7 @@ class RollbackRecord:
 # ---------------------------------------------------------------------------
 
 
-def _health_degraded(pre: Optional[dict], post: dict) -> tuple[bool, str]:
+def _health_degraded(pre: dict | None, post: dict) -> tuple[bool, str]:
     """Compare pre/post health-check results and identify degradation.
 
     Returns ``(degraded, reason)`` where *degraded* is ``True`` when the
@@ -132,7 +131,7 @@ def _health_degraded(pre: Optional[dict], post: dict) -> tuple[bool, str]:
 # ---------------------------------------------------------------------------
 
 
-def _save_pre_snapshot(host: str, config: str, snapshot_dir: Path, timestamp: str) -> Optional[str]:
+def _save_pre_snapshot(host: str, config: str, snapshot_dir: Path, timestamp: str) -> str | None:
     """Save *config* to *snapshot_dir* using the standard backup directory layout.
 
     Returns the saved file path on success, or ``None`` if saving fails.
@@ -164,8 +163,8 @@ def run_rollback_push(
     mem_threshold: float = DEFAULT_MEM_THRESHOLD,
     operator: str = "",
     reason: str = "",
-    audit_log_path: Optional[Path] = None,
-    snapshot_dir: Optional[Path] = None,
+    audit_log_path: Path | None = None,
+    snapshot_dir: Path | None = None,
 ) -> RollbackRecord:
     """Execute a configuration change with pre/post health validation.
 

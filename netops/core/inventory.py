@@ -13,9 +13,8 @@ from __future__ import annotations
 
 import json
 import logging
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -27,16 +26,16 @@ class Device:
     host: str  # IP or FQDN
     vendor: str  # cisco_ios, nokia_sros, etc.
     transport: str = "ssh"
-    port: Optional[int] = None
-    username: Optional[str] = None
-    password: Optional[str] = None
-    enable_password: Optional[str] = None
-    key_file: Optional[str] = None
+    port: int | None = None
+    username: str | None = None
+    password: str | None = None
+    enable_password: str | None = None
+    key_file: str | None = None
     groups: list[str] = field(default_factory=list)
     tags: dict[str, str] = field(default_factory=dict)
     # Location/metadata
-    site: Optional[str] = None
-    role: Optional[str] = None  # core, distribution, access, edge
+    site: str | None = None
+    role: str | None = None  # core, distribution, access, edge
 
     def to_dict(self) -> dict:
         """Return a dict representation of the device, omitting ``None`` fields."""
@@ -66,7 +65,7 @@ class Inventory:
         for group in device.groups:
             self.groups.setdefault(group, []).append(device.hostname)
 
-    def get(self, hostname: str) -> Optional[Device]:
+    def get(self, hostname: str) -> Device | None:
         """Look up a device by hostname; returns ``None`` if not found."""
         return self.devices.get(hostname)
 
@@ -89,7 +88,7 @@ class Inventory:
         return results
 
     @classmethod
-    def from_file(cls, path: str | Path) -> "Inventory":
+    def from_file(cls, path: str | Path) -> Inventory:
         """Load inventory from YAML or JSON file."""
         path = Path(path)
         if path.suffix in (".yaml", ".yml"):

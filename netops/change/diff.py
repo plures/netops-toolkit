@@ -43,7 +43,6 @@ import sys
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Optional
 
 __all__ = [
     "ConfigStyle",
@@ -95,7 +94,7 @@ class ConfigStyle(str, Enum):
     FLAT = "flat"
 
     @classmethod
-    def detect(cls, text: str) -> "ConfigStyle":
+    def detect(cls, text: str) -> ConfigStyle:
         """Heuristically detect the config style from *text*."""
         lines = [ln for ln in text.splitlines() if ln.strip() and not ln.strip().startswith("!")]
         set_lines = sum(1 for ln in lines if ln.lstrip().startswith("set "))
@@ -140,7 +139,7 @@ class ConfigNode:
     raw: str
     """Original line as it appeared in the config (may include whitespace)."""
 
-    children: list["ConfigNode"] = field(default_factory=list)
+    children: list[ConfigNode] = field(default_factory=list)
     """Child nodes (sub-stanzas in Cisco hierarchical config)."""
 
     depth: int = 0
@@ -229,7 +228,7 @@ _ROOT_INDENT = -1  # Sentinel indent for the virtual root stack entry
 def _parse_junos_hierarchical(text: str) -> list[ConfigNode]:
     """Parse JunOS bracketed hierarchical format (``{…}`` blocks)."""
     root_nodes: list[ConfigNode] = []
-    stack: list[tuple[int, Optional[ConfigNode]]] = [(_ROOT_INDENT, None)]
+    stack: list[tuple[int, ConfigNode | None]] = [(_ROOT_INDENT, None)]
 
     for raw_line in text.splitlines():
         stripped = raw_line.strip()
@@ -477,7 +476,7 @@ def diff_configs(
     before: str,
     after: str,
     *,
-    style: Optional[ConfigStyle] = None,
+    style: ConfigStyle | None = None,
 ) -> DiffResult:
     """Compare two config strings and return a :class:`DiffResult`.
 

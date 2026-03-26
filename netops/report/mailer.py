@@ -33,7 +33,6 @@ from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -67,11 +66,11 @@ class ReportMailer:
         self,
         host: str,
         port: int = 587,
-        username: Optional[str] = None,
-        password: Optional[str] = None,
+        username: str | None = None,
+        password: str | None = None,
         use_tls: bool = True,
         use_ssl: bool = False,
-        from_addr: Optional[str] = None,
+        from_addr: str | None = None,
         timeout: int = 30,
     ) -> None:
         """Initialise the mailer with SMTP server connection settings."""
@@ -93,9 +92,9 @@ class ReportMailer:
         recipients: list[str],
         subject: str,
         html_body: str,
-        pdf_attachment: Optional[bytes] = None,
+        pdf_attachment: bytes | None = None,
         pdf_filename: str = "report.pdf",
-        plain_text: Optional[str] = None,
+        plain_text: str | None = None,
     ) -> None:
         """Send a report email to *recipients*.
 
@@ -149,9 +148,9 @@ class ReportMailer:
         recipients: list[str],
         subject: str,
         html_body: str,
-        pdf_attachment: Optional[bytes],
+        pdf_attachment: bytes | None,
         pdf_filename: str,
-        plain_text: Optional[str],
+        plain_text: str | None,
     ) -> MIMEMultipart:
         """Assemble the MIME message."""
         if pdf_attachment:

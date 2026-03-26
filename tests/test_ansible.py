@@ -182,7 +182,7 @@ class TestToAnsibleYaml:
 
 
 class TestInventoryCLI:
-    def _run_cli(self, args: list[str]) -> "subprocess.CompletedProcess":  # type: ignore[name-defined]  # noqa: F821
+    def _run_cli(self, args: list[str]) -> subprocess.CompletedProcess:  # type: ignore[name-defined]  # noqa: F821
         import subprocess
         import sys
 
@@ -243,7 +243,7 @@ class TestInventoryCLI:
 
 
 class TestDynamicInventory:
-    def _run(self, args: list[str]) -> "subprocess.CompletedProcess":  # type: ignore[name-defined]  # noqa: F821
+    def _run(self, args: list[str]) -> subprocess.CompletedProcess:  # type: ignore[name-defined]  # noqa: F821
         import subprocess
         import sys
 
@@ -381,8 +381,9 @@ class TestAutoGroups:
 
     def test_no_duplicate_auto_group_overrides_explicit(self, tmp_path: Path):
         """Explicit groups are never overwritten by an auto-group with the same name."""
-        from netops.ansible.dynamic_inventory import build_inventory
         import textwrap
+
+        from netops.ansible.dynamic_inventory import build_inventory
 
         yaml_text = textwrap.dedent("""\
             devices:
@@ -449,6 +450,7 @@ class TestCache:
         self, sample_inventory_file: Path, tmp_path: Path
     ):
         import time
+
         from netops.ansible.dynamic_inventory import build_inventory
 
         cache_file = tmp_path / "cache.json"
@@ -469,6 +471,7 @@ class TestCache:
         self, sample_inventory_file: Path, tmp_path: Path
     ):
         import time
+
         from netops.ansible.dynamic_inventory import build_inventory
 
         cache_file = tmp_path / "cache.json"
@@ -505,7 +508,7 @@ class TestCache:
 
 
 class TestDynamicInventoryCLIExtended:
-    def _run(self, args: list[str]) -> "subprocess.CompletedProcess":  # type: ignore[name-defined]  # noqa: F821
+    def _run(self, args: list[str]) -> subprocess.CompletedProcess:  # type: ignore[name-defined]  # noqa: F821
         import subprocess
         import sys
 

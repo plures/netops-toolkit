@@ -36,7 +36,6 @@ import time
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
 
 from netops.core.connection import ConnectionParams, DeviceConnection, Transport
 
@@ -57,12 +56,12 @@ class ChangeRecord:
     started_at: str  # ISO-8601 UTC
     commands: list[str]
     pre_config: str
-    post_config: Optional[str] = None
-    diff: Optional[str] = None
+    post_config: str | None = None
+    diff: str | None = None
     committed: bool = False
     confirmed: bool = False
     rolled_back: bool = False
-    error: Optional[str] = None
+    error: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -166,7 +165,7 @@ def run_push(
     commit: bool = False,
     confirm_timer_minutes: int = 0,
     operator: str = "",
-    changelog_path: Optional[Path] = None,
+    changelog_path: Path | None = None,
 ) -> ChangeRecord:
     """Execute the full safe-push workflow.
 

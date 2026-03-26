@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import pytest
 
-from netops.parsers.vlan import expand_vlan_range, parse_interfaces_trunk, parse_vlan_brief
 from netops.check.vlan import (
     _check_name_mismatches,
     _check_trunk_vlans,
@@ -15,6 +14,7 @@ from netops.check.vlan import (
     build_vlan_report,
 )
 from netops.core.connection import ConnectionParams
+from netops.parsers.vlan import expand_vlan_range, parse_interfaces_trunk, parse_vlan_brief
 
 # ---------------------------------------------------------------------------
 # Sample CLI output fixtures

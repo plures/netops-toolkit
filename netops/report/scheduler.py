@@ -33,8 +33,8 @@ from __future__ import annotations
 
 import logging
 import threading
+from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
-from typing import Callable, Optional
 
 from netops.report.generator import ReportGenerator, generate_report
 
@@ -60,11 +60,11 @@ class ScheduledReport:
         collect_fn: Callable[[], list[dict]],
         frequency: str,  # "daily" or "weekly"
         time_of_day: str,  # "HH:MM" in UTC
-        day_of_week: Optional[str],  # for "weekly" frequency
+        day_of_week: str | None,  # for "weekly" frequency
         title: str,
-        output_dir: Optional[str],
-        recipients: Optional[list[str]],
-        subject: Optional[str],
+        output_dir: str | None,
+        recipients: list[str] | None,
+        subject: str | None,
         pdf: bool,
     ) -> None:
         """Initialise a scheduled report descriptor with timing and delivery settings."""
@@ -78,7 +78,7 @@ class ScheduledReport:
         self.subject = subject or title
         self.pdf = pdf
 
-    def next_run(self, now: Optional[datetime] = None) -> datetime:
+    def next_run(self, now: datetime | None = None) -> datetime:
         """Return the next UTC run datetime for this schedule."""
         now = now or datetime.now(timezone.utc)
         hour, minute = _parse_time(self.time_of_day)
@@ -116,15 +116,15 @@ class ReportScheduler:
 
     def __init__(
         self,
-        generator: Optional[ReportGenerator] = None,
-        mailer: Optional[object] = None,
+        generator: ReportGenerator | None = None,
+        mailer: object | None = None,
     ) -> None:
         """Initialise the scheduler with optional generator and mailer instances."""
         self._generator = generator or ReportGenerator()
         self._mailer = mailer
         self._jobs: list[ScheduledReport] = []
         self._stop_event = threading.Event()
-        self._thread: Optional[threading.Thread] = None
+        self._thread: threading.Thread | None = None
 
     # ------------------------------------------------------------------
     # Schedule registration
@@ -135,9 +135,9 @@ class ReportScheduler:
         collect_fn: Callable[[], list[dict]],
         time_of_day: str = "00:00",
         title: str = "Daily Network Health Report",
-        output_dir: Optional[str] = None,
-        recipients: Optional[list[str]] = None,
-        subject: Optional[str] = None,
+        output_dir: str | None = None,
+        recipients: list[str] | None = None,
+        subject: str | None = None,
         pdf: bool = False,
     ) -> None:
         """Register a daily report.
@@ -182,9 +182,9 @@ class ReportScheduler:
         day_of_week: str = "monday",
         time_of_day: str = "00:00",
         title: str = "Weekly Network Health Report",
-        output_dir: Optional[str] = None,
-        recipients: Optional[list[str]] = None,
-        subject: Optional[str] = None,
+        output_dir: str | None = None,
+        recipients: list[str] | None = None,
+        subject: str | None = None,
         pdf: bool = False,
     ) -> None:
         """Register a weekly report.

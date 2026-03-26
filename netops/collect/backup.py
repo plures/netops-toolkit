@@ -26,7 +26,6 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
 
 from netops.collect.config import collect_config
 from netops.core import Inventory
@@ -59,7 +58,7 @@ def _safe_hostname(host: str) -> str:
     return safe.strip(". ") or "_"
 
 
-def _latest_backup_before(device_dir: Path, current_filename: str) -> Optional[Path]:
+def _latest_backup_before(device_dir: Path, current_filename: str) -> Path | None:
     """Return the most recent *.cfg in *device_dir* that is not *current_filename*."""
     backups = sorted(f for f in device_dir.glob("*.cfg") if f.name != current_filename)
     return backups[-1] if backups else None
@@ -213,7 +212,7 @@ def run_backup(
     workers: int = 5,
     git: bool = False,
     alert_on_change: bool = True,
-    _timestamp: Optional[str] = None,
+    _timestamp: str | None = None,
 ) -> list[dict]:
     """Collect configs from all devices and save them with diff tracking.
 

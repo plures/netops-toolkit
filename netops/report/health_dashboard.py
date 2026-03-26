@@ -46,7 +46,7 @@ import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -581,7 +581,7 @@ def render_html(dashboard: dict, output_path: str | None = None) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _parse_thresholds(raw: Optional[str]) -> dict[str, float]:
+def _parse_thresholds(raw: str | None) -> dict[str, float]:
     """Parse a ``key=value[,...]`` threshold string into a dict of floats."""
     thresholds: dict[str, float] = {}
     if not raw:

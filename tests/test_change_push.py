@@ -10,7 +10,6 @@ from __future__ import annotations
 import json
 from unittest.mock import MagicMock, patch
 
-
 from netops.change.push import (
     ChangeRecord,
     _rollback_to,

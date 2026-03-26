@@ -2,6 +2,17 @@
 
 from __future__ import annotations
 
+from netops.check.health import (
+    DEFAULT_CPU_THRESHOLD,
+    DEFAULT_MEM_THRESHOLD,
+    _parse_thresholds,
+    check_cpu,
+    check_interface_errors,
+    check_logs,
+    check_memory,
+    run_health_check,
+)
+from netops.core.connection import ConnectionParams
 from netops.parsers.health import (
     parse_cpu_brocade,
     parse_cpu_cisco,
@@ -16,17 +27,6 @@ from netops.parsers.health import (
     parse_memory_cisco,
     parse_memory_nokia,
 )
-from netops.check.health import (
-    _parse_thresholds,
-    check_cpu,
-    check_interface_errors,
-    check_logs,
-    check_memory,
-    run_health_check,
-    DEFAULT_CPU_THRESHOLD,
-    DEFAULT_MEM_THRESHOLD,
-)
-from netops.core.connection import ConnectionParams
 
 # ---------------------------------------------------------------------------
 # Sample CLI output fixtures

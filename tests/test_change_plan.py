@@ -14,6 +14,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from netops.change.diff import DiffResult
 from netops.change.plan import (
     ChangePlan,
     ChangeStep,
@@ -28,7 +29,6 @@ from netops.change.plan import (
     generate_plan,
     load_plan,
 )
-from netops.change.diff import DiffResult
 
 # ---------------------------------------------------------------------------
 # Shared test data

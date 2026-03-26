@@ -2,6 +2,26 @@
 
 from __future__ import annotations
 
+from netops.check.arista import (
+    DEFAULT_CPU_THRESHOLD,
+    DEFAULT_MEM_THRESHOLD,
+    _parse_thresholds,
+    _send_json,
+    build_eos_health_report,
+    check_eos_bgp,
+    check_eos_bgp_evpn,
+    check_eos_cpu_memory,
+    check_eos_environment,
+    check_eos_interfaces,
+    check_eos_mlag,
+    check_eos_ospf,
+    check_eos_transceivers,
+    run_health_check,
+)
+from netops.check.arista import (
+    _print_result as _eos_print_result,
+)
+from netops.core.connection import ConnectionParams as _AristaConnParams
 from netops.parsers.arista import (
     parse_bgp_evpn_eos,
     parse_bgp_summary_eos,
@@ -17,24 +37,6 @@ from netops.parsers.arista import (
     parse_ospf_neighbors_eos_text,
     parse_transceivers_eos,
 )
-from netops.check.arista import (
-    _parse_thresholds,
-    _print_result as _eos_print_result,
-    _send_json,
-    build_eos_health_report,
-    check_eos_bgp,
-    check_eos_bgp_evpn,
-    check_eos_cpu_memory,
-    check_eos_environment,
-    check_eos_interfaces,
-    check_eos_mlag,
-    check_eos_ospf,
-    check_eos_transceivers,
-    run_health_check,
-    DEFAULT_CPU_THRESHOLD,
-    DEFAULT_MEM_THRESHOLD,
-)
-from netops.core.connection import ConnectionParams as _AristaConnParams
 from netops.templates.arista_eos import HEALTH as EOS_HEALTH
 
 # ===========================================================================
