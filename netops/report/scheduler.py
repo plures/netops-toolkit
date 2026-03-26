@@ -1,5 +1,4 @@
-"""
-Scheduled network health report generation.
+"""Scheduled network health report generation.
 
 Supports daily and weekly schedules using Python's built-in
 :mod:`threading` module — no external scheduler library required.
@@ -112,6 +111,7 @@ class ReportScheduler:
     mailer:
         Optional :class:`~netops.report.mailer.ReportMailer` instance for
         email delivery.  When *None* reports are only written to disk.
+
     """
 
     def __init__(
@@ -161,6 +161,7 @@ class ReportScheduler:
         pdf:
             When ``True`` also generate and attach a PDF.  Requires
             ``weasyprint`` (``pip install netops-toolkit[report-pdf]``).
+
         """
         job = ScheduledReport(
             collect_fn=collect_fn,
@@ -201,6 +202,7 @@ class ReportScheduler:
             Report title.
         output_dir, recipients, subject, pdf:
             Same as :meth:`schedule_daily`.
+
         """
         dow = day_of_week.lower()
         if dow not in _WEEKDAYS:
@@ -238,6 +240,7 @@ class ReportScheduler:
             When ``True`` (default) this call blocks until :meth:`stop` is
             called from another thread.  When ``False`` the scheduler runs
             in a background daemon thread and this call returns immediately.
+
         """
         if not self._jobs:
             logger.warning("ReportScheduler started with no scheduled jobs")
@@ -265,7 +268,7 @@ class ReportScheduler:
     # ------------------------------------------------------------------
 
     def _run_loop(self) -> None:
-        """Main scheduler loop — sleep until the next job, then fire it."""
+        """Sleep until the next scheduled job is due, then fire it."""
         while not self._stop_event.is_set():
             now = datetime.now(timezone.utc)
             if not self._jobs:

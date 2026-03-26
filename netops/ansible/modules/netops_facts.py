@@ -1,7 +1,5 @@
 #!/usr/bin/env python
-"""
-Ansible module: netops_facts
-=============================
+"""Ansible module: netops_facts.
 
 Collect structured device facts from a network device using netops utilities
 and return them as Ansible facts (``ansible_facts``).
@@ -46,7 +44,7 @@ Return values
                 status: up
                 protocol: up
 
-EXAMPLES
+Examples
 --------
 
 .. code-block:: yaml
@@ -64,6 +62,7 @@ EXAMPLES
     - name: Show CPU usage
       debug:
         var: ansible_facts.netops.health.cpu_percent
+
 """
 
 from __future__ import annotations

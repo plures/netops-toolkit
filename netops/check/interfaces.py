@@ -1,5 +1,4 @@
-"""
-Check interface status across devices.
+"""Check interface status across devices.
 
 Usage:
     python -m netops.check.interfaces --inventory inventory.yaml --down-only

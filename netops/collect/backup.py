@@ -1,5 +1,4 @@
-"""
-Bulk configuration backup with diff tracking.
+"""Bulk configuration backup with diff tracking.
 
 Collects running configs from all inventory devices, saves them with timestamps
 to a per-device directory tree, and generates unified diffs against the previous
@@ -230,6 +229,7 @@ def run_backup(
     Raises:
         ValueError: If *workers* is less than 1.
         RuntimeError: If *git* is True and git initialisation or commit fails.
+
     """
     if workers < 1:
         raise ValueError(f"workers must be >= 1, got {workers}")

@@ -1,5 +1,4 @@
-"""
-Composable health checks for network devices.
+r"""Composable health checks for network devices.
 
 Runs CPU, memory, interface-error, and log checks across vendors and reports
 results as structured JSON for monitoring integration.
@@ -257,6 +256,7 @@ def build_health_report(results: list[dict]) -> dict:
     * ``log_alerts``               – count of devices with log alerts
     * ``overall_alert``            – ``True`` when any device triggered an alert
     * ``results``                  – original per-device result list
+
     """
     reachable = [r for r in results if r.get("success")]
 

@@ -1,5 +1,4 @@
-"""
-Security policy audit and health checks for Palo Alto Networks PAN-OS devices.
+r"""Security policy audit and health checks for Palo Alto Networks PAN-OS devices.
 
 Policy audit::
 

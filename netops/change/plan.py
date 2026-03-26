@@ -1,5 +1,4 @@
-"""
-Change approval workflow: plan → dry-run → review → approve → execute.
+r"""Change approval workflow: plan → dry-run → review → approve → execute.
 
 Workflow::
 
@@ -300,6 +299,7 @@ def generate_plan(
     ChangePlan
         A fully populated plan ready for export or review.  The plan is
         **never** applied here — call :func:`apply_plan` for that.
+
     """
     now = datetime.now(timezone.utc).isoformat()
     plan_id = str(uuid.uuid4())
@@ -409,6 +409,7 @@ def apply_plan(
     ChangePlan
         The same plan object with each step's ``applied`` / ``error`` fields
         updated.
+
     """
     if not approved:
         logger.info("apply_plan called without approval — dry-run, no changes pushed")
@@ -493,6 +494,7 @@ def export_plan(plan: ChangePlan, path: Path, *, fmt: str = "json") -> None:
     ------
     ValueError
         When *fmt* is not ``"json"`` or ``"yaml"``.
+
     """
     if fmt not in {"json", "yaml"}:
         raise ValueError(f"Unsupported export format: {fmt!r} — use 'json' or 'yaml'")
@@ -530,6 +532,7 @@ def load_plan(path: Path) -> ChangePlan:
     ------
     FileNotFoundError
         When *path* does not exist.
+
     """
     if not path.exists():
         raise FileNotFoundError(f"Plan file not found: {path}")

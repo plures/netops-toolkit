@@ -1,5 +1,4 @@
-"""
-Arista EOS health checker.
+r"""Arista EOS health checker.
 
 Provides health checks for Arista EOS devices (DCS-7xxx, DCS-720x, etc.):
 
@@ -511,6 +510,7 @@ def build_eos_health_report(results: list[dict]) -> dict:
     * ``environment_alerts``     – count of devices with environment alerts
     * ``overall_alert``          – ``True`` when any device triggered an alert
     * ``results``                – original per-device result list
+
     """
     reachable = [r for r in results if r.get("success")]
 

@@ -1,5 +1,4 @@
-"""
-Playbook template library for remediation actions.
+"""Playbook template library for remediation actions.
 
 Each template describes a specific remediation action with vendor-specific
 commands for pre-validation, remediation, post-validation, and rollback.

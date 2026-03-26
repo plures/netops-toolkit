@@ -1,7 +1,5 @@
 #!/usr/bin/env python
-"""
-Ansible module: netops_command
-================================
+"""Ansible module: netops_command.
 
 Thin Ansible wrapper around netops utilities.  Sends one or more commands
 to a network device using the netmiko connection backend and returns the
@@ -32,7 +30,7 @@ Return values
 ``stdout``
     Concatenated output of all commands.
 
-EXAMPLES
+Examples
 --------
 
 .. code-block:: yaml
@@ -60,6 +58,7 @@ EXAMPLES
     - name: Parse BGP output
       set_fact:
         bgp_peers: "{{ bgp_raw.output[0] | netops_parse_bgp }}"
+
 """
 
 from __future__ import annotations

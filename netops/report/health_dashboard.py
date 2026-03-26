@@ -1,5 +1,4 @@
-"""
-Unified multi-vendor health dashboard.
+r"""Unified multi-vendor health dashboard.
 
 Aggregates health check results from all supported vendor checkers
 (Cisco IOS/IOS-XE, Arista EOS, Juniper JunOS, Nokia SROS, Brocade,
@@ -279,6 +278,7 @@ def normalize_device_result(
 
     Returns a list of row dicts.  Unreachable devices produce a single
     ``status="crit"`` row with category ``"reachability"``.
+
     """
     device = result.get("host", "unknown")
     timestamp = result.get("timestamp", datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
@@ -360,6 +360,7 @@ def aggregate_dashboard(
     * ``entries``        – list of normalised row dicts
     * ``summary``        – aggregated statistics
     * ``overall_status`` – worst status across all entries
+
     """
     all_entries: list[dict] = []
     for r in device_results:
@@ -463,6 +464,7 @@ def format_table(dashboard: dict, color: bool = True) -> str:
         When *True* (default), status values are prefixed with emoji icons.
 
     Returns the formatted string (no trailing newline).
+
     """
     entries = dashboard.get("entries", [])
     summary = dashboard.get("summary", {})
@@ -548,6 +550,7 @@ def render_html(dashboard: dict, output_path: str | None = None) -> str:
     ------
     ImportError
         When ``jinja2`` is not installed.
+
     """
     try:
         import jinja2  # noqa: PLC0415

@@ -1,5 +1,4 @@
-"""
-Email delivery for network health reports.
+"""Email delivery for network health reports.
 
 Sends HTML (and optional PDF attachment) reports via SMTP using Python's
 built-in :mod:`smtplib` and :mod:`email` modules — no extra dependencies
@@ -60,6 +59,7 @@ class ReportMailer:
         Envelope *From* address.  Defaults to *username* when not given.
     timeout:
         Socket timeout in seconds (default: 30).
+
     """
 
     def __init__(
@@ -113,6 +113,7 @@ class ReportMailer:
         plain_text:
             Optional plain-text alternative body.  When omitted a minimal
             plain-text version is generated automatically.
+
         """
         if not recipients:
             raise ValueError("recipients must not be empty")

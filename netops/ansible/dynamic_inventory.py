@@ -1,5 +1,4 @@
-"""
-Ansible dynamic inventory script backed by a netops inventory file.
+"""Ansible dynamic inventory script backed by a netops inventory file.
 
 Usage (as a standalone script)::
 
@@ -235,6 +234,7 @@ def build_inventory(
         When *True*, skip reading from and writing to the cache.
     refresh_cache:
         When *True*, ignore the existing cache and always rebuild.
+
     """
     if cache_path is None:
         cache_path = _default_cache_path()

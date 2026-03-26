@@ -1,5 +1,4 @@
-"""
-Semantic-aware configuration diff engine.
+"""Semantic-aware configuration diff engine.
 
 Understands network device config structure rather than treating configs as
 plain text.  Supports three input formats:
@@ -285,6 +284,7 @@ def parse_config(text: str, style: ConfigStyle = ConfigStyle.CISCO) -> list[Conf
     style:
         One of :class:`ConfigStyle`.  Use ``ConfigStyle.detect(text)`` to
         auto-detect.
+
     """
     if style == ConfigStyle.JUNOS:
         lines = text.splitlines()
@@ -489,6 +489,7 @@ def diff_configs(
     style:
         Parsing style.  When *None* (default) the style is auto-detected from
         *before*.
+
     """
     if style is None:
         style = ConfigStyle.detect(before or after)

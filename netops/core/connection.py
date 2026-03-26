@@ -1,5 +1,4 @@
-"""
-Unified device connection manager.
+"""Unified device connection manager.
 
 Handles SSH, SSH2, and Telnet connections with a single interface.
 Uses Netmiko under the hood for vendor-aware CLI interaction.
@@ -38,6 +37,7 @@ class AuthMethod(Enum):
 @dataclass
 class ConnectionParams:
     """Everything needed to connect to a device."""
+
     host: str
     username: str | None = None
     password: str | None = None
@@ -60,8 +60,7 @@ class ConnectionParams:
 
 
 class DeviceConnection:
-    """
-    Unified connection to a network device.
+    """Unified connection to a network device.
 
     Usage:
         params = ConnectionParams(host="10.0.0.1", username="admin", password="secret")
