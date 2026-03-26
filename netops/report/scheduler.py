@@ -14,9 +14,9 @@ Usage::
     mail = ReportMailer(host="smtp.example.com", username="netops@example.com",
                         password="secret")
 
-    def collect() -> list[dict]:
+    def collect() -> list[ReportSection]:
         # Build section list from live checks
-        return [{"name": "Device Health", "type": "health", "data": ...}]
+        return [{"name": "Device Health", "type": "health", "data": {}}]
 
     scheduler = ReportScheduler(generator=gen, mailer=mail)
     scheduler.schedule_daily(
@@ -36,7 +36,7 @@ import threading
 from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 
-from netops.report.generator import ReportGenerator, generate_report
+from netops.report.generator import ReportGenerator, ReportSection, generate_report
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ class ScheduledReport:
 
     def __init__(
         self,
-        collect_fn: Callable[[], list[dict]],
+        collect_fn: Callable[[], list[ReportSection]],
         frequency: str,  # "daily" or "weekly"
         time_of_day: str,  # "HH:MM" in UTC
         day_of_week: str | None,  # for "weekly" frequency
@@ -132,7 +132,7 @@ class ReportScheduler:
 
     def schedule_daily(
         self,
-        collect_fn: Callable[[], list[dict]],
+        collect_fn: Callable[[], list[ReportSection]],
         time_of_day: str = "00:00",
         title: str = "Daily Network Health Report",
         output_dir: str | None = None,
@@ -178,7 +178,7 @@ class ReportScheduler:
 
     def schedule_weekly(
         self,
-        collect_fn: Callable[[], list[dict]],
+        collect_fn: Callable[[], list[ReportSection]],
         day_of_week: str = "monday",
         time_of_day: str = "00:00",
         title: str = "Weekly Network Health Report",

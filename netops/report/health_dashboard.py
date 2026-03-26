@@ -44,9 +44,9 @@ import json
 import logging
 import os
 import sys
+from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -222,7 +222,7 @@ def _detail_generic(check: dict) -> tuple[str, str]:
 
 
 # Mapping from check key → (canonical category name, detail builder)
-_CHECK_MAP: dict[str, tuple[str, Any]] = {
+_CHECK_MAP: dict[str, tuple[str, Callable[[dict], tuple[str, str]]]] = {
     "cpu": ("cpu", _detail_cpu),
     "memory": ("memory", _detail_memory),
     "cpu_memory": ("cpu/memory", _detail_cpu_memory),

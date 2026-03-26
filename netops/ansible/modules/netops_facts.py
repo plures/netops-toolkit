@@ -68,7 +68,10 @@ EXAMPLES
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from netmiko.base_connection import BaseConnection
 
 DOCUMENTATION = __doc__
 
@@ -89,7 +92,7 @@ ANSIBLE_METADATA = {
 _GATHER_ALL = {"health", "interfaces", "bgp", "vlans"}
 
 
-def _gather_health(conn: Any) -> dict:
+def _gather_health(conn: BaseConnection) -> dict:
     """Collect CPU/memory health facts."""
     from netops.parsers.health import (
         parse_cpu_cisco,
@@ -141,7 +144,7 @@ def _gather_health(conn: Any) -> dict:
     return facts
 
 
-def _gather_interfaces(conn: Any) -> list[dict]:
+def _gather_interfaces(conn: BaseConnection) -> list[dict]:
     """Collect interface status facts."""
     from netops.parsers.health import parse_interface_errors_cisco
 
@@ -159,7 +162,7 @@ def _gather_interfaces(conn: Any) -> list[dict]:
         return []
 
 
-def _gather_bgp(conn: Any) -> list[dict]:
+def _gather_bgp(conn: BaseConnection) -> list[dict]:
     """Collect BGP peer facts."""
     try:
         if "nokia" in conn.device_type or "sros" in conn.device_type:
@@ -174,7 +177,7 @@ def _gather_bgp(conn: Any) -> list[dict]:
         return []
 
 
-def _gather_vlans(conn: Any) -> list[dict]:
+def _gather_vlans(conn: BaseConnection) -> list[dict]:
     """Collect VLAN facts (Cisco IOS / IOS-XE only)."""
     try:
         from netops.parsers.vlan import parse_vlan_brief
