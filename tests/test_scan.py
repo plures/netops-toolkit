@@ -557,7 +557,17 @@ class TestFragmentToCsv:
         from netops.inventory.scan import _fragment_to_csv
         out = tmp_path / "empty.csv"
         count = _fragment_to_csv({"devices": {}}, out)
+        # No device rows should be written
         assert count == 0
+        # CSV file should still be created with a header row
+        assert out.exists()
+        content = out.read_text()
+        lines = content.splitlines()
+        # Expect header-only CSV when there are no devices
+        assert len(lines) == 1
+        header = lines[0]
+        assert "name" in header
+        assert "vendor" in header
 
     def test_tags_flattened(self, tmp_path):
         from netops.inventory.scan import _fragment_to_csv
