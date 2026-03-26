@@ -38,7 +38,7 @@ Complete API reference for the **netops-toolkit** Python library.
 | [`netops.check.bgp`](check.md#netopscheckbgp) | `check_bgp_peers()`, `build_bgp_report()` |
 | [`netops.check.interfaces`](check.md#netopscheckinterfaces) | `check_interfaces()` |
 | [`netops.check.vlan`](check.md#netopscheckvlan) | `audit_vlans()`, `build_vlan_report()` |
-| [`netops.check.arista`](check.md#netopsheckarista) | `run_health_check()`, `build_eos_health_report()` |
+| [`netops.check.arista`](check.md#netopscheckarista) | `run_health_check()`, `build_eos_health_report()` |
 | [`netops.check.cisco`](check.md#netopscheckcisco) | `run_cisco_health_check()`, `build_cisco_health_report()` |
 | [`netops.check.juniper`](check.md#netopscheckjuniper) | `run_health_check()`, `build_junos_health_report()` |
 | [`netops.check.paloalto`](check.md#netopscheckpaloalto) | `run_health_check()`, `run_policy_audit()` |
@@ -70,7 +70,7 @@ Complete API reference for the **netops-toolkit** Python library.
 | [`netops.parsers.health`](parsers.md#netopsparsershealth) | CPU/memory/errors/logs (multi-vendor) |
 | [`netops.parsers.juniper`](parsers.md#netopsparsersjuniper) | Juniper JunOS CLI |
 | [`netops.parsers.nokia_sros`](parsers.md#netopsparsersnokia_sros) | Nokia SR-OS CLI |
-| [`netops.parsers.paloalto`](parsers.md#netopsparsersspaloalto) | Palo Alto PAN-OS CLI |
+| [`netops.parsers.paloalto`](parsers.md#netopsparserspaloalto) | Palo Alto PAN-OS CLI |
 | [`netops.parsers.vlan`](parsers.md#netopsparsersvlan) | Cisco VLAN CLI |
 
 ### `netops.playbooks`
@@ -85,7 +85,7 @@ Complete API reference for the **netops-toolkit** Python library.
 | Module | Key Classes / Functions |
 |--------|------------------------|
 | [`netops.report.generator`](report.md#netopsreportgenerator) | `ReportGenerator`, `generate_report()` |
-| [`netops.report.health_dashboard`](report.md#netopsreporthealthdashboard) | `aggregate_dashboard()`, `format_table()`, `render_html()` |
+| [`netops.report.health_dashboard`](report.md#netopsreporthealth_dashboard) | `aggregate_dashboard()`, `format_table()`, `render_html()` |
 | [`netops.report.mailer`](report.md#netopsreportmailer) | `ReportMailer` |
 | [`netops.report.scheduler`](report.md#netopsreportscheduler) | `ReportScheduler`, `ScheduledReport` |
 
@@ -107,5 +107,5 @@ Complete API reference for the **netops-toolkit** Python library.
 
 ## See Also
 
-- [User Guides](../guides/) — step-by-step guides for common workflows
-- [Examples](../../examples/) — runnable example scripts
+- [User Guides](../guides/README.md) — step-by-step guides for common workflows
+- [Examples](https://github.com/plures/netops-toolkit/tree/main/examples) — runnable example scripts

@@ -4,6 +4,8 @@
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![CI](https://github.com/plures/netops-toolkit/actions/workflows/release.yml/badge.svg)](https://github.com/plures/netops-toolkit/actions)
+[![interrogate](https://img.shields.io/badge/interrogate-100%25-brightgreen.svg)](https://interrogate.readthedocs.io)
+[![docs](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://plures.github.io/netops-toolkit/)
 
 Modular network automation utilities for telco operations.
 

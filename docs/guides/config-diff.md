@@ -275,7 +275,7 @@ The following config constructs are automatically flagged as security-sensitive:
 ## Integration with change push workflow
 
 The diff engine integrates naturally with
-[`netops.change.push`](../guides/cli-reference.md#netopschangepush--safe-config-push)
+[`netops.change.push`](../guides/cli-reference.md#netopschangepush-safe-config-push)
 — capture pre/post snapshots with `push.py` and then run `diff.py` to get a
 structured view of what changed:
 
