@@ -526,3 +526,69 @@ class TestScanSubnet:
             results = scan_subnet("10.0.0.0/24", skip_snmp=True)
 
         assert results == []
+
+
+# ===========================================================================
+# CSV output — _fragment_to_csv
+# ===========================================================================
+
+class TestFragmentToCsv:
+    def test_basic_csv_output(self, tmp_path):
+        from netops.inventory.scan import _fragment_to_csv
+        fragment = {
+            "devices": {
+                "router1": {"host": "10.0.0.1", "vendor": "cisco_ios", "version": "16.9.4", "model": "ISR4451"},
+                "switch1": {"host": "10.0.0.2", "vendor": "nokia_sros", "version": "23.10.R1"},
+            }
+        }
+        out = tmp_path / "scan.csv"
+        count = _fragment_to_csv(fragment, out)
+        assert count == 2
+        content = out.read_text()
+        assert "router1" in content
+        assert "switch1" in content
+        assert "cisco_ios" in content
+        assert "nokia_sros" in content
+        # Header present
+        assert "name" in content.splitlines()[0]
+        assert "vendor" in content.splitlines()[0]
+
+    def test_empty_fragment(self, tmp_path):
+        from netops.inventory.scan import _fragment_to_csv
+        out = tmp_path / "empty.csv"
+        count = _fragment_to_csv({"devices": {}}, out)
+        # No device rows should be written
+        assert count == 0
+        # CSV file should still be created with a header row
+        assert out.exists()
+        content = out.read_text()
+        lines = content.splitlines()
+        # Expect header-only CSV when there are no devices
+        assert len(lines) == 1
+        header = lines[0]
+        assert "name" in header
+        assert "vendor" in header
+
+    def test_tags_flattened(self, tmp_path):
+        from netops.inventory.scan import _fragment_to_csv
+        fragment = {
+            "devices": {
+                "r1": {"host": "10.0.0.1", "vendor": "cisco_ios", "tags": {"neighbors": "cdp:r2,lldp:r3", "role": "core"}},
+            }
+        }
+        out = tmp_path / "tags.csv"
+        _fragment_to_csv(fragment, out)
+        content = out.read_text()
+        assert "tag_neighbors" in content
+        assert "tag_role" in content
+        assert "cdp:r2,lldp:r3" in content
+
+    def test_stdout_csv(self):
+        import io
+        from netops.inventory.scan import _fragment_to_csv
+        fragment = {"devices": {"r1": {"host": "10.0.0.1", "vendor": "nokia_sros"}}}
+        buf = io.StringIO()
+        count = _fragment_to_csv(fragment, buf)
+        assert count == 1
+        output = buf.getvalue()
+        assert "name,host,vendor" in output.splitlines()[0]

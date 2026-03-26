@@ -1310,6 +1310,59 @@ def _parse_hosts_file(path: str) -> list[str]:
     return hosts
 
 
+def _fragment_to_csv(fragment: dict, dest: Any) -> int:
+    """Write an inventory fragment as CSV.
+
+    Args:
+        fragment: ``{"devices": {...}}`` dict from scan.
+        dest: File-like object or Path to write to.
+
+    Returns:
+        Number of rows written.
+    """
+    import csv
+
+    devices = fragment.get("devices", {})
+
+    # Collect all possible field names across devices
+    fieldnames_set: set[str] = {"name"}
+    for entry in devices.values():
+        fieldnames_set.update(entry.keys())
+        # Flatten tags dict into tag_* columns
+        if "tags" in entry and isinstance(entry["tags"], dict):
+            for tk in entry["tags"]:
+                fieldnames_set.add(f"tag_{tk}")
+            fieldnames_set.discard("tags")
+
+    # Stable column order: name, host, vendor, model, version, serial first
+    priority = ["name", "host", "vendor", "model", "version", "serial",
+                "hostname", "mac_address", "site", "uptime", "image"]
+    ordered = [f for f in priority if f in fieldnames_set]
+    ordered += sorted(fieldnames_set - set(ordered))
+
+    close_after = False
+    if isinstance(dest, (str, Path)):
+        dest = open(dest, "w", newline="")
+        close_after = True
+
+    try:
+        writer = csv.DictWriter(dest, fieldnames=ordered, extrasaction="ignore")
+        writer.writeheader()
+        for name, entry in devices.items():
+            row = {"name": name}
+            for k, v in entry.items():
+                if k == "tags" and isinstance(v, dict):
+                    for tk, tv in v.items():
+                        row[f"tag_{tk}"] = tv
+                else:
+                    row[k] = v
+            writer.writerow(row)
+        return len(devices)
+    finally:
+        if close_after:
+            dest.close()
+
+
 def main() -> None:
     """CLI entry point for the network device discovery scanner."""
     parser = argparse.ArgumentParser(
@@ -1349,7 +1402,13 @@ def main() -> None:
         default=10,
         help="Max simultaneous SNMP sessions (default: 10)",
     )
-    parser.add_argument("--output", "-o", help="Write JSON inventory fragment to this file")
+    parser.add_argument("--output", "-o", help="Write inventory fragment to this file")
+    parser.add_argument(
+        "--format",
+        choices=["json", "csv"],
+        default="json",
+        help="Output format for --output or stdout (default: json)",
+    )
     parser.add_argument(
         "--merge", "-m", help="Merge scan results into this existing inventory file"
     )
@@ -1468,11 +1527,26 @@ def main() -> None:
             merge_path.write_text(json.dumps(merged, indent=2))
         print(f"✅ Merged into {args.merge}", file=sys.stderr)
     elif args.output:
-        Path(args.output).write_text(json.dumps(fragment, indent=2))
-        print(f"✅ Fragment written to {args.output}", file=sys.stderr)
+        fmt = args.format
+        # Auto-detect from extension if not explicitly set
+        out_path = Path(args.output)
+        if fmt == "json" and out_path.suffix.lower() == ".csv":
+            fmt = "csv"
+        if fmt == "csv":
+            count = _fragment_to_csv(fragment, out_path)
+            # Ensure a CSV file exists even when no devices were discovered
+            if count == 0 and not out_path.exists():
+                out_path.touch()
+            print(f"✅ CSV written to {args.output} ({count} devices)", file=sys.stderr)
+        else:
+            out_path.write_text(json.dumps(fragment, indent=2))
+            print(f"✅ Fragment written to {args.output}", file=sys.stderr)
     else:
-        json.dump(fragment, sys.stdout, indent=2)
-        sys.stdout.write("\n")
+        if args.format == "csv":
+            _fragment_to_csv(fragment, sys.stdout)
+        else:
+            json.dump(fragment, sys.stdout, indent=2)
+            sys.stdout.write("\n")
 
 
 if __name__ == "__main__":
