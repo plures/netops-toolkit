@@ -71,14 +71,17 @@ _DEFAULT_CACHE_PATH = Path.home() / ".netops" / "inventory_cache.json"
 
 
 def _default_inventory_path() -> str:
+    """Return the default inventory file path from env or fallback to ``inventory.yaml``."""
     return os.environ.get("NETOPS_INVENTORY", "inventory.yaml")
 
 
 def _default_vault_path() -> Optional[str]:
+    """Return the vault path from ``NETOPS_VAULT`` environment variable, or ``None``."""
     return os.environ.get("NETOPS_VAULT")
 
 
 def _default_cache_path() -> str:
+    """Return the inventory cache file path from env or the default ``~/.netops/`` location."""
     return os.environ.get("NETOPS_INVENTORY_CACHE", str(_DEFAULT_CACHE_PATH))
 
 

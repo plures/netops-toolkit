@@ -63,6 +63,7 @@ class ReportGenerator:
         template_path: str | None = None,
         output_dir: str | None = None,
     ) -> None:
+        """Initialise the generator with an optional template path and output directory."""
         self._template_path = Path(template_path) if template_path else _BUILTIN_TEMPLATE
         self._output_dir = Path(output_dir) if output_dir else Path.cwd()
 

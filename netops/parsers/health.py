@@ -213,6 +213,7 @@ def parse_interface_errors_cisco(output: str) -> list[dict]:
 
 
 def _has_errors(iface: dict) -> bool:
+    """Return ``True`` if the interface dict contains any non-zero error counter."""
     return any(iface.get(k, 0) > 0 for k in ("input_errors", "output_errors", "crc", "drops"))
 
 

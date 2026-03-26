@@ -49,6 +49,7 @@ DEFAULT_PREFIX_DEVIATION_PCT = 20.0  # percent
 
 
 def _is_nokia(device_type: str) -> bool:
+    """Return ``True`` if *device_type* indicates a Nokia SR-OS device."""
     return "nokia" in device_type.lower()
 
 

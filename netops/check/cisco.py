@@ -420,6 +420,7 @@ def build_cisco_health_report(results: list[dict]) -> dict:
     reachable = [r for r in results if r.get("success")]
 
     def _count_alert(key: str) -> int:
+        """Count how many reachable devices have an alert for check *key*."""
         return sum(1 for r in reachable if r.get("checks", {}).get(key, {}).get("alert"))
 
     devices_with_alerts = sum(1 for r in reachable if r.get("overall_alert"))

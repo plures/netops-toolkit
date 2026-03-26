@@ -598,6 +598,7 @@ def _print_plan_summary(plan: ChangePlan, *, verbose: bool = False) -> None:
 
 
 def _build_parser() -> argparse.ArgumentParser:
+    """Build and return the argument parser for the change plan CLI."""
     parser = argparse.ArgumentParser(
         prog="python -m netops.change.plan",
         description="Change approval workflow: generate plan → dry-run → review → approve → execute.",

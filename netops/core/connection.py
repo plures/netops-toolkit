@@ -68,10 +68,12 @@ class DeviceConnection:
     """
 
     def __init__(self, params: ConnectionParams) -> None:
+        """Initialise the connection manager with the given connection parameters."""
         self.params = params
         self._connection: Any = None
 
     def __enter__(self) -> DeviceConnection:
+        """Connect on entering the context manager block."""
         self.connect()
         return self
 
@@ -81,6 +83,7 @@ class DeviceConnection:
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
     ) -> None:
+        """Disconnect when leaving the context manager block."""
         self.disconnect()
 
     def connect(self) -> None:

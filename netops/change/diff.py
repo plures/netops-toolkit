@@ -150,6 +150,7 @@ class ConfigNode:
     """True when the line matches a security-sensitive pattern."""
 
     def __post_init__(self) -> None:
+        """Auto-detect security sensitivity when not explicitly set."""
         if not self.is_security:
             self.is_security = _is_security_sensitive(self.raw)
 

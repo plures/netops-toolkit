@@ -529,6 +529,7 @@ def generate_playbooks_from_report(
 
 
 def _build_parser() -> argparse.ArgumentParser:
+    """Build and return the argument parser for the playbook generator CLI."""
     parser = argparse.ArgumentParser(
         prog="python -m netops.playbooks.generator",
         description="Generate Ansible remediation playbooks from health-check reports.",

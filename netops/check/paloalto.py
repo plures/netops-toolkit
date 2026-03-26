@@ -320,6 +320,7 @@ def run_health_check(
 
 
 def _print_audit(result: dict) -> None:
+    """Print a formatted policy audit summary to stdout."""
     icon = "🚨" if result.get("alert") else "✅"
     print(f"{icon} Policy audit — {result['rule_count']} rules total")
 
@@ -344,6 +345,7 @@ def _print_audit(result: dict) -> None:
 
 
 def _print_health(result: dict) -> None:
+    """Print a formatted device health check result to stdout."""
     icon = "🚨" if result.get("overall_alert") else ("✅" if result.get("success") else "❌")
     print(f"{icon} {result['host']} [{result['timestamp']}]")
 

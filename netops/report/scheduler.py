@@ -67,6 +67,7 @@ class ScheduledReport:
         subject: Optional[str],
         pdf: bool,
     ) -> None:
+        """Initialise a scheduled report descriptor with timing and delivery settings."""
         self.collect_fn = collect_fn
         self.frequency = frequency
         self.time_of_day = time_of_day
@@ -118,6 +119,7 @@ class ReportScheduler:
         generator: Optional[ReportGenerator] = None,
         mailer: Optional[object] = None,
     ) -> None:
+        """Initialise the scheduler with optional generator and mailer instances."""
         self._generator = generator or ReportGenerator()
         self._mailer = mailer
         self._jobs: list[ScheduledReport] = []
