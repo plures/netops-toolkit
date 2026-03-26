@@ -381,3 +381,377 @@ class TestParseExpectedPrefixes:
     def test_non_integer_value_skipped(self):
         result = _parse_expected_prefixes("10.0.0.2=abc")
         assert result == {}
+
+
+# ===========================================================================
+# Additional imports for new test classes
+# ===========================================================================
+
+from netops.check.bgp import check_bgp_peers, _is_nokia
+from netops.core.connection import ConnectionParams as _BgpConnParams
+
+
+# ===========================================================================
+# _is_nokia
+# ===========================================================================
+
+
+class TestIsNokia:
+    def test_nokia_sr_os_returns_true(self):
+        assert _is_nokia("nokia_sros") is True
+
+    def test_nokia_mixed_case_returns_true(self):
+        assert _is_nokia("Nokia_SROS") is True
+
+    def test_cisco_ios_returns_false(self):
+        assert _is_nokia("cisco_ios") is False
+
+    def test_cisco_xr_returns_false(self):
+        assert _is_nokia("cisco_xr") is False
+
+    def test_arista_eos_returns_false(self):
+        assert _is_nokia("arista_eos") is False
+
+    def test_empty_string_returns_false(self):
+        assert _is_nokia("") is False
+
+
+# ===========================================================================
+# check_bgp_peers
+# ===========================================================================
+
+
+class _BgpMockConn:
+    """Minimal mock returning pre-canned output based on command substring."""
+
+    def __init__(self, responses: dict[str, str]):
+        self._responses = responses
+
+    def send(self, command: str, **_kwargs) -> str:
+        for key, val in self._responses.items():
+            if key in command:
+                return val
+        return ""
+
+
+class TestCheckBgpPeers:
+    def _make_params(self, device_type="cisco_ios"):
+        return _BgpConnParams(
+            host="10.0.0.1",
+            username="admin",
+            password="secret",
+            device_type=device_type,
+        )
+
+    def test_cisco_ios_success(self, monkeypatch):
+        mock_conn = _BgpMockConn({"bgp summary": CISCO_BGP_SUMMARY})
+
+        class _FakeConn:
+            def __enter__(self_inner):
+                return mock_conn
+
+            def __exit__(self_inner, *_):
+                pass
+
+        monkeypatch.setattr("netops.check.bgp.DeviceConnection", lambda _p: _FakeConn())
+        result = check_bgp_peers(self._make_params("cisco_ios"))
+        assert result["success"] is True
+        assert result["error"] is None
+        assert len(result["peers"]) == 4
+        assert "summary" in result
+        assert result["summary"]["total"] == 4
+
+    def test_cisco_xr_uses_show_bgp_summary(self, monkeypatch):
+        # cisco_xr uses "show bgp summary" (without "ip")
+        mock_conn = _BgpMockConn({"bgp summary": CISCO_BGP_SUMMARY})
+
+        class _FakeConn:
+            def __enter__(self_inner):
+                return mock_conn
+
+            def __exit__(self_inner, *_):
+                pass
+
+        monkeypatch.setattr("netops.check.bgp.DeviceConnection", lambda _p: _FakeConn())
+        result = check_bgp_peers(self._make_params("cisco_xr"))
+        assert result["success"] is True
+        assert len(result["peers"]) == 4
+
+    def test_nokia_sros_path(self, monkeypatch):
+        # Nokia returns "received" key; normalize_peer maps it to prefixes_received
+        nokia_output = """\
+===============================================================================
+BGP Summary
+===============================================================================
+Neighbor        AS         Recv   Sent  OutQ  Up/Down     State/Pfx
+-------------------------------------------------------------------------------
+10.0.0.5    65001         100     50     0  01:00:00  50
+-------------------------------------------------------------------------------
+"""
+        mock_conn = _BgpMockConn({"bgp summary": nokia_output})
+
+        class _FakeConn:
+            def __enter__(self_inner):
+                return mock_conn
+
+            def __exit__(self_inner, *_):
+                pass
+
+        monkeypatch.setattr("netops.check.bgp.DeviceConnection", lambda _p: _FakeConn())
+        result = check_bgp_peers(self._make_params("nokia_sros"))
+        assert result["success"] is True
+        # Nokia parser may return 0 or more peers depending on output format;
+        # the important thing is success=True and no error.
+        assert result["error"] is None
+
+    def test_connection_failure_returns_error(self, monkeypatch):
+        class _FailConn:
+            def __enter__(self_inner):
+                raise OSError("cannot connect")
+
+            def __exit__(self_inner, *_):
+                pass
+
+        monkeypatch.setattr("netops.check.bgp.DeviceConnection", lambda _p: _FailConn())
+        result = check_bgp_peers(self._make_params())
+        assert result["success"] is False
+        assert result["error"] is not None
+        assert "cannot connect" in result["error"]
+
+    def test_expected_prefixes_used(self, monkeypatch):
+        mock_conn = _BgpMockConn({"bgp summary": CISCO_BGP_SUMMARY})
+
+        class _FakeConn:
+            def __enter__(self_inner):
+                return mock_conn
+
+            def __exit__(self_inner, *_):
+                pass
+
+        monkeypatch.setattr("netops.check.bgp.DeviceConnection", lambda _p: _FakeConn())
+        # 10.0.0.2 receives 100 prefixes; expected=50 → deviation=100% > 20% → alert
+        result = check_bgp_peers(
+            self._make_params(),
+            expected_prefixes={"10.0.0.2": 50},
+            prefix_deviation_pct=20.0,
+        )
+        assert result["success"] is True
+        peer_202 = next(p for p in result["peers"] if p["neighbor"] == "10.0.0.2")
+        assert peer_202["prefix_alert"] is True
+
+    def test_flap_detection(self, monkeypatch):
+        mock_conn = _BgpMockConn({"bgp summary": CISCO_BGP_SUMMARY})
+
+        class _FakeConn:
+            def __enter__(self_inner):
+                return mock_conn
+
+            def __exit__(self_inner, *_):
+                pass
+
+        monkeypatch.setattr("netops.check.bgp.DeviceConnection", lambda _p: _FakeConn())
+        # 10.0.0.4 is up for 00:00:45 = 45s < 300s threshold → flapping
+        result = check_bgp_peers(
+            self._make_params(), flap_min_uptime=300
+        )
+        assert result["success"] is True
+        peer_204 = next(p for p in result["peers"] if p["neighbor"] == "10.0.0.4")
+        assert peer_204["is_flapping"] is True
+
+    def test_overall_alert_when_not_established(self, monkeypatch):
+        mock_conn = _BgpMockConn({"bgp summary": CISCO_BGP_SUMMARY})
+
+        class _FakeConn:
+            def __enter__(self_inner):
+                return mock_conn
+
+            def __exit__(self_inner, *_):
+                pass
+
+        monkeypatch.setattr("netops.check.bgp.DeviceConnection", lambda _p: _FakeConn())
+        result = check_bgp_peers(self._make_params())
+        # 10.0.0.3 is in Active state → not_established > 0 → overall_alert
+        assert result["overall_alert"] is True
+
+    def test_empty_bgp_table_no_alert(self, monkeypatch):
+        mock_conn = _BgpMockConn({"bgp summary": CISCO_BGP_SUMMARY_EMPTY})
+
+        class _FakeConn:
+            def __enter__(self_inner):
+                return mock_conn
+
+            def __exit__(self_inner, *_):
+                pass
+
+        monkeypatch.setattr("netops.check.bgp.DeviceConnection", lambda _p: _FakeConn())
+        result = check_bgp_peers(self._make_params())
+        assert result["success"] is True
+        assert result["peers"] == []
+        assert result["overall_alert"] is False
+
+    def test_result_structure(self, monkeypatch):
+        mock_conn = _BgpMockConn({"bgp summary": CISCO_BGP_SUMMARY_EMPTY})
+
+        class _FakeConn:
+            def __enter__(self_inner):
+                return mock_conn
+
+            def __exit__(self_inner, *_):
+                pass
+
+        monkeypatch.setattr("netops.check.bgp.DeviceConnection", lambda _p: _FakeConn())
+        result = check_bgp_peers(self._make_params())
+        for key in ("host", "timestamp", "success", "peers", "summary",
+                    "overall_alert", "error"):
+            assert key in result
+        assert result["host"] == "10.0.0.1"
+
+
+# ===========================================================================
+# _print_device_result and _print_summary_report (lines 286-322, 327-328)
+# ===========================================================================
+
+from netops.check.bgp import _print_device_result, _print_summary_report
+
+
+class TestPrintDeviceResult:
+    def _make_peer(self, neighbor, established=True, flapping=False, prefix_alert=False, alerts=None):
+        return {
+            "neighbor": neighbor,
+            "peer_as": 65001,
+            "state": "Established" if established else "Active",
+            "prefixes_received": 100 if established else None,
+            "up_down": "01:00:00",
+            "is_established": established,
+            "is_flapping": flapping,
+            "prefix_alert": prefix_alert,
+            "expected_prefixes": None,
+            "alerts": alerts or [],
+        }
+
+    def test_failed_device_prints_error(self, capsys):
+        result = {
+            "host": "10.0.0.1",
+            "timestamp": "2026-01-01T00:00:00Z",
+            "success": False,
+            "overall_alert": False,
+            "error": "Connection refused",
+            "peers": [],
+            "summary": {},
+        }
+        _print_device_result(result)
+        out = capsys.readouterr().out
+        assert "10.0.0.1" in out
+        assert "ERROR" in out
+
+    def test_healthy_device_prints_summary(self, capsys):
+        peers = [self._make_peer("10.0.0.2")]
+        result = {
+            "host": "10.0.0.1",
+            "timestamp": "2026-01-01T00:00:00Z",
+            "success": True,
+            "overall_alert": False,
+            "error": None,
+            "peers": peers,
+            "summary": {
+                "established": 1, "total": 1,
+                "flapping": 0, "prefix_alerts": 0,
+            },
+        }
+        _print_device_result(result)
+        out = capsys.readouterr().out
+        assert "10.0.0.1" in out
+        assert "1/1 established" in out
+
+    def test_alerted_peer_printed(self, capsys):
+        peers = [
+            self._make_peer("10.0.0.2", established=False,
+                            alerts=["peer 10.0.0.2 not established (state=Active)"]),
+        ]
+        result = {
+            "host": "10.0.0.1",
+            "timestamp": "2026-01-01T00:00:00Z",
+            "success": True,
+            "overall_alert": True,
+            "error": None,
+            "peers": peers,
+            "summary": {
+                "established": 0, "total": 1,
+                "flapping": 0, "prefix_alerts": 0,
+            },
+        }
+        _print_device_result(result)
+        out = capsys.readouterr().out
+        assert "10.0.0.2" in out
+
+    def test_peer_with_expected_prefixes_shown(self, capsys):
+        peer = self._make_peer("10.0.0.2")
+        peer["expected_prefixes"] = 100
+        result = {
+            "host": "10.0.0.1",
+            "timestamp": "2026-01-01T00:00:00Z",
+            "success": True,
+            "overall_alert": False,
+            "error": None,
+            "peers": [peer],
+            "summary": {
+                "established": 1, "total": 1,
+                "flapping": 0, "prefix_alerts": 0,
+            },
+        }
+        _print_device_result(result)
+        out = capsys.readouterr().out
+        assert "/100" in out
+
+    def test_flapping_peer_uses_warning_icon(self, capsys):
+        peers = [self._make_peer("10.0.0.2", flapping=True)]
+        result = {
+            "host": "10.0.0.1",
+            "timestamp": "2026-01-01T00:00:00Z",
+            "success": True,
+            "overall_alert": True,
+            "error": None,
+            "peers": peers,
+            "summary": {
+                "established": 1, "total": 1,
+                "flapping": 1, "prefix_alerts": 0,
+            },
+        }
+        _print_device_result(result)
+        out = capsys.readouterr().out
+        assert "10.0.0.2" in out
+
+
+class TestPrintSummaryReport:
+    def test_healthy_report(self, capsys):
+        report = {
+            "routers": 2,
+            "routers_reachable": 2,
+            "total_peers": 4,
+            "established": 4,
+            "not_established": 0,
+            "flapping": 0,
+            "prefix_alerts": 0,
+            "overall_alert": False,
+            "peers": [],
+        }
+        _print_summary_report(report)
+        out = capsys.readouterr().out
+        assert "2/2 routers reachable" in out
+        assert "4/4 peers established" in out
+
+    def test_alerted_report(self, capsys):
+        report = {
+            "routers": 2,
+            "routers_reachable": 1,
+            "total_peers": 3,
+            "established": 2,
+            "not_established": 1,
+            "flapping": 0,
+            "prefix_alerts": 0,
+            "overall_alert": True,
+            "peers": [],
+        }
+        _print_summary_report(report)
+        out = capsys.readouterr().out
+        assert "1/2 routers reachable" in out

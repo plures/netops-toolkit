@@ -868,3 +868,330 @@ class TestDefaults:
 
     def test_mem_threshold(self):
         assert DEFAULT_MEM_THRESHOLD == 85.0
+
+
+# ===========================================================================
+# Additional imports for new test classes
+# ===========================================================================
+
+from netops.check.juniper import run_health_check as run_junos_health_check
+from netops.core.connection import ConnectionParams as _JunosConnParams
+
+
+# ===========================================================================
+# Helpers
+# ===========================================================================
+
+
+class _JunosRaisingConn:
+    """Mock connection that always raises RuntimeError on send()."""
+
+    def send(self, command: str) -> str:
+        raise RuntimeError("simulated send failure")
+
+
+# ===========================================================================
+# check_junos_* error paths
+# ===========================================================================
+
+
+class TestCheckJunosReError:
+    def test_exception_returns_error_dict(self):
+        res = check_junos_re(_JunosRaisingConn(), 80.0, 85.0)
+        assert res["error"] is not None
+        assert "simulated" in res["error"]
+        assert res["alert"] is False
+        assert res["cpu_utilization"] is None
+        assert res["mem_utilization"] is None
+        assert res["cpu_alert"] is False
+        assert res["mem_alert"] is False
+        assert res["routing_engines"] == []
+
+
+class TestCheckJunosFpcError:
+    def test_exception_returns_error_dict(self):
+        res = check_junos_fpc(_JunosRaisingConn())
+        assert res["error"] is not None
+        assert res["alert"] is False
+        assert res["fpcs"] == []
+        assert res["total"] == 0
+        assert res["online"] == 0
+        assert res["offline"] == 0
+
+
+class TestCheckJunosInterfacesError:
+    def test_exception_returns_error_dict(self):
+        res = check_junos_interfaces(_JunosRaisingConn())
+        assert res["error"] is not None
+        assert res["alert"] is False
+        assert res["interfaces"] == []
+        assert res["total"] == 0
+        assert res["with_errors"] == 0
+
+
+class TestCheckJunosBgpError:
+    def test_exception_returns_error_dict(self):
+        res = check_junos_bgp(_JunosRaisingConn())
+        assert res["error"] is not None
+        assert res["alert"] is False
+        assert res["peers"] == []
+        assert res["total"] == 0
+        assert res["established"] == 0
+        assert res["not_established"] == 0
+
+
+class TestCheckJunosOspfError:
+    def test_exception_returns_error_dict(self):
+        res = check_junos_ospf(_JunosRaisingConn())
+        assert res["error"] is not None
+        assert res["alert"] is False
+        assert res["neighbors"] == []
+        assert res["total"] == 0
+        assert res["full"] == 0
+        assert res["not_full"] == 0
+
+
+class TestCheckJunosAlarmsError:
+    def test_exception_returns_error_dict(self):
+        res = check_junos_alarms(_JunosRaisingConn())
+        assert res["error"] is not None
+        assert res["alert"] is False
+        assert res["alarms"] == []
+        assert res["major_count"] == 0
+        assert res["minor_count"] == 0
+
+
+class TestCheckJunosEnvironmentError:
+    def test_exception_returns_error_dict(self):
+        res = check_junos_environment(_JunosRaisingConn())
+        assert res["error"] is not None
+        assert res["alert"] is False
+        assert res["power_supplies"] == []
+        assert res["fans"] == []
+        assert res["temperatures"] == []
+        assert res["overall_ok"] is True
+
+
+class TestCheckJunosRoutesError:
+    def test_exception_returns_error_dict(self):
+        res = check_junos_routes(_JunosRaisingConn())
+        assert res["error"] is not None
+        assert res["alert"] is False
+        assert res["tables"] == []
+
+
+# ===========================================================================
+# run_junos_health_check (run_health_check)
+# ===========================================================================
+
+
+class _JunosMockConn:
+    """Minimal mock returning pre-canned output based on command substring."""
+
+    def __init__(self, responses: dict[str, str]):
+        self._responses = responses
+
+    def send(self, command: str) -> str:
+        for key, val in self._responses.items():
+            if key in command:
+                return val
+        return ""
+
+
+class TestRunJunosHealthCheck:
+    def _make_params(self):
+        return _JunosConnParams(
+            host="10.1.1.1",
+            username="netops",
+            password="secret",
+            device_type="juniper",
+        )
+
+    def _healthy_conn(self):
+        return _JunosMockConn(
+            {
+                "routing-engine": RE_STATUS_OUTPUT,
+                "chassis fpc": FPC_STATUS_OUTPUT,
+                "interfaces extensive": INTERFACE_ERRORS_CLEAN,
+                "bgp summary": BGP_SUMMARY_ALL_ESTABLISHED,
+                "ospf neighbor": OSPF_NEIGHBORS_ALL_FULL,
+                "chassis alarms": CHASSIS_ALARMS_NONE,
+                "chassis environment": CHASSIS_ENVIRONMENT_OUTPUT,
+                "route summary": ROUTE_SUMMARY_OUTPUT,
+            }
+        )
+
+    def test_success_path(self, monkeypatch):
+        healthy = self._healthy_conn()
+
+        class _FakeConn:
+            def __enter__(self_inner):
+                return healthy
+
+            def __exit__(self_inner, *_):
+                pass
+
+        monkeypatch.setattr(
+            "netops.check.juniper.DeviceConnection", lambda _p: _FakeConn()
+        )
+        result = run_junos_health_check(self._make_params())
+        assert result["success"] is True
+        assert result["error"] is None
+        assert "re" in result["checks"]
+        assert "fpc" in result["checks"]
+        assert "interfaces" in result["checks"]
+        assert "bgp" in result["checks"]
+        assert "ospf" in result["checks"]
+        assert "alarms" in result["checks"]
+        assert "environment" in result["checks"]
+        assert "routes" in result["checks"]
+
+    def test_connection_failure(self, monkeypatch):
+        class _FailConn:
+            def __enter__(self_inner):
+                raise OSError("cannot connect")
+
+            def __exit__(self_inner, *_):
+                pass
+
+        monkeypatch.setattr(
+            "netops.check.juniper.DeviceConnection", lambda _p: _FailConn()
+        )
+        result = run_junos_health_check(self._make_params())
+        assert result["success"] is False
+        assert result["error"] is not None
+
+    def test_bgp_and_ospf_skipped_when_disabled(self, monkeypatch):
+        conn = self._healthy_conn()
+
+        class _FakeConn:
+            def __enter__(self_inner):
+                return conn
+
+            def __exit__(self_inner, *_):
+                pass
+
+        monkeypatch.setattr(
+            "netops.check.juniper.DeviceConnection", lambda _p: _FakeConn()
+        )
+        result = run_junos_health_check(
+            self._make_params(), check_bgp=False, check_ospf=False
+        )
+        assert result["success"] is True
+        assert "bgp" not in result["checks"]
+        assert "ospf" not in result["checks"]
+
+    def test_overall_alert_set_when_check_alerts(self, monkeypatch):
+        conn = _JunosMockConn(
+            {
+                "routing-engine": RE_STATUS_HIGH_CPU,
+                "chassis fpc": FPC_STATUS_OUTPUT,
+                "interfaces extensive": INTERFACE_ERRORS_CLEAN,
+                "bgp summary": BGP_SUMMARY_ALL_ESTABLISHED,
+                "ospf neighbor": OSPF_NEIGHBORS_ALL_FULL,
+                "chassis alarms": CHASSIS_ALARMS_NONE,
+                "chassis environment": CHASSIS_ENVIRONMENT_OUTPUT,
+                "route summary": ROUTE_SUMMARY_OUTPUT,
+            }
+        )
+
+        class _FakeConn:
+            def __enter__(self_inner):
+                return conn
+
+            def __exit__(self_inner, *_):
+                pass
+
+        monkeypatch.setattr(
+            "netops.check.juniper.DeviceConnection", lambda _p: _FakeConn()
+        )
+        result = run_junos_health_check(self._make_params(), cpu_threshold=50.0)
+        assert result["success"] is True
+        assert result["overall_alert"] is True
+
+
+# ===========================================================================
+# _print_result (lines 494-569)
+# ===========================================================================
+
+
+from netops.check.juniper import _print_result as _junos_print_result
+
+
+class TestJunosPrintResult:
+    def _base_result(self, success=True, overall_alert=False, checks=None):
+        return {
+            "host": "10.1.1.1",
+            "timestamp": "2026-01-01T00:00:00Z",
+            "success": success,
+            "overall_alert": overall_alert,
+            "checks": checks or {},
+            "error": None,
+        }
+
+    def test_failed_device_prints_error(self, capsys):
+        result = self._base_result(success=False)
+        result["error"] = "SSH timeout"
+        _junos_print_result(result)
+        out = capsys.readouterr().out
+        assert "10.1.1.1" in out
+        assert "ERROR" in out
+
+    def test_healthy_device_shows_re_cpu_mem(self, capsys):
+        checks = {
+            "re": {
+                "cpu_utilization": 5.0,
+                "mem_utilization": 65.0,
+                "cpu_threshold": 80.0,
+                "mem_threshold": 85.0,
+                "alert": False,
+            },
+            "fpc": {"online": 2, "offline": 0, "alert": False},
+            "interfaces": {"with_errors": 0, "total": 8, "alert": False},
+            "alarms": {"major_count": 0, "minor_count": 0, "alert": False},
+            "environment": {"overall_ok": True, "alert": False},
+            "routes": {"tables": [], "alert": False},
+        }
+        _junos_print_result(self._base_result(checks=checks))
+        out = capsys.readouterr().out
+        assert "10.1.1.1" in out
+        assert "5.0%" in out
+        assert "65.0%" in out
+        assert "FPC" in out
+        assert "ALARMS" in out
+        assert "ENVIRONMENT" in out
+
+    def test_bgp_ospf_shown_when_present(self, capsys):
+        checks = {
+            "re": {"cpu_utilization": None, "mem_utilization": None, "alert": False},
+            "fpc": {"online": 1, "offline": 0, "alert": False},
+            "interfaces": {"with_errors": 0, "total": 0, "alert": False},
+            "bgp": {"established": 2, "total": 2, "alert": False},
+            "ospf": {"full": 1, "total": 1, "alert": False},
+            "alarms": {"major_count": 0, "minor_count": 0, "alert": False},
+            "environment": {"overall_ok": True, "alert": False},
+            "routes": {"tables": [], "alert": False},
+        }
+        _junos_print_result(self._base_result(checks=checks))
+        out = capsys.readouterr().out
+        assert "BGP" in out
+        assert "OSPF" in out
+
+    def test_routes_tables_shown(self, capsys):
+        checks = {
+            "re": {"cpu_utilization": None, "mem_utilization": None, "alert": False},
+            "fpc": {"online": 0, "offline": 0, "alert": False},
+            "interfaces": {"with_errors": 0, "total": 0, "alert": False},
+            "alarms": {"major_count": 0, "minor_count": 0, "alert": False},
+            "environment": {"overall_ok": True, "alert": False},
+            "routes": {
+                "tables": [
+                    {"table": "inet.0", "active_routes": 100, "total_routes": 120},
+                ],
+                "alert": False,
+            },
+        }
+        _junos_print_result(self._base_result(checks=checks))
+        out = capsys.readouterr().out
+        assert "ROUTES" in out
+        assert "inet.0" in out
