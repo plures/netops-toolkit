@@ -6,6 +6,11 @@ dist/
 build/
 .pytest_cache/
 .ruff_cache/
+# Test / coverage artifacts
+.coverage
+coverage.xml
+htmlcov/
+
 # Never commit credentials
 *.key
 *.pem
