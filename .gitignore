@@ -11,6 +11,9 @@ build/
 coverage.xml
 htmlcov/
 
+# MkDocs build output
+site/
+
 # Never commit credentials
 *.key
 *.pem

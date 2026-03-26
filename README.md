@@ -451,6 +451,20 @@ Full guides are in [docs/guides/](docs/guides/):
 | [Palo Alto Support](docs/guides/paloalto.md) | PAN-OS security policy audit guide |
 | [Juniper Support](docs/guides/juniper.md) | JunOS health checks guide |
 
+The full **[API Reference](docs/api/README.md)** covers every public class, function, and parameter:
+
+| Module | Description |
+|--------|-------------|
+| [Core](docs/api/core.md) | Connection management, inventory, credential vault |
+| [Check](docs/api/check.md) | Health, BGP, interface, VLAN, and vendor-specific checks |
+| [Change](docs/api/change.md) | Diff engine, change planning, safe push, rollback |
+| [Collect](docs/api/collect.md) | Configuration collection and bulk backup |
+| [Parsers](docs/api/parsers.md) | Vendor CLI and eAPI output parsers |
+| [Playbooks](docs/api/playbooks.md) | Ansible remediation playbook generation |
+| [Report](docs/api/report.md) | HTML/PDF reports, health dashboard, email, scheduling |
+| [Ansible](docs/api/ansible.md) | Dynamic inventory and Ansible modules |
+| [Inventory](docs/api/inventory.md) | Subnet scanner and device discovery |
+
 ---
 
 ## Changelog

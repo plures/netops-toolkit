@@ -32,6 +32,9 @@ jobs:
       - name: Type check (mypy)
         run: python -m mypy netops/
 
+      - name: Docstring coverage (interrogate)
+        run: python -m interrogate --fail-under 90 netops/
+
       - name: Tests (pytest + coverage)
         run: python -m pytest --tb=short -q
 

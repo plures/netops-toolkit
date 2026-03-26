@@ -449,4 +449,4 @@ ansible-playbook -i netops/ansible/dynamic_inventory.py gather_facts.yml
 - [Network Scanner Guide](scan.md) — full scanner CLI reference, SNMP prerequisites, and tuning
 - [Inventory Management Guide](inventory-management.md) — inventory file format, groups, tags, and Ansible export
 - [Getting Started](getting-started.md) — installation and first connection
-- [Credential Vault](../reference/vault.md) — vault CLI and Python API reference (if available)
+- [Credential Vault](../api/core.md#netopscorevault) — vault CLI and Python API reference
