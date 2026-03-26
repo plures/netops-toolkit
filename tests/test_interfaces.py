@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from netops.check.interfaces import check_interfaces, parse_cisco_interfaces
 from netops.core.connection import ConnectionParams
 

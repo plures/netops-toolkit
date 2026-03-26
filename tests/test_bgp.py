@@ -7,10 +7,15 @@ import pytest
 from netops.parsers.bgp import parse_bgp_summary_cisco, updown_to_seconds
 from netops.check.bgp import (
     _evaluate_peer,
+    _is_nokia,
     _normalize_peer,
     _parse_expected_prefixes,
+    _print_device_result,
+    _print_summary_report,
     build_bgp_report,
+    check_bgp_peers,
 )
+from netops.core.connection import ConnectionParams as _BgpConnParams
 
 # ---------------------------------------------------------------------------
 # Sample CLI output fixtures
@@ -387,9 +392,6 @@ class TestParseExpectedPrefixes:
 # Additional imports for new test classes
 # ===========================================================================
 
-from netops.check.bgp import check_bgp_peers, _is_nokia
-from netops.core.connection import ConnectionParams as _BgpConnParams
-
 
 # ===========================================================================
 # _is_nokia
@@ -610,8 +612,6 @@ Neighbor        AS         Recv   Sent  OutQ  Up/Down     State/Pfx
 # ===========================================================================
 # _print_device_result and _print_summary_report (lines 286-322, 327-328)
 # ===========================================================================
-
-from netops.check.bgp import _print_device_result, _print_summary_report
 
 
 class TestPrintDeviceResult:

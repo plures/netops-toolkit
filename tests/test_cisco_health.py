@@ -11,6 +11,7 @@ from netops.parsers.cisco import (
 )
 from netops.check.cisco import (
     _parse_thresholds,
+    _print_result as _cisco_print_result,
     build_cisco_health_report,
     check_cisco_bgp,
     check_cisco_cpu,
@@ -20,9 +21,11 @@ from netops.check.cisco import (
     check_cisco_memory,
     check_cisco_ospf,
     check_cisco_uptime,
+    run_cisco_health_check,
     DEFAULT_CPU_THRESHOLD,
     DEFAULT_MEM_THRESHOLD,
 )
+from netops.core.connection import ConnectionParams as _CiscoConnParams
 from netops.templates.cisco_ios import HEALTH as CISCO_HEALTH
 
 # ---------------------------------------------------------------------------
@@ -829,9 +832,6 @@ System image file is "flash:ios.bin"
 # Additional imports for new test classes
 # ===========================================================================
 
-from netops.check.cisco import run_cisco_health_check
-from netops.core.connection import ConnectionParams as _CiscoConnParams
-
 
 # ===========================================================================
 # Helpers
@@ -1107,9 +1107,6 @@ class TestParseCiscoThresholdsContinue:
 # ===========================================================================
 # _print_result (lines 468-533)
 # ===========================================================================
-
-
-from netops.check.cisco import _print_result as _cisco_print_result
 
 
 class TestCiscoPrintResult:

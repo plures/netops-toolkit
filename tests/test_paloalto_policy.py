@@ -16,11 +16,8 @@ from netops.check.paloalto import (
 )
 from netops.core.connection import ConnectionParams
 from netops.parsers.paloalto import (
-    parse_ha_state,
     parse_security_policy,
     parse_security_policy_stats,
-    parse_session_info,
-    parse_system_info,
 )
 
 # ---------------------------------------------------------------------------

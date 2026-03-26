@@ -14,6 +14,7 @@ from netops.parsers.juniper import (
 )
 from netops.check.juniper import (
     _parse_thresholds,
+    _print_result as _junos_print_result,
     build_junos_health_report,
     check_junos_alarms,
     check_junos_bgp,
@@ -23,9 +24,11 @@ from netops.check.juniper import (
     check_junos_ospf,
     check_junos_re,
     check_junos_routes,
+    run_health_check as run_junos_health_check,
     DEFAULT_CPU_THRESHOLD,
     DEFAULT_MEM_THRESHOLD,
 )
+from netops.core.connection import ConnectionParams as _JunosConnParams
 from netops.templates.junos import HEALTH as JUNOS_HEALTH
 
 # ---------------------------------------------------------------------------
@@ -874,9 +877,6 @@ class TestDefaults:
 # Additional imports for new test classes
 # ===========================================================================
 
-from netops.check.juniper import run_health_check as run_junos_health_check
-from netops.core.connection import ConnectionParams as _JunosConnParams
-
 
 # ===========================================================================
 # Helpers
@@ -1113,9 +1113,6 @@ class TestRunJunosHealthCheck:
 # ===========================================================================
 # _print_result (lines 494-569)
 # ===========================================================================
-
-
-from netops.check.juniper import _print_result as _junos_print_result
 
 
 class TestJunosPrintResult:

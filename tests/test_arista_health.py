@@ -19,6 +19,8 @@ from netops.parsers.arista import (
 )
 from netops.check.arista import (
     _parse_thresholds,
+    _print_result as _eos_print_result,
+    _send_json,
     build_eos_health_report,
     check_eos_bgp,
     check_eos_bgp_evpn,
@@ -28,9 +30,11 @@ from netops.check.arista import (
     check_eos_mlag,
     check_eos_ospf,
     check_eos_transceivers,
+    run_health_check,
     DEFAULT_CPU_THRESHOLD,
     DEFAULT_MEM_THRESHOLD,
 )
+from netops.core.connection import ConnectionParams as _AristaConnParams
 from netops.templates.arista_eos import HEALTH as EOS_HEALTH
 
 # ===========================================================================
@@ -1223,9 +1227,6 @@ class TestEosHealthTemplate:
 # Additional imports for new test classes
 # ===========================================================================
 
-from netops.check.arista import _send_json, run_health_check
-from netops.core.connection import ConnectionParams as _AristaConnParams
-
 
 # ===========================================================================
 # Helpers
@@ -1611,9 +1612,6 @@ class TestCheckEosMlagTextFallback:
 # ===========================================================================
 # _print_result (lines 562-637)
 # ===========================================================================
-
-
-from netops.check.arista import _print_result as _eos_print_result
 
 
 class TestEosPrintResult:
