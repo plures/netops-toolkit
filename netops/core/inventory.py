@@ -166,7 +166,7 @@ class Inventory:
             import yaml
         except ImportError as exc:
             raise ImportError("PyYAML required for YAML export: pip install pyyaml") from exc
-        return yaml.dump(self.to_ansible(), default_flow_style=False, sort_keys=False)
+        return str(yaml.dump(self.to_ansible(), default_flow_style=False, sort_keys=False))
 
     def to_ansible_json(self) -> str:
         """Export as Ansible inventory in JSON format."""

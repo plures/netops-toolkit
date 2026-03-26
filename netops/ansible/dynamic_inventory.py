@@ -58,7 +58,7 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Optional
+from typing import Optional, cast
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +102,7 @@ def _cache_valid(cache_path: str, ttl: int) -> bool:
 def _load_cache(cache_path: str) -> Optional[dict]:
     """Load and return the cached inventory dict, or *None* on failure."""
     try:
-        return json.loads(Path(cache_path).read_text())
+        return cast(dict, json.loads(Path(cache_path).read_text()))
     except Exception:  # noqa: BLE001
         return None
 
@@ -321,7 +321,7 @@ def get_host_vars(
         no_cache=no_cache,
         refresh_cache=refresh_cache,
     )
-    return full.get("_meta", {}).get("hostvars", {}).get(hostname, {})
+    return cast(dict, full.get("_meta", {}).get("hostvars", {}).get(hostname, {}))
 
 
 # ---------------------------------------------------------------------------

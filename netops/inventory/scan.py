@@ -201,7 +201,7 @@ async def _snmp_get_async(
     timeout: int,
 ) -> Optional[str]:
     """Async SNMP GET for a single OID. Returns the string value or ``None``."""
-    from pysnmp.hlapi.v3arch.asyncio import (  # type: ignore[import]
+    from pysnmp.hlapi.v3arch.asyncio import (
         CommunityData,
         ContextData,
         ObjectIdentity,
@@ -239,7 +239,7 @@ async def _snmp_walk_async(
     Returns a list of ``(oid_suffix, value)`` tuples where *oid_suffix* is
     the index portion after the base *oid*.
     """
-    from pysnmp.hlapi.v3arch.asyncio import (  # type: ignore[import]
+    from pysnmp.hlapi.v3arch.asyncio import (
         CommunityData,
         ContextData,
         ObjectIdentity,
@@ -442,7 +442,7 @@ async def _scan_subnet_async(
 
     _require_pysnmp()
 
-    from pysnmp.hlapi.v3arch.asyncio import SnmpEngine  # type: ignore[import]
+    from pysnmp.hlapi.v3arch.asyncio import SnmpEngine
 
     engine = SnmpEngine()
     sem = asyncio.Semaphore(snmp_concurrency)
@@ -573,7 +573,7 @@ def results_to_inventory_fragment(results: list[ScanResult]) -> dict:
 def _load_yaml(path: Path) -> dict:
     """Load a YAML file, raising a helpful ImportError if PyYAML is missing."""
     try:
-        import yaml  # type: ignore[import]
+        import yaml
 
         return yaml.safe_load(path.read_text()) or {}
     except ImportError:
@@ -583,7 +583,7 @@ def _load_yaml(path: Path) -> dict:
 def _dump_yaml(path: Path, data: dict) -> None:
     """Write *data* to *path* as YAML, raising a helpful ImportError if PyYAML is missing."""
     try:
-        import yaml  # type: ignore[import]
+        import yaml
 
         path.write_text(yaml.dump(data, default_flow_style=False))
     except ImportError:

@@ -38,7 +38,7 @@ import sys
 from datetime import datetime, timezone
 from typing import Optional
 
-import yaml  # type: ignore[import]
+import yaml
 
 from netops.core import DeviceConnection
 from netops.core.connection import ConnectionParams, Transport

@@ -135,13 +135,13 @@ class DeviceConnection:
         kwargs = {}
         if expect_string:
             kwargs["expect_string"] = expect_string
-        return self._connection.send_command(command, **kwargs)
+        return str(self._connection.send_command(command, **kwargs))
 
     def send_config(self, commands: list[str]) -> str:
         """Send configuration commands."""
         if not self._connection:
             raise RuntimeError("Not connected")
-        return self._connection.send_config_set(commands)
+        return str(self._connection.send_config_set(commands))
 
     def _resolve_device_type(self) -> str:
         """Map our device_type to Netmiko device_type."""
