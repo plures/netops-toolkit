@@ -164,12 +164,12 @@ class GeneratedPlaybook:
 
     def to_yaml(self) -> str:
         """Serialise the playbook plays to Ansible-compatible YAML."""
-        return yaml.dump(
+        return str(yaml.dump(
             self.plays,
             default_flow_style=False,
             sort_keys=False,
             allow_unicode=True,
-        )
+        ))
 
     def to_dict(self) -> dict:
         """Return a JSON-serialisable dict representation of this playbook."""

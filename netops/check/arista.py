@@ -30,7 +30,7 @@ import logging
 import os
 import sys
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Optional, cast
 
 from netops.core import DeviceConnection
 from netops.core.connection import ConnectionParams, Transport
@@ -75,7 +75,7 @@ def _send_json(conn: DeviceConnection, command: str) -> dict:
             return raw
         if isinstance(raw, str) and raw.strip().startswith("{"):
             try:
-                return json.loads(raw)
+                return cast(dict, json.loads(raw))
             except (ValueError, json.JSONDecodeError):
                 pass
     return {}

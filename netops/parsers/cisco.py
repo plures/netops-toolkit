@@ -310,11 +310,11 @@ def parse_serial_cisco(output: str) -> str | None:
     # Prefer the chassis entry
     for e in entries:
         if "chassis" in e["name"].lower() and e["sn"]:
-            return e["sn"]
+            return str(e["sn"])
 
     # Fall back to first entry with a serial
     for e in entries:
         if e["sn"]:
-            return e["sn"]
+            return str(e["sn"])
 
     return None

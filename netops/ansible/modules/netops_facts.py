@@ -218,7 +218,7 @@ def _collect_facts(params: dict) -> dict:
 
 def run_module() -> None:
     """Entry point called by Ansible."""
-    from ansible.module_utils.basic import AnsibleModule  # type: ignore[import]
+    from ansible.module_utils.basic import AnsibleModule
 
     module_args = {
         "host": {"type": "str", "required": False, "default": None},
