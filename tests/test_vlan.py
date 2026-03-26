@@ -11,8 +11,10 @@ from netops.check.vlan import (
     _find_extra_vlans,
     _find_missing_vlans,
     _parse_vlan_db,
+    audit_vlans,
     build_vlan_report,
 )
+from netops.core.connection import ConnectionParams
 
 # ---------------------------------------------------------------------------
 # Sample CLI output fixtures
@@ -492,3 +494,147 @@ class TestParseVlanDb:
         expected_vlans, expected_names = _parse_vlan_db(str(db))
         assert 10 in expected_vlans
         assert expected_names[10] == "MANAGEMENT"
+
+
+# ===========================================================================
+# audit_vlans
+# ===========================================================================
+
+
+class _MockConn:
+    def __init__(self, responses: dict[str, str]):
+        self._responses = responses
+
+    def send(self, command: str, **_kwargs) -> str:
+        for key, value in self._responses.items():
+            if key in command:
+                return value
+        return ""
+
+
+class _FakeDeviceConnection:
+    def __init__(self, responses: dict[str, str]):
+        self._responses = responses
+
+    def __enter__(self):
+        return _MockConn(self._responses)
+
+    def __exit__(self, *_):
+        pass
+
+
+def _make_params(host: str = "192.0.2.10") -> ConnectionParams:
+    return ConnectionParams(host=host, username="admin", device_type="cisco_ios")
+
+
+class TestAuditVlans:
+    def test_success_all_compliant(self, monkeypatch):
+        monkeypatch.setattr(
+            "netops.check.vlan.DeviceConnection",
+            lambda _p: _FakeDeviceConnection({"show vlan brief": CISCO_VLAN_BRIEF}),
+        )
+        result = audit_vlans(_make_params(), expected_vlans={1, 10, 20, 100, 200})
+        assert result["success"] is True
+        assert result["compliant"] is True
+        assert result["missing_vlans"] == []
+        assert result["extra_vlans"] == []
+
+    def test_host_in_result(self, monkeypatch):
+        monkeypatch.setattr(
+            "netops.check.vlan.DeviceConnection",
+            lambda _p: _FakeDeviceConnection({"show vlan brief": CISCO_VLAN_BRIEF}),
+        )
+        result = audit_vlans(_make_params("10.1.2.3"), expected_vlans={1})
+        assert result["host"] == "10.1.2.3"
+
+    def test_missing_vlans_detected(self, monkeypatch):
+        monkeypatch.setattr(
+            "netops.check.vlan.DeviceConnection",
+            lambda _p: _FakeDeviceConnection({"show vlan brief": CISCO_VLAN_BRIEF}),
+        )
+        result = audit_vlans(_make_params(), expected_vlans={1, 10, 20, 100, 200, 999})
+        assert 999 in result["missing_vlans"]
+        assert result["compliant"] is False
+
+    def test_extra_vlans_detected(self, monkeypatch):
+        monkeypatch.setattr(
+            "netops.check.vlan.DeviceConnection",
+            lambda _p: _FakeDeviceConnection({"show vlan brief": CISCO_VLAN_BRIEF}),
+        )
+        # Only expect VLAN 1; the rest (10, 20, 100, 200) are extra
+        result = audit_vlans(_make_params(), expected_vlans={1})
+        assert result["extra_vlans"]
+        assert 10 in result["extra_vlans"]
+        assert result["compliant"] is False
+
+    def test_connection_error(self, monkeypatch):
+        def _raise(_p):
+            raise ConnectionError("timeout")
+
+        monkeypatch.setattr("netops.check.vlan.DeviceConnection", _raise)
+        result = audit_vlans(_make_params(), expected_vlans={10})
+        assert result["success"] is False
+        assert "timeout" in result["error"]
+
+    def test_with_trunks(self, monkeypatch):
+        responses = {
+            "show vlan brief": CISCO_VLAN_BRIEF,
+            "show interfaces trunk": CISCO_INTERFACES_TRUNK,
+        }
+        monkeypatch.setattr(
+            "netops.check.vlan.DeviceConnection",
+            lambda _p: _FakeDeviceConnection(responses),
+        )
+        result = audit_vlans(
+            _make_params(),
+            expected_vlans={1, 10, 20, 100, 200},
+            check_trunks=True,
+        )
+        assert result["success"] is True
+        assert isinstance(result["trunks"], list)
+        assert len(result["trunks"]) > 0
+
+    def test_name_mismatches_detected(self, monkeypatch):
+        monkeypatch.setattr(
+            "netops.check.vlan.DeviceConnection",
+            lambda _p: _FakeDeviceConnection({"show vlan brief": CISCO_VLAN_BRIEF}),
+        )
+        # VLAN 10 is "MANAGEMENT" on the device; pass wrong expected name
+        result = audit_vlans(
+            _make_params(),
+            expected_vlans={1, 10, 20, 100, 200},
+            expected_names={10: "MGMT"},
+        )
+        name_mismatch_ids = [m["vlan_id"] for m in result["name_mismatches"]]
+        assert 10 in name_mismatch_ids
+        assert result["compliant"] is False
+
+    def test_ignore_vlans_excluded_from_extra(self, monkeypatch):
+        monkeypatch.setattr(
+            "netops.check.vlan.DeviceConnection",
+            lambda _p: _FakeDeviceConnection({"show vlan brief": CISCO_VLAN_BRIEF}),
+        )
+        # Expect only VLAN 1; ignore_vlans suppresses 10, 20, 100, 200 from extras
+        result = audit_vlans(
+            _make_params(),
+            expected_vlans={1},
+            ignore_vlans={10, 20, 100, 200},
+        )
+        assert result["extra_vlans"] == []
+
+    def test_actual_vlans_populated(self, monkeypatch):
+        monkeypatch.setattr(
+            "netops.check.vlan.DeviceConnection",
+            lambda _p: _FakeDeviceConnection({"show vlan brief": CISCO_VLAN_BRIEF}),
+        )
+        result = audit_vlans(_make_params(), expected_vlans={1, 10})
+        assert len(result["actual_vlans"]) > 0
+
+    def test_timestamp_present(self, monkeypatch):
+        monkeypatch.setattr(
+            "netops.check.vlan.DeviceConnection",
+            lambda _p: _FakeDeviceConnection({"show vlan brief": CISCO_VLAN_BRIEF}),
+        )
+        result = audit_vlans(_make_params(), expected_vlans={1})
+        assert "timestamp" in result
+        assert result["timestamp"]

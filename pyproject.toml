@@ -52,6 +52,21 @@ ignore_missing_imports = true
 disallow_untyped_defs = true
 disable_error_code = ["type-arg", "import-untyped"]
 
+[tool.pytest.ini_options]
+addopts = "--cov=netops --cov-report=term-missing --cov-report=xml --cov-fail-under=80"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["netops"]
+omit = ["netops/ansible/modules/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "def main\\(",
+]
+
 [tool.ruff]
 line-length = 100
 target-version = "py310"
