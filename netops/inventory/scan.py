@@ -1316,7 +1316,6 @@ def _fragment_to_csv(fragment: dict, dest: Any) -> int:
         Number of rows written.
     """
     import csv
-    import io
 
     devices = fragment.get("devices", {})
 
