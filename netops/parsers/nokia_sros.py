@@ -785,7 +785,7 @@ def parse_router_interface(output: str) -> list[dict]:
                     "admin_state": m.group(3),
                     "oper_state": oper,
                     "protocol": oper,
-                    "port": m.group(7) if m.lastindex and m.lastindex >= 7 else None,
+                    "port": (m.group(7) or m.group(6)) if m.lastindex and m.lastindex >= 6 else None,
                 }
             )
             continue
