@@ -11,6 +11,7 @@ from netops.parsers.cisco import (
 )
 from netops.check.cisco import (
     _parse_thresholds,
+    _print_result as _cisco_print_result,
     build_cisco_health_report,
     check_cisco_bgp,
     check_cisco_cpu,
@@ -20,9 +21,11 @@ from netops.check.cisco import (
     check_cisco_memory,
     check_cisco_ospf,
     check_cisco_uptime,
+    run_cisco_health_check,
     DEFAULT_CPU_THRESHOLD,
     DEFAULT_MEM_THRESHOLD,
 )
+from netops.core.connection import ConnectionParams as _CiscoConnParams
 from netops.templates.cisco_ios import HEALTH as CISCO_HEALTH
 
 # ---------------------------------------------------------------------------
@@ -823,3 +826,361 @@ System image file is "flash:ios.bin"
     def test_last_reload_reason_variants(self, line, expected_reason):
         result = parse_version_cisco(line)
         assert result["reload_reason"] == expected_reason
+
+
+# ===========================================================================
+# Additional imports for new test classes
+# ===========================================================================
+
+
+# ===========================================================================
+# Helpers
+# ===========================================================================
+
+
+class _CiscoRaisingConn:
+    """Mock connection that always raises RuntimeError on send()."""
+
+    def send(self, command: str, **_kwargs) -> str:
+        raise RuntimeError("simulated connection failure")
+
+
+# ===========================================================================
+# check_cisco_* error paths
+# ===========================================================================
+
+
+class TestCheckCiscoCpuError:
+    def test_exception_returns_error_dict(self):
+        res = check_cisco_cpu(_CiscoRaisingConn(), 80.0)
+        assert res["error"] is not None
+        assert "simulated" in res["error"]
+        assert res["alert"] is False
+        assert res["utilization"] is None
+
+
+class TestCheckCiscoMemoryError:
+    def test_exception_returns_error_dict(self):
+        res = check_cisco_memory(_CiscoRaisingConn(), 85.0)
+        assert res["error"] is not None
+        assert res["alert"] is False
+        assert res["utilization"] is None
+
+
+class TestCheckCiscoInterfacesError:
+    def test_exception_returns_error_dict(self):
+        res = check_cisco_interfaces(_CiscoRaisingConn())
+        assert res["error"] is not None
+        assert res["alert"] is False
+        assert res["interfaces"] == []
+        assert res["total"] == 0
+        assert res["with_errors"] == 0
+
+
+class TestCheckCiscoLogsError:
+    def test_exception_returns_error_dict(self):
+        res = check_cisco_logs(_CiscoRaisingConn())
+        assert res["error"] is not None
+        assert res["alert"] is False
+        assert res["critical_count"] == 0
+        assert res["major_count"] == 0
+        assert res["events"] == []
+
+
+class TestCheckCiscoBgpError:
+    def test_exception_returns_error_dict(self):
+        res = check_cisco_bgp(_CiscoRaisingConn())
+        assert res["error"] is not None
+        assert res["alert"] is False
+        assert res["peers"] == []
+        assert res["total"] == 0
+        assert res["established"] == 0
+        assert res["not_established"] == 0
+
+
+class TestCheckCiscoOspfError:
+    def test_exception_returns_error_dict(self):
+        res = check_cisco_ospf(_CiscoRaisingConn())
+        assert res["error"] is not None
+        assert res["alert"] is False
+        assert res["neighbors"] == []
+        assert res["total"] == 0
+        assert res["full"] == 0
+        assert res["not_full"] == 0
+
+
+class TestCheckCiscoEnvironmentError:
+    def test_exception_returns_error_dict(self):
+        res = check_cisco_environment(_CiscoRaisingConn())
+        assert res["error"] is not None
+        assert res["alert"] is False
+        assert res["fans"] == []
+        assert res["temperatures"] == []
+        assert res["power_supplies"] == []
+        assert res["overall_ok"] is True
+
+
+class TestCheckCiscoUptimeError:
+    def test_exception_returns_error_dict(self):
+        res = check_cisco_uptime(_CiscoRaisingConn())
+        assert res["error"] is not None
+        assert res["alert"] is False
+        assert res["version"] is None
+        assert res["uptime"] is None
+
+
+# ===========================================================================
+# run_cisco_health_check
+# ===========================================================================
+
+
+class _CiscoMockConn:
+    """Minimal mock that returns pre-canned output based on command substring."""
+
+    def __init__(self, responses: dict[str, str]):
+        self._responses = responses
+
+    def send(self, command: str, **_kwargs) -> str:
+        for key, value in self._responses.items():
+            if key in command:
+                return value
+        return ""
+
+
+class TestRunCiscoHealthCheck:
+    def _make_params(self):
+        return _CiscoConnParams(
+            host="192.168.1.1",
+            username="admin",
+            password="secret",
+            device_type="cisco_ios",
+        )
+
+    def _healthy_conn(self):
+        return _CiscoMockConn(
+            {
+                "show processes cpu": CISCO_CPU_OUTPUT,
+                "show processes memory": CISCO_MEM_OUTPUT,
+                "show interfaces": CISCO_INTERFACES_OUTPUT,
+                "show logging": CISCO_LOG_OUTPUT,
+                "show ip bgp summary": CISCO_BGP_ALL_ESTABLISHED,
+                "show ip ospf neighbor": OSPF_NEIGHBORS_ALL_FULL,
+                "show environment all": ENVIRONMENT_IOS_XE,
+                "show version": VERSION_IOS,
+            }
+        )
+
+    def test_success_path(self, monkeypatch):
+        healthy = self._healthy_conn()
+
+        class _FakeConn:
+            def __enter__(self_inner):
+                return healthy
+
+            def __exit__(self_inner, *_):
+                pass
+
+        monkeypatch.setattr(
+            "netops.check.cisco.DeviceConnection", lambda _p: _FakeConn()
+        )
+        result = run_cisco_health_check(self._make_params())
+        assert result["success"] is True
+        assert result["error"] is None
+        assert "cpu" in result["checks"]
+        assert "memory" in result["checks"]
+        assert "interface_errors" in result["checks"]
+        assert "logs" in result["checks"]
+        assert "bgp" in result["checks"]
+        assert "ospf" in result["checks"]
+        assert "environment" in result["checks"]
+        assert "uptime" in result["checks"]
+
+    def test_connection_failure(self, monkeypatch):
+        class _FailConn:
+            def __enter__(self_inner):
+                raise OSError("cannot connect")
+
+            def __exit__(self_inner, *_):
+                pass
+
+        monkeypatch.setattr(
+            "netops.check.cisco.DeviceConnection", lambda _p: _FailConn()
+        )
+        result = run_cisco_health_check(self._make_params())
+        assert result["success"] is False
+        assert result["error"] is not None
+
+    def test_bgp_and_ospf_skipped_when_disabled(self, monkeypatch):
+        conn = self._healthy_conn()
+
+        class _FakeConn:
+            def __enter__(self_inner):
+                return conn
+
+            def __exit__(self_inner, *_):
+                pass
+
+        monkeypatch.setattr(
+            "netops.check.cisco.DeviceConnection", lambda _p: _FakeConn()
+        )
+        result = run_cisco_health_check(
+            self._make_params(), include_bgp=False, include_ospf=False
+        )
+        assert result["success"] is True
+        assert "bgp" not in result["checks"]
+        assert "ospf" not in result["checks"]
+
+    def test_environment_skipped_when_disabled(self, monkeypatch):
+        conn = self._healthy_conn()
+
+        class _FakeConn:
+            def __enter__(self_inner):
+                return conn
+
+            def __exit__(self_inner, *_):
+                pass
+
+        monkeypatch.setattr(
+            "netops.check.cisco.DeviceConnection", lambda _p: _FakeConn()
+        )
+        result = run_cisco_health_check(
+            self._make_params(), include_environment=False
+        )
+        assert result["success"] is True
+        assert "environment" not in result["checks"]
+
+    def test_overall_alert_set_when_check_alerts(self, monkeypatch):
+        conn = _CiscoMockConn(
+            {
+                "show processes cpu": CISCO_CPU_HIGH,
+                "show processes memory": CISCO_MEM_OUTPUT,
+                "show interfaces": CISCO_INTERFACES_OUTPUT,
+                "show logging": CISCO_LOG_OUTPUT,
+                "show ip bgp summary": CISCO_BGP_ALL_ESTABLISHED,
+                "show ip ospf neighbor": OSPF_NEIGHBORS_ALL_FULL,
+                "show environment all": ENVIRONMENT_IOS_XE,
+                "show version": VERSION_IOS,
+            }
+        )
+
+        class _FakeConn:
+            def __enter__(self_inner):
+                return conn
+
+            def __exit__(self_inner, *_):
+                pass
+
+        monkeypatch.setattr(
+            "netops.check.cisco.DeviceConnection", lambda _p: _FakeConn()
+        )
+        result = run_cisco_health_check(self._make_params(), cpu_threshold=50.0)
+        assert result["success"] is True
+        assert result["overall_alert"] is True
+
+
+# ===========================================================================
+# _parse_thresholds — ValueError path (line 457)
+# ===========================================================================
+
+
+class TestParseCiscoThresholdsValueError:
+    def test_non_float_value_skipped(self):
+        from netops.check.cisco import _parse_thresholds as _pt
+        result = _pt("cpu=notanumber,mem=85")
+        assert "cpu" not in result
+        assert result["mem"] == 85.0
+
+    def test_all_invalid_returns_empty(self):
+        from netops.check.cisco import _parse_thresholds as _pt
+        assert _pt("cpu=abc,mem=xyz") == {}
+
+
+class TestParseCiscoThresholdsContinue:
+    def test_entry_without_equals_skipped(self):
+        from netops.check.cisco import _parse_thresholds as _pt
+        # "invalid" has no "=" → hits the `continue` branch
+        result = _pt("invalid,mem=85")
+        assert "invalid" not in result
+        assert result["mem"] == 85.0
+
+
+# ===========================================================================
+# _print_result (lines 468-533)
+# ===========================================================================
+
+
+class TestCiscoPrintResult:
+    def _base_result(self, success=True, overall_alert=False, checks=None):
+        return {
+            "host": "192.168.1.1",
+            "timestamp": "2026-01-01T00:00:00Z",
+            "success": success,
+            "overall_alert": overall_alert,
+            "checks": checks or {},
+            "error": None,
+        }
+
+    def test_failed_device_prints_error(self, capsys):
+        result = self._base_result(success=False)
+        result["error"] = "Timeout"
+        _cisco_print_result(result)
+        out = capsys.readouterr().out
+        assert "192.168.1.1" in out
+        assert "ERROR" in out
+
+    def test_healthy_device_shows_cpu_mem(self, capsys):
+        checks = {
+            "cpu": {"utilization": 30.0, "threshold": 80.0, "alert": False},
+            "memory": {"utilization": 55.0, "threshold": 85.0, "alert": False},
+            "interface_errors": {"with_errors": 0, "total": 5, "alert": False},
+            "logs": {"critical_count": 0, "major_count": 0, "alert": False},
+        }
+        _cisco_print_result(self._base_result(checks=checks))
+        out = capsys.readouterr().out
+        assert "192.168.1.1" in out
+        assert "30.0%" in out
+        assert "55.0%" in out
+
+    def test_bgp_ospf_env_uptime_shown(self, capsys):
+        checks = {
+            "cpu": {"utilization": None, "threshold": 80.0, "alert": False},
+            "memory": {"utilization": None, "threshold": 85.0, "alert": False},
+            "interface_errors": {"with_errors": 0, "total": 0, "alert": False},
+            "logs": {"critical_count": 0, "major_count": 0, "alert": False},
+            "bgp": {
+                "established": 2, "total": 2,
+                "not_established": 0, "alert": False,
+            },
+            "ospf": {"full": 2, "total": 2, "not_full": 0, "alert": False},
+            "environment": {
+                "overall_ok": True,
+                "fans": [{"ok": True}],
+                "temperatures": [],
+                "power_supplies": [],
+                "alert": False,
+            },
+            "uptime": {
+                "uptime": "1 day",
+                "version": "15.2(4)E8",
+                "reload_reason": "power-on",
+                "alert": False,
+            },
+        }
+        _cisco_print_result(self._base_result(checks=checks))
+        out = capsys.readouterr().out
+        assert "BGP" in out
+        assert "OSPF" in out
+        assert "ENV" in out
+        assert "UPTIME" in out
+        assert "RELOAD" in out
+
+    def test_alert_state_shown(self, capsys):
+        checks = {
+            "cpu": {"utilization": 95.0, "threshold": 80.0, "alert": True},
+            "memory": {"utilization": None, "threshold": 85.0, "alert": False},
+            "interface_errors": {"with_errors": 0, "total": 0, "alert": False},
+            "logs": {"critical_count": 0, "major_count": 0, "alert": False},
+        }
+        _cisco_print_result(self._base_result(overall_alert=True, checks=checks))
+        out = capsys.readouterr().out
+        assert "ALERT" in out

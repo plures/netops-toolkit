@@ -19,6 +19,8 @@ from netops.parsers.arista import (
 )
 from netops.check.arista import (
     _parse_thresholds,
+    _print_result as _eos_print_result,
+    _send_json,
     build_eos_health_report,
     check_eos_bgp,
     check_eos_bgp_evpn,
@@ -28,9 +30,11 @@ from netops.check.arista import (
     check_eos_mlag,
     check_eos_ospf,
     check_eos_transceivers,
+    run_health_check,
     DEFAULT_CPU_THRESHOLD,
     DEFAULT_MEM_THRESHOLD,
 )
+from netops.core.connection import ConnectionParams as _AristaConnParams
 from netops.templates.arista_eos import HEALTH as EOS_HEALTH
 
 # ===========================================================================
@@ -1217,3 +1221,485 @@ class TestEosHealthTemplate:
     def test_defaults_match(self):
         assert DEFAULT_CPU_THRESHOLD == 80.0
         assert DEFAULT_MEM_THRESHOLD == 85.0
+
+
+# ===========================================================================
+# Additional imports for new test classes
+# ===========================================================================
+
+
+# ===========================================================================
+# Helpers
+# ===========================================================================
+
+
+class _RaisingConn:
+    """Mock connection that always raises RuntimeError on send()."""
+
+    def send(self, command: str):
+        raise RuntimeError("simulated send failure")
+
+
+# ===========================================================================
+# _send_json
+# ===========================================================================
+
+
+class TestSendJson:
+    def test_dict_response_returned_directly(self):
+        conn = _MockConn({"show version": {"key": "value"}})
+        assert _send_json(conn, "show version") == {"key": "value"}
+
+    def test_json_string_parsed(self):
+        conn = _MockConn({}, {"show version": '{"status": "ok"}'})
+        assert _send_json(conn, "show version") == {"status": "ok"}
+
+    def test_malformed_json_string_returns_empty_dict(self):
+        # Starts with '{' but is not valid JSON — covers the `pass` on decode failure.
+        conn = _MockConn({}, {"show version": "{malformed json"})
+        assert _send_json(conn, "show version") == {}
+
+    def test_plain_text_response_returns_empty_dict(self):
+        conn = _MockConn({}, {"show version": "plain text output"})
+        assert _send_json(conn, "show version") == {}
+
+    def test_no_matching_response_returns_empty_dict(self):
+        conn = _MockConn({})
+        assert _send_json(conn, "show version") == {}
+
+
+# ===========================================================================
+# check_eos_* error paths
+# ===========================================================================
+
+
+class TestCheckEosCpuMemoryError:
+    def test_exception_returns_error_dict(self):
+        res = check_eos_cpu_memory(_RaisingConn(), 80.0, 85.0)
+        assert res["error"] is not None
+        assert "simulated" in res["error"]
+        assert res["alert"] is False
+        assert res["cpu_utilization"] is None
+        assert res["cpu_alert"] is False
+        assert res["mem_alert"] is False
+
+
+class TestCheckEosInterfacesError:
+    def test_exception_returns_error_dict(self):
+        res = check_eos_interfaces(_RaisingConn())
+        assert res["error"] is not None
+        assert res["alert"] is False
+        assert res["interfaces"] == []
+        assert res["total"] == 0
+        assert res["with_errors"] == 0
+
+
+class TestCheckEosTransceiversError:
+    def test_exception_returns_error_dict(self):
+        res = check_eos_transceivers(_RaisingConn())
+        assert res["error"] is not None
+        assert res["alert"] is False
+        assert res["transceivers"] == []
+        assert res["total"] == 0
+        assert res["with_alerts"] == 0
+
+
+class TestCheckEosBgpError:
+    def test_exception_returns_error_dict(self):
+        res = check_eos_bgp(_RaisingConn())
+        assert res["error"] is not None
+        assert res["alert"] is False
+        assert res["peers"] == []
+        assert res["total"] == 0
+        assert res["established"] == 0
+        assert res["not_established"] == 0
+
+
+class TestCheckEosBgpEvpnError:
+    def test_exception_returns_error_dict(self):
+        res = check_eos_bgp_evpn(_RaisingConn())
+        assert res["error"] is not None
+        assert res["alert"] is False
+        assert res["peers"] == []
+        assert res["total"] == 0
+
+
+class TestCheckEosOspfError:
+    def test_exception_returns_error_dict(self):
+        res = check_eos_ospf(_RaisingConn())
+        assert res["error"] is not None
+        assert res["alert"] is False
+        assert res["neighbors"] == []
+        assert res["total"] == 0
+        assert res["full"] == 0
+        assert res["not_full"] == 0
+
+
+class TestCheckEosMlagError:
+    def test_exception_returns_error_dict(self):
+        res = check_eos_mlag(_RaisingConn())
+        assert res["error"] is not None
+        assert res["alert"] is False
+        assert res["is_active"] is False
+        assert res["peer_link_ok"] is False
+        assert res["config_consistent"] is True
+
+
+class TestCheckEosEnvironmentError:
+    def test_exception_returns_error_dict(self):
+        res = check_eos_environment(_RaisingConn())
+        assert res["error"] is not None
+        assert res["alert"] is False
+        assert res["power_supplies"] == []
+        assert res["fans"] == []
+        assert res["temperatures"] == []
+
+
+# ===========================================================================
+# run_health_check
+# ===========================================================================
+
+
+class TestRunEosHealthCheck:
+    def _make_params(self):
+        return _AristaConnParams(
+            host="10.0.0.1",
+            username="admin",
+            password="secret",
+            device_type="arista_eos",
+        )
+
+    def _healthy_mock(self):
+        return _MockConn(
+            {
+                "show version": VERSION_DATA,
+                "show interfaces": INTERFACES_DATA_CLEAN,
+                "show bgp summary": BGP_SUMMARY_ALL_ESTABLISHED,
+                "show ip ospf neighbor": OSPF_NEIGHBORS_EMPTY,
+                "show mlag config-sanity": MLAG_SANITY_CONSISTENT,
+                "show mlag": MLAG_DATA_INACTIVE,
+                "show environment all": ENVIRONMENT_DATA_OK,
+            }
+        )
+
+    def test_success_path(self, monkeypatch):
+        healthy = self._healthy_mock()
+
+        class _FakeConn:
+            def __enter__(self_inner):
+                return healthy
+
+            def __exit__(self_inner, *_):
+                pass
+
+        monkeypatch.setattr("netops.check.arista.DeviceConnection", lambda _p: _FakeConn())
+        result = run_health_check(self._make_params())
+        assert result["success"] is True
+        assert result["error"] is None
+        assert "cpu_memory" in result["checks"]
+        assert "interfaces" in result["checks"]
+        assert "environment" in result["checks"]
+
+    def test_connection_failure(self, monkeypatch):
+        class _FailConn:
+            def __enter__(self_inner):
+                raise OSError("cannot connect")
+
+            def __exit__(self_inner, *_):
+                pass
+
+        monkeypatch.setattr("netops.check.arista.DeviceConnection", lambda _p: _FailConn())
+        result = run_health_check(self._make_params())
+        assert result["success"] is False
+        assert result["error"] is not None
+
+    def test_optional_transceivers_and_evpn_included(self, monkeypatch):
+        conn_data = _MockConn(
+            {
+                "show version": VERSION_DATA,
+                "show interfaces": INTERFACES_DATA_CLEAN,
+                "show interfaces transceiver": TRANSCEIVERS_DATA_EMPTY,
+                "show bgp summary": BGP_SUMMARY_ALL_ESTABLISHED,
+                "show bgp evpn summary": BGP_SUMMARY_EMPTY,
+                "show ip ospf neighbor": OSPF_NEIGHBORS_EMPTY,
+                "show mlag config-sanity": MLAG_SANITY_CONSISTENT,
+                "show mlag": MLAG_DATA_INACTIVE,
+                "show environment all": ENVIRONMENT_DATA_OK,
+            }
+        )
+
+        class _FakeConn:
+            def __enter__(self_inner):
+                return conn_data
+
+            def __exit__(self_inner, *_):
+                pass
+
+        monkeypatch.setattr("netops.check.arista.DeviceConnection", lambda _p: _FakeConn())
+        result = run_health_check(
+            self._make_params(), check_transceivers=True, check_evpn=True
+        )
+        assert result["success"] is True
+        assert "transceivers" in result["checks"]
+        assert "bgp_evpn" in result["checks"]
+
+    def test_bgp_and_ospf_skipped_when_disabled(self, monkeypatch):
+        conn_data = _MockConn(
+            {
+                "show version": VERSION_DATA,
+                "show interfaces": INTERFACES_DATA_CLEAN,
+                "show mlag config-sanity": MLAG_SANITY_CONSISTENT,
+                "show mlag": MLAG_DATA_INACTIVE,
+                "show environment all": ENVIRONMENT_DATA_OK,
+            }
+        )
+
+        class _FakeConn:
+            def __enter__(self_inner):
+                return conn_data
+
+            def __exit__(self_inner, *_):
+                pass
+
+        monkeypatch.setattr("netops.check.arista.DeviceConnection", lambda _p: _FakeConn())
+        result = run_health_check(
+            self._make_params(), check_bgp=False, check_ospf=False
+        )
+        assert result["success"] is True
+        assert "bgp" not in result["checks"]
+        assert "ospf" not in result["checks"]
+
+    def test_overall_alert_set_when_check_alerts(self, monkeypatch):
+        conn_data = _MockConn(
+            {
+                "show version": VERSION_DATA_HIGH_CPU,
+                "show interfaces": INTERFACES_DATA_CLEAN,
+                "show bgp summary": BGP_SUMMARY_ALL_ESTABLISHED,
+                "show ip ospf neighbor": OSPF_NEIGHBORS_EMPTY,
+                "show mlag config-sanity": MLAG_SANITY_CONSISTENT,
+                "show mlag": MLAG_DATA_INACTIVE,
+                "show environment all": ENVIRONMENT_DATA_OK,
+            }
+        )
+
+        class _FakeConn:
+            def __enter__(self_inner):
+                return conn_data
+
+            def __exit__(self_inner, *_):
+                pass
+
+        monkeypatch.setattr("netops.check.arista.DeviceConnection", lambda _p: _FakeConn())
+        result = run_health_check(self._make_params(), cpu_threshold=50.0)
+        assert result["success"] is True
+        assert result["overall_alert"] is True
+
+
+# ===========================================================================
+# build_eos_health_report — additional coverage
+# ===========================================================================
+
+
+class TestBuildEosHealthReportExtra:
+    def _make_result(self, host, success=True, overall_alert=False, checks=None):
+        return {
+            "host": host,
+            "timestamp": "2024-01-01T00:00:00Z",
+            "success": success,
+            "overall_alert": overall_alert,
+            "checks": checks or {},
+            "error": None,
+        }
+
+    def test_bgp_alert_counted(self):
+        checks = {
+            "cpu_memory": {"alert": False},
+            "interfaces": {"alert": False},
+            "bgp": {"alert": True},
+            "ospf": {"alert": False},
+            "mlag": {"alert": False},
+            "environment": {"alert": False},
+        }
+        result = self._make_result("10.0.0.1", overall_alert=True, checks=checks)
+        report = build_eos_health_report([result])
+        assert report["bgp_alerts"] == 1
+        assert report["overall_alert"] is True
+
+    def test_interface_and_ospf_alerts_counted(self):
+        checks_r1 = {
+            "interfaces": {"alert": True},
+            "ospf": {"alert": False},
+        }
+        checks_r2 = {
+            "interfaces": {"alert": False},
+            "ospf": {"alert": True},
+        }
+        r1 = self._make_result("r1", overall_alert=True, checks=checks_r1)
+        r2 = self._make_result("r2", overall_alert=True, checks=checks_r2)
+        report = build_eos_health_report([r1, r2])
+        assert report["interface_alerts"] == 1
+        assert report["ospf_alerts"] == 1
+
+    def test_results_key_contains_originals(self):
+        r = self._make_result("10.0.0.1")
+        report = build_eos_health_report([r])
+        assert report["results"] is not None
+        assert len(report["results"]) == 1
+        assert report["results"][0]["host"] == "10.0.0.1"
+
+
+# ===========================================================================
+# _parse_thresholds — ValueError path (lines 555-556)
+# ===========================================================================
+
+
+class TestParseThresholdsValueError:
+    def test_non_float_value_skipped(self):
+        # "cpu=abc" triggers ValueError → pass → key not added
+        t = _parse_thresholds("cpu=abc,mem=85")
+        assert "cpu" not in t
+        assert t["mem"] == 85.0
+
+    def test_all_invalid_returns_empty(self):
+        t = _parse_thresholds("cpu=notanumber,mem=alsonotanumber")
+        assert t == {}
+
+
+# ===========================================================================
+# check_eos_bgp / check_eos_ospf text fallback paths (lines 232, 305, 349-351)
+# ===========================================================================
+
+
+class TestCheckEosBgpTextFallback:
+    def test_text_fallback_used_when_json_empty(self):
+        # json responses return nothing for bgp summary → text response kicks in
+        conn = _MockConn(
+            {},
+            {"show bgp summary": BGP_SUMMARY_TEXT_ALL_ESTAB},
+        )
+        res = check_eos_bgp(conn)
+        assert res["error"] is None
+        assert res["total"] > 0
+        assert res["not_established"] == 0
+        assert res["alert"] is False
+
+
+class TestCheckEosOspfTextFallback:
+    def test_text_fallback_used_when_json_empty(self):
+        conn = _MockConn(
+            {},
+            {"show ip ospf neighbor": OSPF_TEXT_ALL_FULL},
+        )
+        res = check_eos_ospf(conn)
+        assert res["error"] is None
+
+
+class TestCheckEosMlagTextFallback:
+    def test_text_fallback_used_when_json_state_empty(self):
+        # json returns empty MLAG dict → text fallback
+        conn = _MockConn(
+            {
+                "show mlag config-sanity": MLAG_SANITY_CONSISTENT,
+            },
+            {
+                "show mlag": MLAG_TEXT_ACTIVE,
+            },
+        )
+        res = check_eos_mlag(conn)
+        assert res["error"] is None
+
+
+# ===========================================================================
+# _print_result (lines 562-637)
+# ===========================================================================
+
+
+class TestEosPrintResult:
+    def _base_result(self, success=True, overall_alert=False, checks=None):
+        return {
+            "host": "10.0.0.1",
+            "timestamp": "2026-01-01T00:00:00Z",
+            "success": success,
+            "overall_alert": overall_alert,
+            "checks": checks or {},
+            "error": None,
+        }
+
+    def test_failed_device_prints_error(self, capsys):
+        result = self._base_result(success=False)
+        result["error"] = "Connection refused"
+        _eos_print_result(result)
+        out = capsys.readouterr().out
+        assert "10.0.0.1" in out
+        assert "ERROR" in out
+
+    def test_healthy_device_shows_cpu_mem(self, capsys):
+        checks = {
+            "cpu_memory": {
+                "cpu_utilization": 25.0,
+                "memory_util": 60.0,
+                "cpu_threshold": 80.0,
+                "mem_threshold": 85.0,
+                "eos_version": "4.28.3M",
+                "model": "DCS-7050CX3",
+                "alert": False,
+            },
+            "interfaces": {"with_errors": 0, "total": 10, "alert": False},
+            "environment": {
+                "power_supplies": [{"ok": True}],
+                "fans": [{"ok": True}],
+                "temperatures": [{"ok": True}],
+                "alert": False,
+            },
+        }
+        _eos_print_result(self._base_result(checks=checks))
+        out = capsys.readouterr().out
+        assert "10.0.0.1" in out
+        assert "25.0%" in out
+        assert "60.0%" in out
+
+    def test_bgp_evpn_and_ospf_printed_when_present(self, capsys):
+        checks = {
+            "cpu_memory": {"cpu_utilization": None, "memory_util": None, "alert": False},
+            "interfaces": {"with_errors": 0, "total": 0, "alert": False},
+            "bgp": {"established": 2, "total": 2, "alert": False},
+            "bgp_evpn": {"established": 1, "total": 1, "alert": False},
+            "ospf": {"full": 3, "total": 3, "alert": False},
+            "mlag": {
+                "alert": False,
+                "config_consistent": True,
+                "mlag": {"state": "active"},
+            },
+            "environment": {
+                "power_supplies": [],
+                "fans": [],
+                "temperatures": [],
+                "alert": False,
+            },
+        }
+        _eos_print_result(self._base_result(checks=checks))
+        out = capsys.readouterr().out
+        assert "BGP" in out
+        assert "EVPN" in out
+        assert "OSPF" in out
+        assert "MLAG" in out
+
+    def test_mlag_config_inconsistency_shown(self, capsys):
+        checks = {
+            "cpu_memory": {"cpu_utilization": None, "memory_util": None, "alert": False},
+            "interfaces": {"with_errors": 0, "total": 0, "alert": False},
+            "mlag": {
+                "alert": True,
+                "config_consistent": False,
+                "mlag": {"state": "active"},
+            },
+            "environment": {
+                "power_supplies": [],
+                "fans": [],
+                "temperatures": [],
+                "alert": False,
+            },
+        }
+        _eos_print_result(self._base_result(checks=checks))
+        out = capsys.readouterr().out
+        assert "SANITY" in out or "inconsistencies" in out
