@@ -24,7 +24,6 @@ from netops.collect.backup import (
 )
 from netops.core.connection import ConnectionParams
 
-
 # ---------------------------------------------------------------------------
 # _latest_backup_before
 # ---------------------------------------------------------------------------

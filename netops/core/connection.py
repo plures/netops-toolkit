@@ -11,7 +11,7 @@ import logging
 from dataclasses import dataclass, field
 from enum import Enum
 from types import TracebackType
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -37,14 +37,14 @@ class ConnectionParams:
     """Everything needed to connect to a device."""
     host: str
     username: str | None = None
-    password: Optional[str] = None
+    password: str | None = None
     transport: Transport = Transport.SSH
     auth_method: AuthMethod = AuthMethod.PASSWORD
-    port: Optional[int] = None  # None = auto (22/23)
-    key_file: Optional[str] = None
+    port: int | None = None  # None = auto (22/23)
+    key_file: str | None = None
     device_type: str = "autodetect"  # Netmiko device_type
     timeout: int = 30
-    enable_password: Optional[str] = None
+    enable_password: str | None = None
     # Vendor-specific overrides
     extras: dict = field(default_factory=dict)
 

@@ -30,7 +30,6 @@ import logging
 import os
 import sys
 from datetime import datetime, timezone
-from typing import Optional
 
 from netops.core import DeviceConnection
 from netops.core.connection import ConnectionParams, Transport
@@ -446,7 +445,7 @@ def build_cisco_health_report(results: list[dict]) -> dict:
 # ---------------------------------------------------------------------------
 
 
-def _parse_thresholds(raw: Optional[str]) -> dict[str, float]:
+def _parse_thresholds(raw: str | None) -> dict[str, float]:
     """Parse ``cpu=80,mem=85`` style threshold string."""
     thresholds: dict[str, float] = {}
     if not raw:

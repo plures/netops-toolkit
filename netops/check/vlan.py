@@ -36,7 +36,6 @@ import logging
 import os
 import sys
 from datetime import datetime, timezone
-from typing import Optional
 
 import yaml
 
@@ -64,7 +63,7 @@ def _find_missing_vlans(actual_ids: set[int], expected_ids: set[int]) -> list[in
 def _find_extra_vlans(
     actual_ids: set[int],
     expected_ids: set[int],
-    ignore_ids: Optional[set[int]] = None,
+    ignore_ids: set[int] | None = None,
 ) -> list[int]:
     """Return sorted list of VLAN IDs in *actual* but absent from *expected*.
 
@@ -124,9 +123,9 @@ def _check_trunk_vlans(trunks: list[dict], expected_ids: set[int]) -> list[dict]
 def audit_vlans(
     params: ConnectionParams,
     expected_vlans: set[int],
-    expected_names: Optional[dict[int, str]] = None,
+    expected_names: dict[int, str] | None = None,
     check_trunks: bool = False,
-    ignore_vlans: Optional[set[int]] = None,
+    ignore_vlans: set[int] | None = None,
 ) -> dict:
     """Audit VLAN configuration on a single switch.
 

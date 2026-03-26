@@ -47,11 +47,16 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Optional
 
 import yaml
 
-from netops.change.diff import ConfigStyle, DiffResult, diff_configs, format_semantic, format_unified
+from netops.change.diff import (
+    ConfigStyle,
+    DiffResult,
+    diff_configs,
+    format_semantic,
+    format_unified,
+)
 from netops.change.push import _push_commands
 from netops.core.connection import ConnectionParams, DeviceConnection, Transport
 
@@ -146,7 +151,7 @@ class ChangeStep:
     applied: bool = False
     """True after this step has been successfully applied."""
 
-    error: Optional[str] = None
+    error: str | None = None
     """Error message if this step failed during :func:`apply_plan`."""
 
 
@@ -192,10 +197,10 @@ class ChangePlan:
     approved: bool = False
     """Set to *True* before calling :func:`apply_plan` to authorise execution."""
 
-    applied_at: Optional[str] = None
+    applied_at: str | None = None
     """ISO-8601 UTC timestamp when :func:`apply_plan` was called."""
 
-    changelog_path: Optional[str] = None
+    changelog_path: str | None = None
     """Optional path to a JSON-lines changelog to append results to."""
 
 
@@ -255,7 +260,7 @@ def generate_plan(
     *,
     operator: str = "",
     description: str = "",
-    config_style: Optional[ConfigStyle] = None,
+    config_style: ConfigStyle | None = None,
 ) -> ChangePlan:
     """Generate a :class:`ChangePlan` from desired-vs-current state.
 
@@ -320,7 +325,7 @@ def generate_plan(
         diff_preview = ""
         unified = ""
         has_security = False
-        diff: Optional[DiffResult] = None
+        diff: DiffResult | None = None
 
         if current_config or desired_config:
             diff = diff_configs(current_config, desired_config, style=config_style)
@@ -375,9 +380,9 @@ def generate_plan(
 def apply_plan(
     plan: ChangePlan,
     *,
-    connection_params: Optional[list[ConnectionParams]] = None,
+    connection_params: list[ConnectionParams] | None = None,
     approved: bool = False,
-    changelog_path: Optional[Path] = None,
+    changelog_path: Path | None = None,
 ) -> ChangePlan:
     """Apply an approved :class:`ChangePlan` to the target devices.
 

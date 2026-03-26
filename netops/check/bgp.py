@@ -28,7 +28,6 @@ import logging
 import os
 import sys
 from datetime import datetime, timezone
-from typing import Optional
 
 from netops.core import DeviceConnection
 from netops.core.connection import ConnectionParams, Transport
@@ -144,7 +143,7 @@ def _evaluate_peer(
 
 def check_bgp_peers(
     params: ConnectionParams,
-    expected_prefixes: Optional[dict[str, int]] = None,
+    expected_prefixes: dict[str, int] | None = None,
     flap_min_uptime: int = DEFAULT_FLAP_MIN_UPTIME,
     prefix_deviation_pct: float = DEFAULT_PREFIX_DEVIATION_PCT,
 ) -> dict:
@@ -338,7 +337,7 @@ def _print_summary_report(report: dict) -> None:
 # ---------------------------------------------------------------------------
 
 
-def _parse_expected_prefixes(raw: Optional[str]) -> dict[str, int]:
+def _parse_expected_prefixes(raw: str | None) -> dict[str, int]:
     """Parse ``10.0.0.2=100,10.0.0.3=200`` into ``{'10.0.0.2': 100, ...}``."""
     result: dict[str, int] = {}
     if not raw:

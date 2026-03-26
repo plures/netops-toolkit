@@ -15,8 +15,8 @@ import argparse
 import asyncio
 import concurrent.futures
 import csv
-import ipaddress
 import io
+import ipaddress
 import json
 import logging
 import platform
@@ -24,7 +24,7 @@ import subprocess
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any
 
 from netops.parsers.nokia_sros import parse_bof as _parse_nokia_bof
 
@@ -60,30 +60,30 @@ class ScanResult:
 
     host: str
     reachable: bool
-    hostname: Optional[str] = None
-    sys_descr: Optional[str] = None
-    sys_obj_id: Optional[str] = None
-    vendor: Optional[str] = None
-    location: Optional[str] = None
+    hostname: str | None = None
+    sys_descr: str | None = None
+    sys_obj_id: str | None = None
+    vendor: str | None = None
+    location: str | None = None
     cdp_neighbors: list[dict] = field(default_factory=list)
     lldp_neighbors: list[dict] = field(default_factory=list)
-    error: Optional[str] = None
+    error: str | None = None
     # Deep-scan fields (populated via SSH when --deep is used)
-    version: Optional[str] = None
-    model: Optional[str] = None
-    serial: Optional[str] = None
-    uptime: Optional[str] = None
-    image: Optional[str] = None
-    hardware_revision: Optional[str] = None
-    total_memory: Optional[str] = None
-    free_memory: Optional[str] = None
-    reload_reason: Optional[str] = None
-    mac_address: Optional[str] = None
-    config_register: Optional[str] = None
-    cpu_type: Optional[str] = None
-    flash_size: Optional[str] = None
-    domain_name: Optional[str] = None
-    interface_count: Optional[str] = None
+    version: str | None = None
+    model: str | None = None
+    serial: str | None = None
+    uptime: str | None = None
+    image: str | None = None
+    hardware_revision: str | None = None
+    total_memory: str | None = None
+    free_memory: str | None = None
+    reload_reason: str | None = None
+    mac_address: str | None = None
+    config_register: str | None = None
+    cpu_type: str | None = None
+    flash_size: str | None = None
+    domain_name: str | None = None
+    interface_count: str | None = None
 
     def to_inventory_entry(self) -> dict:
         """Convert to an inventory device dict (compatible with core.Inventory)."""
@@ -201,7 +201,7 @@ async def _snmp_get_async(
     community: str,
     port: int,
     timeout: int,
-) -> Optional[str]:
+) -> str | None:
     """Async SNMP GET for a single OID. Returns the string value or ``None``."""
     from pysnmp.hlapi.v3arch.asyncio import (
         CommunityData,
@@ -459,7 +459,7 @@ async def _scan_subnet_async(
                 return ScanResult(host=host, reachable=True, error=str(exc))
 
     # Use a worker-queue pattern to avoid creating one coroutine per host at once.
-    queue: asyncio.Queue[Optional[str]] = asyncio.Queue()
+    queue: asyncio.Queue[str | None] = asyncio.Queue()
     for host in reachable_hosts:
         await queue.put(host)
 
@@ -1252,7 +1252,7 @@ def deep_enrich(
     )
     return fragment
 
-def _parse_hosts_file(path: str) -> List[str]:
+def _parse_hosts_file(path: str) -> list[str]:
     """Parse a CSV or plain-text file of IPs/hostnames.
 
     Supported formats:

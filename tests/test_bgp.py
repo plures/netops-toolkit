@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import pytest
 
-from netops.parsers.bgp import parse_bgp_summary_cisco, updown_to_seconds
 from netops.check.bgp import (
     _evaluate_peer,
     _is_nokia,
@@ -16,6 +15,7 @@ from netops.check.bgp import (
     check_bgp_peers,
 )
 from netops.core.connection import ConnectionParams as _BgpConnParams
+from netops.parsers.bgp import parse_bgp_summary_cisco, updown_to_seconds
 
 # ---------------------------------------------------------------------------
 # Sample CLI output fixtures

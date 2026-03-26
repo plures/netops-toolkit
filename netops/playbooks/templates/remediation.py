@@ -26,7 +26,6 @@ Public API::
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 # ---------------------------------------------------------------------------
 # Vendor → Ansible module mappings
@@ -479,6 +478,6 @@ REMEDIATION_TEMPLATES: dict[str, RemediationTemplate] = {
 }
 
 
-def get_template(failure_type: str) -> Optional[RemediationTemplate]:
+def get_template(failure_type: str) -> RemediationTemplate | None:
     """Return the :class:`RemediationTemplate` for *failure_type*, or ``None``."""
     return REMEDIATION_TEMPLATES.get(failure_type)

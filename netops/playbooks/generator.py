@@ -62,7 +62,6 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Optional
 
 import yaml
 
@@ -195,8 +194,8 @@ def _cmd_task(
     name: str,
     vendor: str,
     commands: list[str],
-    register: Optional[str] = None,
-    when: Optional[str] = None,
+    register: str | None = None,
+    when: str | None = None,
 ) -> dict:
     """Build an Ansible task dict using the correct vendor command module.
 
@@ -241,7 +240,7 @@ def _build_remediation_block(
     template: RemediationTemplate,
     vendor: str,
     dry_run: bool,
-) -> Optional[dict]:
+) -> dict | None:
     """Build the ``block/rescue`` task group for a single remediation.
 
     Returns ``None`` when the template has no commands to run (e.g. checks
@@ -409,10 +408,10 @@ def extract_failures(health_result: dict) -> list[tuple[FailureType, dict]]:
 
 def generate_playbook(
     health_result: dict,
-    vendor: Optional[str] = None,
+    vendor: str | None = None,
     dry_run: bool = True,
     include_pause: bool = True,
-) -> Optional[GeneratedPlaybook]:
+) -> GeneratedPlaybook | None:
     """Generate a remediation playbook from a single device health-check result.
 
     Parameters
@@ -473,10 +472,10 @@ def generate_playbook(
 
 def generate_playbooks_from_report(
     health_report: dict,
-    vendor: Optional[str] = None,
+    vendor: str | None = None,
     dry_run: bool = True,
     include_pause: bool = True,
-    host_filter: Optional[str] = None,
+    host_filter: str | None = None,
 ) -> list[GeneratedPlaybook]:
     """Generate remediation playbooks from an aggregated health report.
 

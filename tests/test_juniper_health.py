@@ -2,6 +2,27 @@
 
 from __future__ import annotations
 
+from netops.check.juniper import (
+    DEFAULT_CPU_THRESHOLD,
+    DEFAULT_MEM_THRESHOLD,
+    _parse_thresholds,
+    build_junos_health_report,
+    check_junos_alarms,
+    check_junos_bgp,
+    check_junos_environment,
+    check_junos_fpc,
+    check_junos_interfaces,
+    check_junos_ospf,
+    check_junos_re,
+    check_junos_routes,
+)
+from netops.check.juniper import (
+    _print_result as _junos_print_result,
+)
+from netops.check.juniper import (
+    run_health_check as run_junos_health_check,
+)
+from netops.core.connection import ConnectionParams as _JunosConnParams
 from netops.parsers.juniper import (
     parse_bgp_summary_junos,
     parse_chassis_alarms,
@@ -12,23 +33,6 @@ from netops.parsers.juniper import (
     parse_re_status,
     parse_route_summary,
 )
-from netops.check.juniper import (
-    _parse_thresholds,
-    _print_result as _junos_print_result,
-    build_junos_health_report,
-    check_junos_alarms,
-    check_junos_bgp,
-    check_junos_environment,
-    check_junos_fpc,
-    check_junos_interfaces,
-    check_junos_ospf,
-    check_junos_re,
-    check_junos_routes,
-    run_health_check as run_junos_health_check,
-    DEFAULT_CPU_THRESHOLD,
-    DEFAULT_MEM_THRESHOLD,
-)
-from netops.core.connection import ConnectionParams as _JunosConnParams
 from netops.templates.junos import HEALTH as JUNOS_HEALTH
 
 # ---------------------------------------------------------------------------

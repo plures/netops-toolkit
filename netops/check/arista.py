@@ -30,7 +30,7 @@ import logging
 import os
 import sys
 from datetime import datetime, timezone
-from typing import Optional, cast
+from typing import cast
 
 from netops.core import DeviceConnection
 from netops.core.connection import ConnectionParams, Transport
@@ -540,7 +540,7 @@ def build_eos_health_report(results: list[dict]) -> dict:
 # ---------------------------------------------------------------------------
 
 
-def _parse_thresholds(raw: Optional[str]) -> dict[str, float]:
+def _parse_thresholds(raw: str | None) -> dict[str, float]:
     """Parse ``cpu=80,mem=85`` style threshold string."""
     thresholds: dict[str, float] = {}
     if not raw:
@@ -682,7 +682,7 @@ def _build_arg_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: Optional[list[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     """CLI entry point for Arista EOS health checks."""
     parser = _build_arg_parser()
     args = parser.parse_args(argv)

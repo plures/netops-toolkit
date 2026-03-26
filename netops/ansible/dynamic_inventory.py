@@ -58,7 +58,7 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Optional, cast
+from typing import cast
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ def _default_inventory_path() -> str:
     return os.environ.get("NETOPS_INVENTORY", "inventory.yaml")
 
 
-def _default_vault_path() -> Optional[str]:
+def _default_vault_path() -> str | None:
     """Return the vault path from ``NETOPS_VAULT`` environment variable, or ``None``."""
     return os.environ.get("NETOPS_VAULT")
 
@@ -99,7 +99,7 @@ def _cache_valid(cache_path: str, ttl: int) -> bool:
     return age < ttl
 
 
-def _load_cache(cache_path: str) -> Optional[dict]:
+def _load_cache(cache_path: str) -> dict | None:
     """Load and return the cached inventory dict, or *None* on failure."""
     try:
         return cast(dict, json.loads(Path(cache_path).read_text()))
@@ -156,7 +156,7 @@ def _generate_auto_groups(devices: dict) -> dict[str, list[str]]:
 
 
 def _inject_vault_credentials(
-    hostvars: dict, devices: dict, vault_path: Optional[str]
+    hostvars: dict, devices: dict, vault_path: str | None
 ) -> None:
     """Mutate *hostvars* to add Ansible credential variables from the vault.
 
@@ -210,8 +210,8 @@ def _inject_vault_credentials(
 
 def build_inventory(
     inventory_path: str,
-    vault_path: Optional[str] = None,
-    cache_path: Optional[str] = None,
+    vault_path: str | None = None,
+    cache_path: str | None = None,
     cache_ttl: int = _DEFAULT_CACHE_TTL,
     no_cache: bool = False,
     refresh_cache: bool = False,
@@ -306,8 +306,8 @@ def build_inventory(
 def get_host_vars(
     inventory_path: str,
     hostname: str,
-    vault_path: Optional[str] = None,
-    cache_path: Optional[str] = None,
+    vault_path: str | None = None,
+    cache_path: str | None = None,
     cache_ttl: int = _DEFAULT_CACHE_TTL,
     no_cache: bool = False,
     refresh_cache: bool = False,
