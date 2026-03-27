@@ -200,9 +200,16 @@ class TestParseSystemInfo:
     def test_required_keys_present(self):
         result = parse_system_info(SHOW_SYSTEM_INFO)
         for key in (
-            "hostname", "ip_address", "model", "serial",
-            "panos_version", "app_version", "threat_version",
-            "url_version", "ha_mode", "ha_state",
+            "hostname",
+            "ip_address",
+            "model",
+            "serial",
+            "panos_version",
+            "app_version",
+            "threat_version",
+            "url_version",
+            "ha_mode",
+            "ha_state",
         ):
             assert key in result
 
@@ -298,8 +305,16 @@ class TestParseRoutes:
 
     def test_required_keys_present(self):
         for route in parse_routes(SHOW_ROUTING_ROUTE):
-            for key in ("destination", "nexthop", "metric", "flags", "active", "type",
-                        "age", "interface"):
+            for key in (
+                "destination",
+                "nexthop",
+                "metric",
+                "flags",
+                "active",
+                "type",
+                "age",
+                "interface",
+            ):
                 assert key in route
 
     def test_empty_output_returns_empty_list(self):
@@ -346,8 +361,12 @@ class TestParseSessionInfo:
     def test_required_keys_present(self):
         result = parse_session_info(SHOW_SESSION_INFO)
         for key in (
-            "max_sessions", "active_sessions", "active_tcp",
-            "active_udp", "active_icmp", "session_utilization",
+            "max_sessions",
+            "active_sessions",
+            "active_tcp",
+            "active_udp",
+            "active_icmp",
+            "session_utilization",
         ):
             assert key in result
 
@@ -411,9 +430,14 @@ class TestParseSecurityPolicy:
     def test_required_keys_present(self):
         for rule in parse_security_policy(SHOW_SECURITY_POLICY):
             for key in (
-                "name", "from_zones", "to_zones",
-                "sources", "destinations", "applications",
-                "services", "action",
+                "name",
+                "from_zones",
+                "to_zones",
+                "sources",
+                "destinations",
+                "applications",
+                "services",
+                "action",
             ):
                 assert key in rule
 

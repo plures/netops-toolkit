@@ -387,9 +387,7 @@ def run_cisco_health_check(
         result["error"] = str(exc)
         return result
 
-    result["overall_alert"] = any(
-        result["checks"][k].get("alert", False) for k in result["checks"]
-    )
+    result["overall_alert"] = any(result["checks"][k].get("alert", False) for k in result["checks"])
     return result
 
 
@@ -509,10 +507,7 @@ def _print_result(result: dict) -> None:
     ospf = checks.get("ospf", {})
     if "total" in ospf:
         tag = " ⚠️  ALERT" if ospf.get("alert") else ""
-        print(
-            f"   OSPF: {ospf['full']}/{ospf['total']} FULL"
-            f" ({ospf['not_full']} not FULL){tag}"
-        )
+        print(f"   OSPF: {ospf['full']}/{ospf['total']} FULL ({ospf['not_full']} not FULL){tag}")
 
     env = checks.get("environment", {})
     if "overall_ok" in env:

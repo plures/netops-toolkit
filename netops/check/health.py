@@ -231,9 +231,7 @@ def run_health_check(
         result["error"] = str(exc)
         return result
 
-    result["overall_alert"] = any(
-        result["checks"][k].get("alert", False) for k in result["checks"]
-    )
+    result["overall_alert"] = any(result["checks"][k].get("alert", False) for k in result["checks"])
     return result
 
 
@@ -260,18 +258,12 @@ def build_health_report(results: list[dict]) -> dict:
     """
     reachable = [r for r in results if r.get("success")]
 
-    cpu_alerts = sum(
-        1 for r in reachable if r.get("checks", {}).get("cpu", {}).get("alert")
-    )
-    memory_alerts = sum(
-        1 for r in reachable if r.get("checks", {}).get("memory", {}).get("alert")
-    )
+    cpu_alerts = sum(1 for r in reachable if r.get("checks", {}).get("cpu", {}).get("alert"))
+    memory_alerts = sum(1 for r in reachable if r.get("checks", {}).get("memory", {}).get("alert"))
     interface_error_alerts = sum(
         1 for r in reachable if r.get("checks", {}).get("interface_errors", {}).get("alert")
     )
-    log_alerts = sum(
-        1 for r in reachable if r.get("checks", {}).get("logs", {}).get("alert")
-    )
+    log_alerts = sum(1 for r in reachable if r.get("checks", {}).get("logs", {}).get("alert"))
     devices_with_alerts = sum(1 for r in reachable if r.get("overall_alert"))
 
     return {
@@ -324,19 +316,13 @@ def _print_result(result: dict) -> None:
     cpu = checks.get("cpu", {})
     if cpu.get("utilization") is not None:
         alert_tag = " ⚠️  ALERT" if cpu.get("alert") else ""
-        print(
-            f"   CPU : {cpu['utilization']:.1f}%"
-            f" (threshold {cpu['threshold']}%){alert_tag}"
-        )
+        print(f"   CPU : {cpu['utilization']:.1f}% (threshold {cpu['threshold']}%){alert_tag}")
 
     # Memory
     mem = checks.get("memory", {})
     if mem.get("utilization") is not None:
         alert_tag = " ⚠️  ALERT" if mem.get("alert") else ""
-        print(
-            f"   MEM : {mem['utilization']:.1f}%"
-            f" (threshold {mem['threshold']}%){alert_tag}"
-        )
+        print(f"   MEM : {mem['utilization']:.1f}% (threshold {mem['threshold']}%){alert_tag}")
 
     # Interface errors
     iface = checks.get("interface_errors", {})
@@ -413,7 +399,9 @@ def main() -> None:
             )
         )
 
-    results = [run_health_check(p, cpu_threshold=cpu_thr, mem_threshold=mem_thr) for p in device_params]
+    results = [
+        run_health_check(p, cpu_threshold=cpu_thr, mem_threshold=mem_thr) for p in device_params
+    ]
 
     if args.json:
         json.dump(results if len(results) > 1 else results[0], sys.stdout, indent=2)

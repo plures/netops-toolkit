@@ -245,17 +245,13 @@ def run_rollback_push(
         # Dry-run exit
         # ------------------------------------------------------------------
         if not commit:
-            logger.info(
-                "[%s] Dry-run mode — no changes pushed (use --commit to apply)", change_id
-            )
+            logger.info("[%s] Dry-run mode — no changes pushed (use --commit to apply)", change_id)
             return record
 
         # ------------------------------------------------------------------
         # Apply change + post-change config snapshot
         # ------------------------------------------------------------------
-        logger.info(
-            "[%s] Applying %d command(s) to %s …", change_id, len(commands), params.host
-        )
+        logger.info("[%s] Applying %d command(s) to %s …", change_id, len(commands), params.host)
         with DeviceConnection(params) as conn:
             _push_commands(conn, commands)
             record.committed = True
@@ -367,9 +363,7 @@ def _print_summary(record: RollbackRecord) -> None:
 def main() -> None:
     """CLI entry point for config push with health-validated auto-rollback."""
     parser = argparse.ArgumentParser(
-        description=(
-            "Push config changes with pre/post health validation and auto-rollback."
-        )
+        description=("Push config changes with pre/post health validation and auto-rollback.")
     )
     parser.add_argument("--host", required=True, help="Target device hostname or IP")
     parser.add_argument(

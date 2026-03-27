@@ -207,8 +207,7 @@ class ReportScheduler:
         dow = day_of_week.lower()
         if dow not in _WEEKDAYS:
             raise ValueError(
-                f"Invalid day_of_week {day_of_week!r}. "
-                f"Must be one of: {', '.join(_WEEKDAYS)}"
+                f"Invalid day_of_week {day_of_week!r}. Must be one of: {', '.join(_WEEKDAYS)}"
             )
         job = ScheduledReport(
             collect_fn=collect_fn,
@@ -224,7 +223,9 @@ class ReportScheduler:
         self._jobs.append(job)
         logger.info(
             "Scheduled weekly report '%s' on %s at %s UTC",
-            title, day_of_week, time_of_day,
+            title,
+            day_of_week,
+            time_of_day,
         )
 
     # ------------------------------------------------------------------
@@ -348,7 +349,5 @@ def _parse_time(time_str: str) -> tuple[int, int]:
     except ValueError as exc:
         raise ValueError(f"Invalid time format {time_str!r} — expected HH:MM") from exc
     if not (0 <= hour <= 23 and 0 <= minute <= 59):
-        raise ValueError(
-            f"Invalid time {time_str!r} — hour must be 0-23, minute 0-59"
-        )
+        raise ValueError(f"Invalid time {time_str!r} — hour must be 0-23, minute 0-59")
     return hour, minute

@@ -307,9 +307,7 @@ def run_health_check(
         result["error"] = str(exc)
         return result
 
-    result["overall_alert"] = any(
-        result["checks"][k].get("alert", False) for k in result["checks"]
-    )
+    result["overall_alert"] = any(result["checks"][k].get("alert", False) for k in result["checks"])
     return result
 
 
@@ -374,9 +372,7 @@ def _print_health(result: dict) -> None:
         )
 
     threat = checks.get("threat_status", {})
-    print(
-        f"   CONTENT : threat={threat.get('threat_version')}  url={threat.get('url_version')}"
-    )
+    print(f"   CONTENT : threat={threat.get('threat_version')}  url={threat.get('url_version')}")
 
 
 def main() -> None:

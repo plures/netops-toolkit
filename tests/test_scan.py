@@ -216,7 +216,7 @@ class TestSnmpWalkAsync:
         # We test the suffix-stripping logic indirectly through the OID constant
         base_oid = OID_CDP_CACHE_DEVICE_ID  # "1.3.6.1.4.1.9.9.23.1.2.1.1.6"
         full_oid = base_oid + ".1.5"
-        suffix = full_oid[len(base_oid):].lstrip(".")
+        suffix = full_oid[len(base_oid) :].lstrip(".")
         assert suffix == "1.5"
 
     def test_oid_constants_defined(self):
@@ -401,7 +401,9 @@ class TestResultsToInventoryFragment:
 
     def test_cdp_neighbors_in_tags(self):
         r = self._cisco_result()
-        r.cdp_neighbors = [{"device_id": "switch-01", "platform": "", "address": "", "protocol": "cdp"}]
+        r.cdp_neighbors = [
+            {"device_id": "switch-01", "platform": "", "address": "", "protocol": "cdp"}
+        ]
         fragment = results_to_inventory_fragment([r])
         assert "cdp:switch-01" in fragment["devices"]["rtr-01"]["tags"]["neighbors"]
 
@@ -438,7 +440,9 @@ class TestResultsToInventoryFragment:
 class TestMergeInventory:
     def test_adds_new_device(self, tmp_path):
         inv_path = tmp_path / "inventory.json"
-        inv_path.write_text(json.dumps({"devices": {"existing-rtr": {"host": "10.0.0.1", "vendor": "cisco_ios"}}}))
+        inv_path.write_text(
+            json.dumps({"devices": {"existing-rtr": {"host": "10.0.0.1", "vendor": "cisco_ios"}}})
+        )
 
         fragment = {"devices": {"new-rtr": {"host": "10.0.0.2", "vendor": "nokia_sros"}}}
         merged = merge_inventory(str(inv_path), fragment)
@@ -450,10 +454,14 @@ class TestMergeInventory:
     def test_does_not_overwrite_existing_values(self, tmp_path):
         inv_path = tmp_path / "inventory.json"
         inv_path.write_text(
-            json.dumps({"devices": {"rtr-01": {"host": "10.0.0.1", "vendor": "cisco_ios", "site": "dc1"}}})
+            json.dumps(
+                {"devices": {"rtr-01": {"host": "10.0.0.1", "vendor": "cisco_ios", "site": "dc1"}}}
+            )
         )
 
-        fragment = {"devices": {"rtr-01": {"host": "10.0.0.1", "vendor": "unknown", "site": "new-site"}}}
+        fragment = {
+            "devices": {"rtr-01": {"host": "10.0.0.1", "vendor": "unknown", "site": "new-site"}}
+        }
         merged = merge_inventory(str(inv_path), fragment)
 
         # Existing non-unknown values must not change
@@ -474,10 +482,14 @@ class TestMergeInventory:
     def test_fills_none_value(self, tmp_path):
         inv_path = tmp_path / "inventory.json"
         inv_path.write_text(
-            json.dumps({"devices": {"rtr-01": {"host": "10.0.0.1", "vendor": "cisco_ios", "site": None}}})
+            json.dumps(
+                {"devices": {"rtr-01": {"host": "10.0.0.1", "vendor": "cisco_ios", "site": None}}}
+            )
         )
 
-        fragment = {"devices": {"rtr-01": {"host": "10.0.0.1", "vendor": "cisco_ios", "site": "dc2"}}}
+        fragment = {
+            "devices": {"rtr-01": {"host": "10.0.0.1", "vendor": "cisco_ios", "site": "dc2"}}
+        }
         merged = merge_inventory(str(inv_path), fragment)
 
         assert merged["devices"]["rtr-01"]["site"] == "dc2"
@@ -532,12 +544,19 @@ class TestScanSubnet:
 # CSV output — _fragment_to_csv
 # ===========================================================================
 
+
 class TestFragmentToCsv:
     def test_basic_csv_output(self, tmp_path):
         from netops.inventory.scan import _fragment_to_csv
+
         fragment = {
             "devices": {
-                "router1": {"host": "10.0.0.1", "vendor": "cisco_ios", "version": "16.9.4", "model": "ISR4451"},
+                "router1": {
+                    "host": "10.0.0.1",
+                    "vendor": "cisco_ios",
+                    "version": "16.9.4",
+                    "model": "ISR4451",
+                },
                 "switch1": {"host": "10.0.0.2", "vendor": "nokia_sros", "version": "23.10.R1"},
             }
         }
@@ -555,6 +574,7 @@ class TestFragmentToCsv:
 
     def test_empty_fragment(self, tmp_path):
         from netops.inventory.scan import _fragment_to_csv
+
         out = tmp_path / "empty.csv"
         count = _fragment_to_csv({"devices": {}}, out)
         # No device rows should be written
@@ -571,9 +591,14 @@ class TestFragmentToCsv:
 
     def test_tags_flattened(self, tmp_path):
         from netops.inventory.scan import _fragment_to_csv
+
         fragment = {
             "devices": {
-                "r1": {"host": "10.0.0.1", "vendor": "cisco_ios", "tags": {"neighbors": "cdp:r2,lldp:r3", "role": "core"}},
+                "r1": {
+                    "host": "10.0.0.1",
+                    "vendor": "cisco_ios",
+                    "tags": {"neighbors": "cdp:r2,lldp:r3", "role": "core"},
+                },
             }
         }
         out = tmp_path / "tags.csv"
@@ -587,6 +612,7 @@ class TestFragmentToCsv:
         import io
 
         from netops.inventory.scan import _fragment_to_csv
+
         fragment = {"devices": {"r1": {"host": "10.0.0.1", "vendor": "nokia_sros"}}}
         buf = io.StringIO()
         count = _fragment_to_csv(fragment, buf)

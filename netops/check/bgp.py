@@ -93,9 +93,7 @@ def _evaluate_peer(
     uptime_seconds = updown_to_seconds(up_down) if is_established else None
 
     # Flap detection: established but suspiciously short uptime
-    is_flapping = (
-        is_established and uptime_seconds is not None and uptime_seconds < flap_min_uptime
-    )
+    is_flapping = is_established and uptime_seconds is not None and uptime_seconds < flap_min_uptime
 
     # Prefix deviation check
     expected = expected_prefixes.get(neighbor)
@@ -112,8 +110,7 @@ def _evaluate_peer(
         alerts.append(f"peer {neighbor} not established (state={state})")
     if is_flapping:
         alerts.append(
-            f"peer {neighbor} may be flapping (uptime={up_down}, "
-            f"threshold={flap_min_uptime}s)"
+            f"peer {neighbor} may be flapping (uptime={up_down}, threshold={flap_min_uptime}s)"
         )
     if prefix_alert:
         alerts.append(
@@ -308,11 +305,7 @@ def _print_device_result(result: dict) -> None:
             if peer.get("prefixes_received") is not None
             else ""
         )
-        exp = (
-            f"/{peer['expected_prefixes']}"
-            if peer.get("expected_prefixes") is not None
-            else ""
-        )
+        exp = f"/{peer['expected_prefixes']}" if peer.get("expected_prefixes") is not None else ""
         uptime = f"  up={peer.get('up_down', 'N/A')}" if peer["is_established"] else ""
         state = peer.get("state", "?")
         neighbor = peer["neighbor"]

@@ -285,8 +285,9 @@ class TestRunPush:
     def test_commit_sends_commands(self):
         params = _make_params()
         mock_conn = _make_mock_conn()
-        with patch("netops.change.push.DeviceConnection", return_value=mock_conn), patch(
-            "netops.change.push._wait_for_confirmation", return_value=True
+        with (
+            patch("netops.change.push.DeviceConnection", return_value=mock_conn),
+            patch("netops.change.push._wait_for_confirmation", return_value=True),
         ):
             record = run_push(params, ["interface lo0"], commit=True)
         mock_conn.send_config.assert_called_once_with(["interface lo0"])
@@ -295,8 +296,9 @@ class TestRunPush:
     def test_commit_records_diff(self):
         params = _make_params()
         mock_conn = _make_mock_conn()
-        with patch("netops.change.push.DeviceConnection", return_value=mock_conn), patch(
-            "netops.change.push._wait_for_confirmation", return_value=True
+        with (
+            patch("netops.change.push.DeviceConnection", return_value=mock_conn),
+            patch("netops.change.push._wait_for_confirmation", return_value=True),
         ):
             record = run_push(params, ["description WAN"], commit=True)
         assert record.diff is not None
@@ -313,8 +315,9 @@ class TestRunPush:
     def test_confirm_timer_confirmed(self):
         params = _make_params()
         mock_conn = _make_mock_conn()
-        with patch("netops.change.push.DeviceConnection", return_value=mock_conn), patch(
-            "netops.change.push._wait_for_confirmation", return_value=True
+        with (
+            patch("netops.change.push.DeviceConnection", return_value=mock_conn),
+            patch("netops.change.push._wait_for_confirmation", return_value=True),
         ):
             record = run_push(params, ["cmd"], commit=True, confirm_timer_minutes=1)
         assert record.confirmed is True
@@ -323,8 +326,9 @@ class TestRunPush:
     def test_confirm_timer_expired_triggers_rollback(self):
         params = _make_params()
         mock_conn = _make_mock_conn()
-        with patch("netops.change.push.DeviceConnection", return_value=mock_conn), patch(
-            "netops.change.push._wait_for_confirmation", return_value=False
+        with (
+            patch("netops.change.push.DeviceConnection", return_value=mock_conn),
+            patch("netops.change.push._wait_for_confirmation", return_value=False),
         ):
             record = run_push(params, ["cmd"], commit=True, confirm_timer_minutes=1)
         assert record.rolled_back is True
@@ -344,8 +348,9 @@ class TestRunPush:
         params = _make_params()
         mock_conn = _make_mock_conn()
         log = tmp_path / "change.jsonl"
-        with patch("netops.change.push.DeviceConnection", return_value=mock_conn), patch(
-            "netops.change.push._wait_for_confirmation", return_value=True
+        with (
+            patch("netops.change.push.DeviceConnection", return_value=mock_conn),
+            patch("netops.change.push._wait_for_confirmation", return_value=True),
         ):
             run_push(params, ["cmd"], commit=True, changelog_path=log)
         records = load_changelog(log)

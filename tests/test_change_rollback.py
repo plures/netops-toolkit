@@ -239,8 +239,9 @@ class TestRunRollbackPushDryRun:
     def test_dry_run_does_not_push(self):
         params = _make_params()
         mock_conn = _make_mock_conn()
-        with patch("netops.change.rollback.DeviceConnection", return_value=mock_conn), patch(
-            "netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT
+        with (
+            patch("netops.change.rollback.DeviceConnection", return_value=mock_conn),
+            patch("netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT),
         ):
             record = run_rollback_push(params, ["cmd"], commit=False, validate_health=False)
         mock_conn.send_config.assert_not_called()
@@ -249,8 +250,9 @@ class TestRunRollbackPushDryRun:
     def test_dry_run_captures_pre_config(self):
         params = _make_params()
         mock_conn = _make_mock_conn()
-        with patch("netops.change.rollback.DeviceConnection", return_value=mock_conn), patch(
-            "netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT
+        with (
+            patch("netops.change.rollback.DeviceConnection", return_value=mock_conn),
+            patch("netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT),
         ):
             record = run_rollback_push(params, ["cmd"], commit=False, validate_health=False)
         assert record.pre_config == PRE_CONFIG
@@ -258,17 +260,21 @@ class TestRunRollbackPushDryRun:
     def test_dry_run_with_health_check_runs_pre_check(self):
         params = _make_params()
         mock_conn = _make_mock_conn()
-        with patch("netops.change.rollback.DeviceConnection", return_value=mock_conn), patch(
-            "netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT
-        ) as mock_hc:
+        with (
+            patch("netops.change.rollback.DeviceConnection", return_value=mock_conn),
+            patch(
+                "netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT
+            ) as mock_hc,
+        ):
             run_rollback_push(params, ["cmd"], commit=False, validate_health=True)
         mock_hc.assert_called_once()
 
     def test_dry_run_aborts_if_device_unreachable_pre_check(self):
         params = _make_params()
         mock_conn = _make_mock_conn()
-        with patch("netops.change.rollback.DeviceConnection", return_value=mock_conn), patch(
-            "netops.change.rollback.run_health_check", return_value=UNREACHABLE_RESULT
+        with (
+            patch("netops.change.rollback.DeviceConnection", return_value=mock_conn),
+            patch("netops.change.rollback.run_health_check", return_value=UNREACHABLE_RESULT),
         ):
             record = run_rollback_push(params, ["cmd"], commit=False, validate_health=True)
         assert record.error is not None
@@ -277,8 +283,9 @@ class TestRunRollbackPushDryRun:
     def test_dry_run_no_diff(self):
         params = _make_params()
         mock_conn = _make_mock_conn()
-        with patch("netops.change.rollback.DeviceConnection", return_value=mock_conn), patch(
-            "netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT
+        with (
+            patch("netops.change.rollback.DeviceConnection", return_value=mock_conn),
+            patch("netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT),
         ):
             record = run_rollback_push(params, ["cmd"], commit=False)
         assert record.diff is None
@@ -294,20 +301,20 @@ class TestRunRollbackPushCommitPass:
     def test_commit_pushes_commands(self):
         params = _make_params()
         mock_conn = _make_mock_conn()
-        with patch("netops.change.rollback.DeviceConnection", return_value=mock_conn), patch(
-            "netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT
+        with (
+            patch("netops.change.rollback.DeviceConnection", return_value=mock_conn),
+            patch("netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT),
         ):
-            record = run_rollback_push(
-                params, ["interface lo0"], commit=True, validate_health=True
-            )
+            record = run_rollback_push(params, ["interface lo0"], commit=True, validate_health=True)
         mock_conn.send_config.assert_called_once_with(["interface lo0"])
         assert record.committed is True
 
     def test_validation_passed_when_healthy(self):
         params = _make_params()
         mock_conn = _make_mock_conn()
-        with patch("netops.change.rollback.DeviceConnection", return_value=mock_conn), patch(
-            "netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT
+        with (
+            patch("netops.change.rollback.DeviceConnection", return_value=mock_conn),
+            patch("netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT),
         ):
             record = run_rollback_push(
                 params, ["cmd"], commit=True, validate_health=True, rollback_on_failure=True
@@ -318,8 +325,9 @@ class TestRunRollbackPushCommitPass:
     def test_diff_captured_on_commit(self):
         params = _make_params()
         mock_conn = _make_mock_conn()
-        with patch("netops.change.rollback.DeviceConnection", return_value=mock_conn), patch(
-            "netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT
+        with (
+            patch("netops.change.rollback.DeviceConnection", return_value=mock_conn),
+            patch("netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT),
         ):
             record = run_rollback_push(
                 params, ["description WAN"], commit=True, validate_health=True
@@ -330,9 +338,12 @@ class TestRunRollbackPushCommitPass:
     def test_validation_skipped_when_validate_health_false(self):
         params = _make_params()
         mock_conn = _make_mock_conn()
-        with patch("netops.change.rollback.DeviceConnection", return_value=mock_conn), patch(
-            "netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT
-        ) as mock_hc:
+        with (
+            patch("netops.change.rollback.DeviceConnection", return_value=mock_conn),
+            patch(
+                "netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT
+            ) as mock_hc,
+        ):
             record = run_rollback_push(params, ["cmd"], commit=True, validate_health=False)
         mock_hc.assert_not_called()
         assert record.validation_passed is True
@@ -340,9 +351,12 @@ class TestRunRollbackPushCommitPass:
     def test_two_health_checks_run_on_commit(self):
         params = _make_params()
         mock_conn = _make_mock_conn()
-        with patch("netops.change.rollback.DeviceConnection", return_value=mock_conn), patch(
-            "netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT
-        ) as mock_hc:
+        with (
+            patch("netops.change.rollback.DeviceConnection", return_value=mock_conn),
+            patch(
+                "netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT
+            ) as mock_hc,
+        ):
             run_rollback_push(params, ["cmd"], commit=True, validate_health=True)
         # pre + post health checks
         assert mock_hc.call_count == 2
@@ -365,9 +379,12 @@ class TestRunRollbackPushCommitFail:
     def test_rollback_triggered_on_health_degradation(self):
         params = _make_params()
         mock_conn = _make_mock_conn()
-        with patch("netops.change.rollback.DeviceConnection", return_value=mock_conn), patch(
-            "netops.change.rollback.run_health_check",
-            side_effect=[HEALTHY_RESULT, UNHEALTHY_RESULT],
+        with (
+            patch("netops.change.rollback.DeviceConnection", return_value=mock_conn),
+            patch(
+                "netops.change.rollback.run_health_check",
+                side_effect=[HEALTHY_RESULT, UNHEALTHY_RESULT],
+            ),
         ):
             record = run_rollback_push(
                 params, ["cmd"], commit=True, validate_health=True, rollback_on_failure=True
@@ -379,9 +396,12 @@ class TestRunRollbackPushCommitFail:
     def test_rollback_not_triggered_when_flag_off(self):
         params = _make_params()
         mock_conn = _make_mock_conn()
-        with patch("netops.change.rollback.DeviceConnection", return_value=mock_conn), patch(
-            "netops.change.rollback.run_health_check",
-            side_effect=[HEALTHY_RESULT, UNHEALTHY_RESULT],
+        with (
+            patch("netops.change.rollback.DeviceConnection", return_value=mock_conn),
+            patch(
+                "netops.change.rollback.run_health_check",
+                side_effect=[HEALTHY_RESULT, UNHEALTHY_RESULT],
+            ),
         ):
             record = run_rollback_push(
                 params, ["cmd"], commit=True, validate_health=True, rollback_on_failure=False
@@ -392,10 +412,14 @@ class TestRunRollbackPushCommitFail:
     def test_rollback_calls_rollback_to(self):
         params = _make_params()
         mock_conn = _make_mock_conn()
-        with patch("netops.change.rollback.DeviceConnection", return_value=mock_conn), patch(
-            "netops.change.rollback.run_health_check",
-            side_effect=[HEALTHY_RESULT, UNHEALTHY_RESULT],
-        ), patch("netops.change.rollback._rollback_to") as mock_rb:
+        with (
+            patch("netops.change.rollback.DeviceConnection", return_value=mock_conn),
+            patch(
+                "netops.change.rollback.run_health_check",
+                side_effect=[HEALTHY_RESULT, UNHEALTHY_RESULT],
+            ),
+            patch("netops.change.rollback._rollback_to") as mock_rb,
+        ):
             run_rollback_push(
                 params, ["cmd"], commit=True, validate_health=True, rollback_on_failure=True
             )
@@ -404,9 +428,12 @@ class TestRunRollbackPushCommitFail:
     def test_rollback_on_unreachable_post_change(self):
         params = _make_params()
         mock_conn = _make_mock_conn()
-        with patch("netops.change.rollback.DeviceConnection", return_value=mock_conn), patch(
-            "netops.change.rollback.run_health_check",
-            side_effect=[HEALTHY_RESULT, UNREACHABLE_RESULT],
+        with (
+            patch("netops.change.rollback.DeviceConnection", return_value=mock_conn),
+            patch(
+                "netops.change.rollback.run_health_check",
+                side_effect=[HEALTHY_RESULT, UNREACHABLE_RESULT],
+            ),
         ):
             record = run_rollback_push(
                 params, ["cmd"], commit=True, validate_health=True, rollback_on_failure=True
@@ -417,9 +444,12 @@ class TestRunRollbackPushCommitFail:
     def test_rollback_reason_recorded(self):
         params = _make_params()
         mock_conn = _make_mock_conn()
-        with patch("netops.change.rollback.DeviceConnection", return_value=mock_conn), patch(
-            "netops.change.rollback.run_health_check",
-            side_effect=[HEALTHY_RESULT, UNHEALTHY_RESULT],
+        with (
+            patch("netops.change.rollback.DeviceConnection", return_value=mock_conn),
+            patch(
+                "netops.change.rollback.run_health_check",
+                side_effect=[HEALTHY_RESULT, UNHEALTHY_RESULT],
+            ),
         ):
             record = run_rollback_push(
                 params, ["cmd"], commit=True, validate_health=True, rollback_on_failure=True
@@ -431,12 +461,16 @@ class TestRunRollbackPushCommitFail:
         params = _make_params()
         mock_conn = _make_mock_conn()
         captured: list = []
-        with patch("netops.change.rollback.DeviceConnection", return_value=mock_conn), patch(
-            "netops.change.rollback.run_health_check",
-            side_effect=[HEALTHY_RESULT, UNHEALTHY_RESULT],
-        ), patch(
-            "netops.change.rollback._rollback_to",
-            side_effect=lambda conn, dt, cfg: captured.append(cfg),
+        with (
+            patch("netops.change.rollback.DeviceConnection", return_value=mock_conn),
+            patch(
+                "netops.change.rollback.run_health_check",
+                side_effect=[HEALTHY_RESULT, UNHEALTHY_RESULT],
+            ),
+            patch(
+                "netops.change.rollback._rollback_to",
+                side_effect=lambda conn, dt, cfg: captured.append(cfg),
+            ),
         ):
             run_rollback_push(
                 params, ["cmd"], commit=True, validate_health=True, rollback_on_failure=True
@@ -477,8 +511,9 @@ class TestRunRollbackPushAuditLog:
         params = _make_params()
         mock_conn = _make_mock_conn()
         log = tmp_path / "audit.jsonl"
-        with patch("netops.change.rollback.DeviceConnection", return_value=mock_conn), patch(
-            "netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT
+        with (
+            patch("netops.change.rollback.DeviceConnection", return_value=mock_conn),
+            patch("netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT),
         ):
             run_rollback_push(
                 params, ["cmd"], commit=True, validate_health=True, audit_log_path=log
@@ -501,8 +536,9 @@ class TestRunRollbackPushAuditLog:
         params = _make_params()
         mock_conn = _make_mock_conn()
         log = tmp_path / "audit.jsonl"
-        with patch("netops.change.rollback.DeviceConnection", return_value=mock_conn), patch(
-            "netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT
+        with (
+            patch("netops.change.rollback.DeviceConnection", return_value=mock_conn),
+            patch("netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT),
         ):
             run_rollback_push(
                 params,
@@ -520,8 +556,9 @@ class TestRunRollbackPushAuditLog:
         params = _make_params()
         mock_conn = _make_mock_conn()
         log = tmp_path / "audit.jsonl"
-        with patch("netops.change.rollback.DeviceConnection", return_value=mock_conn), patch(
-            "netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT
+        with (
+            patch("netops.change.rollback.DeviceConnection", return_value=mock_conn),
+            patch("netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT),
         ):
             record = run_rollback_push(params, ["cmd"], commit=False, audit_log_path=log)
         loaded = load_audit_log(log)[0]
@@ -532,8 +569,9 @@ class TestRunRollbackPushAuditLog:
         params = _make_params()
         mock_conn = _make_mock_conn()
         log = tmp_path / "audit.jsonl"
-        with patch("netops.change.rollback.DeviceConnection", return_value=mock_conn), patch(
-            "netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT
+        with (
+            patch("netops.change.rollback.DeviceConnection", return_value=mock_conn),
+            patch("netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT),
         ):
             run_rollback_push(params, ["cmd"], commit=False, audit_log_path=log)
         loaded = load_audit_log(log)[0]
@@ -543,10 +581,14 @@ class TestRunRollbackPushAuditLog:
         params = _make_params()
         mock_conn = _make_mock_conn()
         log = tmp_path / "audit.jsonl"
-        with patch("netops.change.rollback.DeviceConnection", return_value=mock_conn), patch(
-            "netops.change.rollback.run_health_check",
-            side_effect=[HEALTHY_RESULT, UNHEALTHY_RESULT],
-        ), patch("netops.change.rollback._rollback_to"):
+        with (
+            patch("netops.change.rollback.DeviceConnection", return_value=mock_conn),
+            patch(
+                "netops.change.rollback.run_health_check",
+                side_effect=[HEALTHY_RESULT, UNHEALTHY_RESULT],
+            ),
+            patch("netops.change.rollback._rollback_to"),
+        ):
             run_rollback_push(
                 params,
                 ["cmd"],
@@ -571,11 +613,11 @@ class TestSnapshotIntegration:
         mock_conn = _make_mock_conn()
         snapshot_dir = tmp_path / "snapshots"
         fake_path = str(snapshot_dir / "router1.cfg")
-        with patch("netops.change.rollback.DeviceConnection", return_value=mock_conn), patch(
-            "netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT
-        ), patch(
-            "netops.change.rollback._save_pre_snapshot", return_value=fake_path
-        ) as mock_snap:
+        with (
+            patch("netops.change.rollback.DeviceConnection", return_value=mock_conn),
+            patch("netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT),
+            patch("netops.change.rollback._save_pre_snapshot", return_value=fake_path) as mock_snap,
+        ):
             record = run_rollback_push(
                 params, ["cmd"], commit=False, validate_health=False, snapshot_dir=snapshot_dir
             )
@@ -585,9 +627,11 @@ class TestSnapshotIntegration:
     def test_snapshot_not_saved_when_no_snapshot_dir(self):
         params = _make_params()
         mock_conn = _make_mock_conn()
-        with patch("netops.change.rollback.DeviceConnection", return_value=mock_conn), patch(
-            "netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT
-        ), patch("netops.change.rollback._save_pre_snapshot") as mock_snap:
+        with (
+            patch("netops.change.rollback.DeviceConnection", return_value=mock_conn),
+            patch("netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT),
+            patch("netops.change.rollback._save_pre_snapshot") as mock_snap,
+        ):
             run_rollback_push(params, ["cmd"], commit=False, snapshot_dir=None)
         mock_snap.assert_not_called()
 
@@ -596,8 +640,9 @@ class TestSnapshotIntegration:
         params = _make_params()
         mock_conn = _make_mock_conn()
         snapshot_dir = tmp_path / "snapshots"
-        with patch("netops.change.rollback.DeviceConnection", return_value=mock_conn), patch(
-            "netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT
+        with (
+            patch("netops.change.rollback.DeviceConnection", return_value=mock_conn),
+            patch("netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT),
         ):
             record = run_rollback_push(
                 params, ["cmd"], commit=False, validate_health=False, snapshot_dir=snapshot_dir
@@ -631,8 +676,9 @@ class TestRollbackRecord:
 
         params = _make_params()
         mock_conn = _make_mock_conn()
-        with patch("netops.change.rollback.DeviceConnection", return_value=mock_conn), patch(
-            "netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT
+        with (
+            patch("netops.change.rollback.DeviceConnection", return_value=mock_conn),
+            patch("netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT),
         ):
             record = run_rollback_push(
                 params, ["cmd"], commit=False, operator="x", validate_health=False
@@ -644,12 +690,14 @@ class TestRollbackRecord:
         params = _make_params()
         mock_conn_a = _make_mock_conn()
         mock_conn_b = _make_mock_conn()
-        with patch("netops.change.rollback.DeviceConnection", return_value=mock_conn_a), patch(
-            "netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT
+        with (
+            patch("netops.change.rollback.DeviceConnection", return_value=mock_conn_a),
+            patch("netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT),
         ):
             record_a = run_rollback_push(params, ["cmd"], commit=False, validate_health=False)
-        with patch("netops.change.rollback.DeviceConnection", return_value=mock_conn_b), patch(
-            "netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT
+        with (
+            patch("netops.change.rollback.DeviceConnection", return_value=mock_conn_b),
+            patch("netops.change.rollback.run_health_check", return_value=HEALTHY_RESULT),
         ):
             record_b = run_rollback_push(params, ["cmd"], commit=False, validate_health=False)
         assert record_a.change_id != record_b.change_id

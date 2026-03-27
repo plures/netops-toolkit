@@ -23,17 +23,18 @@ def parse_cisco_interfaces(output: str) -> list[dict]:
     for line in output.splitlines():
         # Interface  IP-Address  OK?  Method  Status  Protocol
         match = re.match(
-            r'(\S+)\s+(\S+)\s+\S+\s+\S+\s+(administratively down|up|down)\s+(up|down)',
-            line
+            r"(\S+)\s+(\S+)\s+\S+\s+\S+\s+(administratively down|up|down)\s+(up|down)", line
         )
         if match:
-            interfaces.append({
-                "name": match.group(1),
-                "ip": match.group(2) if match.group(2) != "unassigned" else None,
-                "status": match.group(3),
-                "protocol": match.group(4),
-                "up": match.group(3) == "up" and match.group(4) == "up",
-            })
+            interfaces.append(
+                {
+                    "name": match.group(1),
+                    "ip": match.group(2) if match.group(2) != "unassigned" else None,
+                    "status": match.group(3),
+                    "protocol": match.group(4),
+                    "up": match.group(3) == "up" and match.group(4) == "up",
+                }
+            )
     return interfaces
 
 
@@ -52,7 +53,9 @@ def check_interfaces(params: ConnectionParams, down_only: bool = False) -> dict:
             if "nokia" in params.device_type:
                 output = conn.send("show port")
                 all_interfaces = parse_nokia_interfaces(output)
-                interfaces = [i for i in all_interfaces if not i["up"]] if down_only else all_interfaces
+                interfaces = (
+                    [i for i in all_interfaces if not i["up"]] if down_only else all_interfaces
+                )
                 result["interfaces"] = interfaces
                 result["summary"] = {
                     "total": len(all_interfaces),
@@ -92,6 +95,7 @@ def main() -> None:
     args = parser.parse_args()
 
     import os
+
     params = ConnectionParams(
         host=args.host,
         username=args.user,

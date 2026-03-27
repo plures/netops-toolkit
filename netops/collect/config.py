@@ -64,6 +64,7 @@ def main() -> None:
     args = parser.parse_args()
 
     import os
+
     password = args.password or os.environ.get("NETOPS_PASSWORD")
 
     results = []

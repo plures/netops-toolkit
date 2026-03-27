@@ -579,7 +579,9 @@ def parse_version(output: str) -> dict:
             if ver:
                 result["version"] = ver.group(1)
             # Extract chassis from same line: "Nokia 7750 SR"
-            chassis = re.search(r"(?:Nokia|Alcatel[- ]Lucent)\s+([\w\d][\w\d ./-]+?)(?:\s+Copyright|\s*$)", stripped)
+            chassis = re.search(
+                r"(?:Nokia|Alcatel[- ]Lucent)\s+([\w\d][\w\d ./-]+?)(?:\s+Copyright|\s*$)", stripped
+            )
             if chassis:
                 result["chassis_type"] = chassis.group(1).strip()
 
@@ -784,7 +786,9 @@ def parse_router_interface(output: str) -> list[dict]:
                     "admin_state": m.group(3),
                     "oper_state": oper,
                     "protocol": oper,
-                    "port": (m.group(7) or m.group(6)) if m.lastindex and m.lastindex >= 6 else None,
+                    "port": (m.group(7) or m.group(6))
+                    if m.lastindex and m.lastindex >= 6
+                    else None,
                 }
             )
             continue

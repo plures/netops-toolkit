@@ -822,7 +822,10 @@ System image file is "flash:ios.bin"
         [
             ("Last reload reason: Reload command", "Reload command"),
             ("Last reload reason: power-on", "power-on"),
-            ("Last reload reason: Reload Request by SMART-CALL-HOME", "Reload Request by SMART-CALL-HOME"),
+            (
+                "Last reload reason: Reload Request by SMART-CALL-HOME",
+                "Reload Request by SMART-CALL-HOME",
+            ),
         ],
     )
     def test_last_reload_reason_variants(self, line, expected_reason):
@@ -982,9 +985,7 @@ class TestRunCiscoHealthCheck:
             def __exit__(self_inner, *_):
                 pass
 
-        monkeypatch.setattr(
-            "netops.check.cisco.DeviceConnection", lambda _p: _FakeConn()
-        )
+        monkeypatch.setattr("netops.check.cisco.DeviceConnection", lambda _p: _FakeConn())
         result = run_cisco_health_check(self._make_params())
         assert result["success"] is True
         assert result["error"] is None
@@ -1005,9 +1006,7 @@ class TestRunCiscoHealthCheck:
             def __exit__(self_inner, *_):
                 pass
 
-        monkeypatch.setattr(
-            "netops.check.cisco.DeviceConnection", lambda _p: _FailConn()
-        )
+        monkeypatch.setattr("netops.check.cisco.DeviceConnection", lambda _p: _FailConn())
         result = run_cisco_health_check(self._make_params())
         assert result["success"] is False
         assert result["error"] is not None
@@ -1022,12 +1021,8 @@ class TestRunCiscoHealthCheck:
             def __exit__(self_inner, *_):
                 pass
 
-        monkeypatch.setattr(
-            "netops.check.cisco.DeviceConnection", lambda _p: _FakeConn()
-        )
-        result = run_cisco_health_check(
-            self._make_params(), include_bgp=False, include_ospf=False
-        )
+        monkeypatch.setattr("netops.check.cisco.DeviceConnection", lambda _p: _FakeConn())
+        result = run_cisco_health_check(self._make_params(), include_bgp=False, include_ospf=False)
         assert result["success"] is True
         assert "bgp" not in result["checks"]
         assert "ospf" not in result["checks"]
@@ -1042,12 +1037,8 @@ class TestRunCiscoHealthCheck:
             def __exit__(self_inner, *_):
                 pass
 
-        monkeypatch.setattr(
-            "netops.check.cisco.DeviceConnection", lambda _p: _FakeConn()
-        )
-        result = run_cisco_health_check(
-            self._make_params(), include_environment=False
-        )
+        monkeypatch.setattr("netops.check.cisco.DeviceConnection", lambda _p: _FakeConn())
+        result = run_cisco_health_check(self._make_params(), include_environment=False)
         assert result["success"] is True
         assert "environment" not in result["checks"]
 
@@ -1072,9 +1063,7 @@ class TestRunCiscoHealthCheck:
             def __exit__(self_inner, *_):
                 pass
 
-        monkeypatch.setattr(
-            "netops.check.cisco.DeviceConnection", lambda _p: _FakeConn()
-        )
+        monkeypatch.setattr("netops.check.cisco.DeviceConnection", lambda _p: _FakeConn())
         result = run_cisco_health_check(self._make_params(), cpu_threshold=50.0)
         assert result["success"] is True
         assert result["overall_alert"] is True
@@ -1088,18 +1077,21 @@ class TestRunCiscoHealthCheck:
 class TestParseCiscoThresholdsValueError:
     def test_non_float_value_skipped(self):
         from netops.check.cisco import _parse_thresholds as _pt
+
         result = _pt("cpu=notanumber,mem=85")
         assert "cpu" not in result
         assert result["mem"] == 85.0
 
     def test_all_invalid_returns_empty(self):
         from netops.check.cisco import _parse_thresholds as _pt
+
         assert _pt("cpu=abc,mem=xyz") == {}
 
 
 class TestParseCiscoThresholdsContinue:
     def test_entry_without_equals_skipped(self):
         from netops.check.cisco import _parse_thresholds as _pt
+
         # "invalid" has no "=" → hits the `continue` branch
         result = _pt("invalid,mem=85")
         assert "invalid" not in result
@@ -1150,8 +1142,10 @@ class TestCiscoPrintResult:
             "interface_errors": {"with_errors": 0, "total": 0, "alert": False},
             "logs": {"critical_count": 0, "major_count": 0, "alert": False},
             "bgp": {
-                "established": 2, "total": 2,
-                "not_established": 0, "alert": False,
+                "established": 2,
+                "total": 2,
+                "not_established": 0,
+                "alert": False,
             },
             "ospf": {"full": 2, "total": 2, "not_full": 0, "alert": False},
             "environment": {

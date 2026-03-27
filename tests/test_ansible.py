@@ -437,18 +437,14 @@ class TestCache:
         second = build_inventory(str(sample_inventory_file), cache_path=str(cache_file))
         assert first == second
 
-    def test_no_cache_skips_read_and_write(
-        self, sample_inventory_file: Path, tmp_path: Path
-    ):
+    def test_no_cache_skips_read_and_write(self, sample_inventory_file: Path, tmp_path: Path):
         from netops.ansible.dynamic_inventory import build_inventory
 
         cache_file = tmp_path / "cache.json"
         build_inventory(str(sample_inventory_file), cache_path=str(cache_file), no_cache=True)
         assert not cache_file.exists()
 
-    def test_refresh_cache_ignores_existing(
-        self, sample_inventory_file: Path, tmp_path: Path
-    ):
+    def test_refresh_cache_ignores_existing(self, sample_inventory_file: Path, tmp_path: Path):
         import time
 
         from netops.ansible.dynamic_inventory import build_inventory
@@ -467,9 +463,7 @@ class TestCache:
         assert "stale" not in result
         assert "router1" in result["all"]["hosts"]
 
-    def test_expired_cache_triggers_rebuild(
-        self, sample_inventory_file: Path, tmp_path: Path
-    ):
+    def test_expired_cache_triggers_rebuild(self, sample_inventory_file: Path, tmp_path: Path):
         import time
 
         from netops.ansible.dynamic_inventory import build_inventory
@@ -486,9 +480,7 @@ class TestCache:
         assert "stale" not in result
         assert "router1" in result["all"]["hosts"]
 
-    def test_missing_inventory_raises_even_with_valid_cache(
-        self, tmp_path: Path
-    ):
+    def test_missing_inventory_raises_even_with_valid_cache(self, tmp_path: Path):
         from netops.ansible.dynamic_inventory import build_inventory
 
         cache_file = tmp_path / "cache.json"
@@ -519,9 +511,7 @@ class TestDynamicInventoryCLIExtended:
         )
 
     def test_list_no_cache_flag(self, sample_inventory_file: Path, tmp_path: Path):
-        result = self._run(
-            ["--list", "--inventory", str(sample_inventory_file), "--no-cache"]
-        )
+        result = self._run(["--list", "--inventory", str(sample_inventory_file), "--no-cache"])
         assert result.returncode == 0
         parsed = json.loads(result.stdout)
         assert "_meta" in parsed
@@ -559,9 +549,7 @@ class TestDynamicInventoryCLIExtended:
         assert "vendor_cisco_ios" in parsed
 
     def test_auto_groups_present_in_list(self, sample_inventory_file: Path):
-        result = self._run(
-            ["--list", "--inventory", str(sample_inventory_file), "--no-cache"]
-        )
+        result = self._run(["--list", "--inventory", str(sample_inventory_file), "--no-cache"])
         assert result.returncode == 0
         parsed = json.loads(result.stdout)
         assert "vendor_cisco_ios" in parsed
@@ -569,9 +557,7 @@ class TestDynamicInventoryCLIExtended:
         assert "role_core" in parsed
 
     def test_auto_groups_in_all_children(self, sample_inventory_file: Path):
-        result = self._run(
-            ["--list", "--inventory", str(sample_inventory_file), "--no-cache"]
-        )
+        result = self._run(["--list", "--inventory", str(sample_inventory_file), "--no-cache"])
         parsed = json.loads(result.stdout)
         children = parsed["all"]["children"]
         assert "vendor_cisco_ios" in children
@@ -632,9 +618,7 @@ class TestVaultInjection:
         hv = result["_meta"]["hostvars"]["router1"]
         assert "ansible_password" not in hv
 
-    def test_no_vault_path_no_injection(
-        self, sample_inventory_file: Path, tmp_path: Path
-    ):
+    def test_no_vault_path_no_injection(self, sample_inventory_file: Path, tmp_path: Path):
         from netops.ansible.dynamic_inventory import build_inventory
 
         result = build_inventory(

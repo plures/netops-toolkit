@@ -1438,9 +1438,7 @@ class TestRunEosHealthCheck:
                 pass
 
         monkeypatch.setattr("netops.check.arista.DeviceConnection", lambda _p: _FakeConn())
-        result = run_health_check(
-            self._make_params(), check_transceivers=True, check_evpn=True
-        )
+        result = run_health_check(self._make_params(), check_transceivers=True, check_evpn=True)
         assert result["success"] is True
         assert "transceivers" in result["checks"]
         assert "bgp_evpn" in result["checks"]
@@ -1464,9 +1462,7 @@ class TestRunEosHealthCheck:
                 pass
 
         monkeypatch.setattr("netops.check.arista.DeviceConnection", lambda _p: _FakeConn())
-        result = run_health_check(
-            self._make_params(), check_bgp=False, check_ospf=False
-        )
+        result = run_health_check(self._make_params(), check_bgp=False, check_ospf=False)
         assert result["success"] is True
         assert "bgp" not in result["checks"]
         assert "ospf" not in result["checks"]

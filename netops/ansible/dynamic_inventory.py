@@ -154,9 +154,7 @@ def _generate_auto_groups(devices: dict) -> dict[str, list[str]]:
 # ---------------------------------------------------------------------------
 
 
-def _inject_vault_credentials(
-    hostvars: dict, devices: dict, vault_path: str | None
-) -> None:
+def _inject_vault_credentials(hostvars: dict, devices: dict, vault_path: str | None) -> None:
     """Mutate *hostvars* to add Ansible credential variables from the vault.
 
     Does nothing when *vault_path* is ``None`` or the vault cannot be opened

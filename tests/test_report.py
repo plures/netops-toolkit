@@ -148,7 +148,9 @@ def _make_sections() -> list[dict]:
         {
             "name": "Device Health",
             "type": "health",
-            "data": build_health_report([HEALTH_RESULT_OK, HEALTH_RESULT_ALERT, HEALTH_RESULT_UNREACHABLE]),
+            "data": build_health_report(
+                [HEALTH_RESULT_OK, HEALTH_RESULT_ALERT, HEALTH_RESULT_UNREACHABLE]
+            ),
         },
         {
             "name": "BGP Health",
@@ -170,15 +172,21 @@ def _make_sections() -> list[dict]:
 
 class TestBuildHealthReport:
     def test_total_devices(self):
-        report = build_health_report([HEALTH_RESULT_OK, HEALTH_RESULT_ALERT, HEALTH_RESULT_UNREACHABLE])
+        report = build_health_report(
+            [HEALTH_RESULT_OK, HEALTH_RESULT_ALERT, HEALTH_RESULT_UNREACHABLE]
+        )
         assert report["devices"] == 3
 
     def test_reachable_devices(self):
-        report = build_health_report([HEALTH_RESULT_OK, HEALTH_RESULT_ALERT, HEALTH_RESULT_UNREACHABLE])
+        report = build_health_report(
+            [HEALTH_RESULT_OK, HEALTH_RESULT_ALERT, HEALTH_RESULT_UNREACHABLE]
+        )
         assert report["devices_reachable"] == 2
 
     def test_devices_with_alerts(self):
-        report = build_health_report([HEALTH_RESULT_OK, HEALTH_RESULT_ALERT, HEALTH_RESULT_UNREACHABLE])
+        report = build_health_report(
+            [HEALTH_RESULT_OK, HEALTH_RESULT_ALERT, HEALTH_RESULT_UNREACHABLE]
+        )
         assert report["devices_with_alerts"] == 1
 
     def test_cpu_alerts(self):
@@ -364,7 +372,11 @@ class TestReportGeneratorGenerateHTML:
     def test_unknown_section_type(self):
         gen = ReportGenerator()
         sections = [
-            {"name": "Custom", "type": "custom_check", "data": {"overall_alert": False, "value": 42}},
+            {
+                "name": "Custom",
+                "type": "custom_check",
+                "data": {"overall_alert": False, "value": 42},
+            },
         ]
         rd = gen.build_report(sections=sections)
         html = gen.generate_html(rd)
@@ -464,9 +476,7 @@ class TestReportMailer:
             mock_smtp.login.assert_called_once_with("u", "p")
 
     def test_send_with_ssl(self):
-        mailer = ReportMailer(
-            host="smtp.example.com", port=465, use_ssl=True, use_tls=False
-        )
+        mailer = ReportMailer(host="smtp.example.com", port=465, use_ssl=True, use_tls=False)
         with patch("smtplib.SMTP_SSL") as mock_smtp_cls:
             mock_smtp = MagicMock()
             mock_smtp_cls.return_value.__enter__ = MagicMock(return_value=mock_smtp)
@@ -627,9 +637,7 @@ class TestReportScheduler:
 
     def test_schedule_weekly_registers_job(self):
         scheduler = ReportScheduler()
-        scheduler.schedule_weekly(
-            collect_fn=lambda: [], day_of_week="tuesday", time_of_day="06:00"
-        )
+        scheduler.schedule_weekly(collect_fn=lambda: [], day_of_week="tuesday", time_of_day="06:00")
         assert len(scheduler._jobs) == 1
         assert scheduler._jobs[0].frequency == "weekly"
         assert scheduler._jobs[0].day_of_week == "tuesday"

@@ -93,8 +93,15 @@ class TestParseBgpSummaryCisco:
 
     def test_required_keys_present(self):
         for peer in parse_bgp_summary_cisco(CISCO_BGP_SUMMARY):
-            for key in ("neighbor", "peer_as", "msg_rcvd", "msg_sent",
-                        "up_down", "state", "prefixes_received"):
+            for key in (
+                "neighbor",
+                "peer_as",
+                "msg_rcvd",
+                "msg_sent",
+                "up_down",
+                "state",
+                "prefixes_received",
+            ):
                 assert key in peer
 
     def test_empty_table_returns_empty_list(self):
@@ -553,9 +560,7 @@ Neighbor        AS         Recv   Sent  OutQ  Up/Down     State/Pfx
 
         monkeypatch.setattr("netops.check.bgp.DeviceConnection", lambda _p: _FakeConn())
         # 10.0.0.4 is up for 00:00:45 = 45s < 300s threshold → flapping
-        result = check_bgp_peers(
-            self._make_params(), flap_min_uptime=300
-        )
+        result = check_bgp_peers(self._make_params(), flap_min_uptime=300)
         assert result["success"] is True
         peer_204 = next(p for p in result["peers"] if p["neighbor"] == "10.0.0.4")
         assert peer_204["is_flapping"] is True
@@ -603,8 +608,7 @@ Neighbor        AS         Recv   Sent  OutQ  Up/Down     State/Pfx
 
         monkeypatch.setattr("netops.check.bgp.DeviceConnection", lambda _p: _FakeConn())
         result = check_bgp_peers(self._make_params())
-        for key in ("host", "timestamp", "success", "peers", "summary",
-                    "overall_alert", "error"):
+        for key in ("host", "timestamp", "success", "peers", "summary", "overall_alert", "error"):
             assert key in result
         assert result["host"] == "10.0.0.1"
 
@@ -615,7 +619,9 @@ Neighbor        AS         Recv   Sent  OutQ  Up/Down     State/Pfx
 
 
 class TestPrintDeviceResult:
-    def _make_peer(self, neighbor, established=True, flapping=False, prefix_alert=False, alerts=None):
+    def _make_peer(
+        self, neighbor, established=True, flapping=False, prefix_alert=False, alerts=None
+    ):
         return {
             "neighbor": neighbor,
             "peer_as": 65001,
@@ -654,8 +660,10 @@ class TestPrintDeviceResult:
             "error": None,
             "peers": peers,
             "summary": {
-                "established": 1, "total": 1,
-                "flapping": 0, "prefix_alerts": 0,
+                "established": 1,
+                "total": 1,
+                "flapping": 0,
+                "prefix_alerts": 0,
             },
         }
         _print_device_result(result)
@@ -665,8 +673,11 @@ class TestPrintDeviceResult:
 
     def test_alerted_peer_printed(self, capsys):
         peers = [
-            self._make_peer("10.0.0.2", established=False,
-                            alerts=["peer 10.0.0.2 not established (state=Active)"]),
+            self._make_peer(
+                "10.0.0.2",
+                established=False,
+                alerts=["peer 10.0.0.2 not established (state=Active)"],
+            ),
         ]
         result = {
             "host": "10.0.0.1",
@@ -676,8 +687,10 @@ class TestPrintDeviceResult:
             "error": None,
             "peers": peers,
             "summary": {
-                "established": 0, "total": 1,
-                "flapping": 0, "prefix_alerts": 0,
+                "established": 0,
+                "total": 1,
+                "flapping": 0,
+                "prefix_alerts": 0,
             },
         }
         _print_device_result(result)
@@ -695,8 +708,10 @@ class TestPrintDeviceResult:
             "error": None,
             "peers": [peer],
             "summary": {
-                "established": 1, "total": 1,
-                "flapping": 0, "prefix_alerts": 0,
+                "established": 1,
+                "total": 1,
+                "flapping": 0,
+                "prefix_alerts": 0,
             },
         }
         _print_device_result(result)
@@ -713,8 +728,10 @@ class TestPrintDeviceResult:
             "error": None,
             "peers": peers,
             "summary": {
-                "established": 1, "total": 1,
-                "flapping": 1, "prefix_alerts": 0,
+                "established": 1,
+                "total": 1,
+                "flapping": 1,
+                "prefix_alerts": 0,
             },
         }
         _print_device_result(result)

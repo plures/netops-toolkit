@@ -210,8 +210,7 @@ def audit_vlans(
         )
     for tm in trunk_mismatches:
         alerts.append(
-            f"trunk {tm['port']} missing VLANs: "
-            f"{', '.join(str(v) for v in tm['missing_vlans'])}"
+            f"trunk {tm['port']} missing VLANs: {', '.join(str(v) for v in tm['missing_vlans'])}"
         )
 
     result.update(
@@ -259,9 +258,7 @@ def build_vlan_report(results: list[dict]) -> dict:
         if r["missing_vlans"]
     ]
     extra_vlan_switches = [
-        {"host": r["host"], "extra_vlans": r["extra_vlans"]}
-        for r in reachable
-        if r["extra_vlans"]
+        {"host": r["host"], "extra_vlans": r["extra_vlans"]} for r in reachable if r["extra_vlans"]
     ]
     name_mismatch_switches = [
         {"host": r["host"], "name_mismatches": r["name_mismatches"]}

@@ -92,6 +92,7 @@ def _decrypt(nonce: bytes, ciphertext: bytes, key: bytes) -> bytes:
 # Vault file format helpers
 # ---------------------------------------------------------------------------
 
+
 def _encode(data: bytes) -> str:
     """Base64-encode *data* and return it as a UTF-8 string."""
     return base64.b64encode(data).decode()
@@ -105,6 +106,7 @@ def _decode(s: str) -> bytes:
 # ---------------------------------------------------------------------------
 # CredentialVault
 # ---------------------------------------------------------------------------
+
 
 class CredentialVault:
     """Encrypted credential store backed by a YAML file.
@@ -267,7 +269,7 @@ class CredentialVault:
         if hostname in self._data.get("devices", {}):
             return dict(self._data["devices"][hostname])
 
-        for group in (groups or []):
+        for group in groups or []:
             if group in self._data.get("groups", {}):
                 return dict(self._data["groups"][group])
 
@@ -309,6 +311,7 @@ class CredentialVault:
 # Module-level helpers
 # ---------------------------------------------------------------------------
 
+
 def _check_vault_header(raw: object) -> None:
     """Raise ``ValueError`` if *raw* is not a valid vault file structure."""
     if not isinstance(raw, dict) or raw.get("version") != 1:
@@ -346,6 +349,7 @@ def _env_credentials(hostname: str) -> dict | None:
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
+
 
 def _prompt_password(prompt: str = "Vault password: ") -> str:
     """Read master password from env var or interactive prompt."""

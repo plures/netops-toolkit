@@ -295,7 +295,9 @@ def main() -> None:
         description="Push config changes safely with pre/post diff and auto-rollback."
     )
     parser.add_argument("--host", required=True, help="Target device hostname or IP")
-    parser.add_argument("--commands", required=True, help="File containing config commands (one per line)")
+    parser.add_argument(
+        "--commands", required=True, help="File containing config commands (one per line)"
+    )
     parser.add_argument("--vendor", default="cisco_ios", help="Device type (default: cisco_ios)")
     parser.add_argument("--user", "-u", help="Username (or env NETOPS_USER)")
     parser.add_argument("--password", "-p", help="Password (or env NETOPS_PASSWORD)")

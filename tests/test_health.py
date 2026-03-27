@@ -611,7 +611,7 @@ class TestCheckLogs:
         conn = _MockConn({"show logging": CISCO_LOG_OUTPUT})
         result = check_logs(conn, "cisco_ios")
         assert result["critical_count"] == 1  # severity 2
-        assert result["major_count"] == 1     # severity 3
+        assert result["major_count"] == 1  # severity 3
         assert result["alert"] is True
 
     def test_cisco_no_alert_for_info_only(self):
@@ -722,7 +722,9 @@ class TestRunHealthCheck:
         monkeypatch.setattr("netops.check.health.DeviceConnection", lambda _p: _FakeConn())
 
         params = ConnectionParams(host="10.0.0.4", username="admin", device_type="cisco_ios")
-        result = run_health_check(params, cpu_threshold=DEFAULT_CPU_THRESHOLD, mem_threshold=DEFAULT_MEM_THRESHOLD)
+        result = run_health_check(
+            params, cpu_threshold=DEFAULT_CPU_THRESHOLD, mem_threshold=DEFAULT_MEM_THRESHOLD
+        )
 
         assert result["overall_alert"] is False
 
@@ -950,8 +952,8 @@ class TestCheckLogsBrocade:
     def test_brocade_critical_and_error_events(self):
         conn = _MockConn({"show logging": BROCADE_LOG_OUTPUT})
         result = check_logs(conn, "brocade_fastiron")
-        assert result["critical_count"] == 1   # CRITICAL
-        assert result["major_count"] == 1       # ERROR maps to major
+        assert result["critical_count"] == 1  # CRITICAL
+        assert result["major_count"] == 1  # ERROR maps to major
         assert result["alert"] is True
 
     def test_brocade_no_alert_for_empty_log(self):

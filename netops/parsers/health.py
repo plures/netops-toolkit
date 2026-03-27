@@ -441,9 +441,7 @@ def parse_interface_errors_brocade(output: str) -> list[dict]:
 
     for line in output.splitlines():
         # New interface header: "GigabitEthernet1/1/1 is up, line protocol is up"
-        iface_match = re.match(
-            r"^(\S+) is (?:up|down|administratively down)", line, re.IGNORECASE
-        )
+        iface_match = re.match(r"^(\S+) is (?:up|down|administratively down)", line, re.IGNORECASE)
         if iface_match:
             if current is not None:
                 current["has_errors"] = _has_errors(current)

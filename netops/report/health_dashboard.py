@@ -556,8 +556,7 @@ def render_html(dashboard: dict, output_path: str | None = None) -> str:
         import jinja2  # noqa: PLC0415
     except ImportError as exc:
         raise ImportError(
-            "HTML rendering requires jinja2.  "
-            "Install it with: pip install netops-toolkit[report]"
+            "HTML rendering requires jinja2.  Install it with: pip install netops-toolkit[report]"
         ) from exc
 
     env = jinja2.Environment(

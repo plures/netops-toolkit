@@ -412,9 +412,7 @@ def run_health_check(
         result["error"] = str(exc)
         return result
 
-    result["overall_alert"] = any(
-        result["checks"][k].get("alert", False) for k in result["checks"]
-    )
+    result["overall_alert"] = any(result["checks"][k].get("alert", False) for k in result["checks"])
     return result
 
 
@@ -505,21 +503,14 @@ def _print_result(result: dict) -> None:
     mem = re_check.get("mem_utilization")
     re_alert = " ⚠️  ALERT" if re_check.get("alert") else ""
     if cpu is not None:
-        print(
-            f"   RE CPU : {cpu:.1f}% (threshold {re_check.get('cpu_threshold')}%){re_alert}"
-        )
+        print(f"   RE CPU : {cpu:.1f}% (threshold {re_check.get('cpu_threshold')}%){re_alert}")
     if mem is not None:
-        print(
-            f"   RE MEM : {mem:.1f}% (threshold {re_check.get('mem_threshold')}%){re_alert}"
-        )
+        print(f"   RE MEM : {mem:.1f}% (threshold {re_check.get('mem_threshold')}%){re_alert}")
 
     # FPC
     fpc = checks.get("fpc", {})
     fpc_alert = " ⚠️  ALERT" if fpc.get("alert") else ""
-    print(
-        f"   FPC : {fpc.get('online', 0)} online,"
-        f" {fpc.get('offline', 0)} offline{fpc_alert}"
-    )
+    print(f"   FPC : {fpc.get('online', 0)} online, {fpc.get('offline', 0)} offline{fpc_alert}")
 
     # Interfaces
     iface = checks.get("interfaces", {})
@@ -533,18 +524,14 @@ def _print_result(result: dict) -> None:
     bgp = checks.get("bgp")
     if bgp is not None:
         bgp_alert = " ⚠️  ALERT" if bgp.get("alert") else ""
-        print(
-            f"   BGP : {bgp.get('established', 0)}/{bgp.get('total', 0)}"
-            f" established{bgp_alert}"
-        )
+        print(f"   BGP : {bgp.get('established', 0)}/{bgp.get('total', 0)} established{bgp_alert}")
 
     # OSPF
     ospf = checks.get("ospf")
     if ospf is not None:
         ospf_alert = " ⚠️  ALERT" if ospf.get("alert") else ""
         print(
-            f"   OSPF : {ospf.get('full', 0)}/{ospf.get('total', 0)}"
-            f" full adjacencies{ospf_alert}"
+            f"   OSPF : {ospf.get('full', 0)}/{ospf.get('total', 0)} full adjacencies{ospf_alert}"
         )
 
     # Alarms

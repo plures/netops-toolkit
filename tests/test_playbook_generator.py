@@ -385,18 +385,14 @@ class TestGeneratePlaybook:
         pb = generate_playbook(_CPU_ALERT_RESULT, include_pause=False)
         assert pb is not None
         play = pb.plays[0]
-        pause_tasks = [
-            t for t in play["tasks"] if "ansible.builtin.pause" in str(t)
-        ]
+        pause_tasks = [t for t in play["tasks"] if "ansible.builtin.pause" in str(t)]
         assert pause_tasks == []
 
     def test_pause_included_by_default(self):
         pb = generate_playbook(_CPU_ALERT_RESULT, include_pause=True)
         assert pb is not None
         play = pb.plays[0]
-        pause_tasks = [
-            t for t in play["tasks"] if "ansible.builtin.pause" in t
-        ]
+        pause_tasks = [t for t in play["tasks"] if "ansible.builtin.pause" in t]
         assert len(pause_tasks) > 0
 
 
@@ -767,9 +763,7 @@ class TestCLI:
             from netops.playbooks.generator import _build_parser, _handle_generate
 
             parser = _build_parser()
-            args = parser.parse_args(
-                ["generate", "--from-health-report", str(report_path)]
-            )
+            args = parser.parse_args(["generate", "--from-health-report", str(report_path)])
             _handle_generate(args)
 
         captured = capsys.readouterr()
@@ -779,9 +773,7 @@ class TestCLI:
         from netops.playbooks.generator import _build_parser, _handle_generate
 
         parser = _build_parser()
-        args = parser.parse_args(
-            ["generate", "--from-health-report", "/nonexistent/report.json"]
-        )
+        args = parser.parse_args(["generate", "--from-health-report", "/nonexistent/report.json"])
         with pytest.raises(SystemExit):
             _handle_generate(args)
 

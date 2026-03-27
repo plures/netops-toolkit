@@ -211,7 +211,9 @@ _RISK_LOW_THRESHOLD = 6.0
 _RISK_HIGH_THRESHOLD = 15.0
 
 
-def _compute_risk(steps: list[ChangeStep], diff_results: list[DiffResult]) -> tuple[float, RiskLevel]:
+def _compute_risk(
+    steps: list[ChangeStep], diff_results: list[DiffResult]
+) -> tuple[float, RiskLevel]:
     """Compute a numeric risk score and :class:`RiskLevel` for *steps*.
 
     The formula combines:
@@ -627,14 +629,18 @@ def _build_parser() -> argparse.ArgumentParser:
         metavar="FILE",
         help="File containing the current running config (omit to skip diff)",
     )
-    p_plan.add_argument("--vendor", default="cisco_ios", help="Netmiko device type (default: cisco_ios)")
+    p_plan.add_argument(
+        "--vendor", default="cisco_ios", help="Netmiko device type (default: cisco_ios)"
+    )
     p_plan.add_argument(
         "--role",
         default="unknown",
         choices=[r.value for r in DeviceRole],
         help="Device criticality role (default: unknown)",
     )
-    p_plan.add_argument("--description", default="", help="Free-text description or ticket reference")
+    p_plan.add_argument(
+        "--description", default="", help="Free-text description or ticket reference"
+    )
     p_plan.add_argument("--operator", help="Operator name")
     p_plan.add_argument(
         "--export",

@@ -162,12 +162,14 @@ class GeneratedPlaybook:
 
     def to_yaml(self) -> str:
         """Serialise the playbook plays to Ansible-compatible YAML."""
-        return str(yaml.dump(
-            self.plays,
-            default_flow_style=False,
-            sort_keys=False,
-            allow_unicode=True,
-        ))
+        return str(
+            yaml.dump(
+                self.plays,
+                default_flow_style=False,
+                sort_keys=False,
+                allow_unicode=True,
+            )
+        )
 
     def to_dict(self) -> dict:
         """Return a JSON-serialisable dict representation of this playbook."""
@@ -629,7 +631,9 @@ def _handle_generate(args: argparse.Namespace) -> None:
             out_file.write_text(content)
             print(f"Written: {out_file}")
         else:
-            print(f"# --- Playbook for {pb.host} (failures: {[ft.value for ft in pb.failure_types]}) ---")
+            print(
+                f"# --- Playbook for {pb.host} (failures: {[ft.value for ft in pb.failure_types]}) ---"
+            )
             print(content)
 
 

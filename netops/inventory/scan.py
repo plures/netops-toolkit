@@ -267,7 +267,7 @@ async def _snmp_walk_async(
         for var_bind in var_binds:
             full_oid = str(var_bind[0])
             value = str(var_bind[1])
-            suffix = full_oid[len(oid):].lstrip(".")
+            suffix = full_oid[len(oid) :].lstrip(".")
             results.append((suffix, value))
     return results
 
@@ -343,9 +343,13 @@ async def _scan_host_async(
     result = ScanResult(host=host, reachable=True)
 
     # ---- System MIB (RFC 1213) ----
-    sys_descr = await _snmp_get_async(engine, host, OID_SYS_DESCR, community, snmp_port, snmp_timeout)
+    sys_descr = await _snmp_get_async(
+        engine, host, OID_SYS_DESCR, community, snmp_port, snmp_timeout
+    )
     sys_name = await _snmp_get_async(engine, host, OID_SYS_NAME, community, snmp_port, snmp_timeout)
-    sys_obj_id = await _snmp_get_async(engine, host, OID_SYS_OBJ_ID, community, snmp_port, snmp_timeout)
+    sys_obj_id = await _snmp_get_async(
+        engine, host, OID_SYS_OBJ_ID, community, snmp_port, snmp_timeout
+    )
     sys_location = await _snmp_get_async(
         engine, host, OID_SYS_LOCATION, community, snmp_port, snmp_timeout
     )
@@ -362,13 +366,19 @@ async def _scan_host_async(
     # ---- CDP neighbors (Cisco-proprietary) ----
     try:
         device_ids = dict(
-            await _snmp_walk_async(engine, host, OID_CDP_CACHE_DEVICE_ID, community, snmp_port, snmp_timeout)
+            await _snmp_walk_async(
+                engine, host, OID_CDP_CACHE_DEVICE_ID, community, snmp_port, snmp_timeout
+            )
         )
         platforms = dict(
-            await _snmp_walk_async(engine, host, OID_CDP_CACHE_PLATFORM, community, snmp_port, snmp_timeout)
+            await _snmp_walk_async(
+                engine, host, OID_CDP_CACHE_PLATFORM, community, snmp_port, snmp_timeout
+            )
         )
         addresses = dict(
-            await _snmp_walk_async(engine, host, OID_CDP_CACHE_ADDRESS, community, snmp_port, snmp_timeout)
+            await _snmp_walk_async(
+                engine, host, OID_CDP_CACHE_ADDRESS, community, snmp_port, snmp_timeout
+            )
         )
         for idx, device_id in device_ids.items():
             result.cdp_neighbors.append(
@@ -385,10 +395,14 @@ async def _scan_host_async(
     # ---- LLDP neighbors (IEEE 802.1AB) ----
     try:
         lldp_sys_names = dict(
-            await _snmp_walk_async(engine, host, OID_LLDP_REM_SYS_NAME, community, snmp_port, snmp_timeout)
+            await _snmp_walk_async(
+                engine, host, OID_LLDP_REM_SYS_NAME, community, snmp_port, snmp_timeout
+            )
         )
         lldp_sys_descs = dict(
-            await _snmp_walk_async(engine, host, OID_LLDP_REM_SYS_DESC, community, snmp_port, snmp_timeout)
+            await _snmp_walk_async(
+                engine, host, OID_LLDP_REM_SYS_DESC, community, snmp_port, snmp_timeout
+            )
         )
         chassis_ids = dict(
             await _snmp_walk_async(
@@ -635,9 +649,10 @@ def merge_inventory(existing_path: str, fragment: dict) -> dict:
                     existing_tags = existing_entry.get("tags")
                     if isinstance(existing_tags, dict):
                         for tag_key, tag_value in value.items():
-                            if (
-                                tag_key not in existing_tags
-                                or existing_tags[tag_key] in (None, "unknown", "")
+                            if tag_key not in existing_tags or existing_tags[tag_key] in (
+                                None,
+                                "unknown",
+                                "",
                             ):
                                 existing_tags[tag_key] = tag_value
                     elif existing_tags in (None, "unknown", "") or key not in existing_entry:
@@ -656,7 +671,6 @@ def merge_inventory(existing_path: str, fragment: dict) -> dict:
 # ---------------------------------------------------------------------------
 # CLI entry point
 # ---------------------------------------------------------------------------
-
 
 
 # ---------------------------------------------------------------------------
@@ -795,10 +809,12 @@ def _parse_version_generic(output: str, vendor: str) -> dict:
             if nokia and ("nokia" in vendor.lower() or "sros" in vendor.lower()):
                 result["model"] = nokia.group(1).strip()
             # Nokia Chassis Type : 7750 SR-12
-            nokia_ct = re.search(
-                r"Chassis Type\s*:\s*(.*\S)", stripped, re.IGNORECASE
-            )
-            if nokia_ct and result["model"] is None and ("nokia" in vendor.lower() or "sros" in vendor.lower()):
+            nokia_ct = re.search(r"Chassis Type\s*:\s*(.*\S)", stripped, re.IGNORECASE)
+            if (
+                nokia_ct
+                and result["model"] is None
+                and ("nokia" in vendor.lower() or "sros" in vendor.lower())
+            ):
                 result["model"] = nokia_ct.group(1).strip()
             # Juniper
             junmod = re.search(r"^Model:\s+(\S+)", line, re.IGNORECASE)
@@ -927,7 +943,11 @@ def _parse_version_generic(output: str, vendor: str) -> dict:
 
         # --- Interface count ---
         if result["interface_count"] is None:
-            ifc = re.search(r"(\d+)\s+(?:Ethernet|FastEthernet|GigabitEthernet|Ten\S+)\s+interface", stripped, re.IGNORECASE)
+            ifc = re.search(
+                r"(\d+)\s+(?:Ethernet|FastEthernet|GigabitEthernet|Ten\S+)\s+interface",
+                stripped,
+                re.IGNORECASE,
+            )
             if ifc:
                 result["interface_count"] = ifc.group(1)
 
@@ -962,8 +982,15 @@ def _parse_serial_from_inventory(output: str, vendor: str) -> str | None:
 def _score_result(r: dict) -> int:
     """Score a scan result: 1 point per non-None field."""
     _SCORED_FIELDS = (
-        "version", "model", "serial", "hostname", "uptime", "image",
-        "mac_address", "total_memory", "reload_reason",
+        "version",
+        "model",
+        "serial",
+        "hostname",
+        "uptime",
+        "image",
+        "mac_address",
+        "total_memory",
+        "reload_reason",
     )
     return sum(1 for k in _SCORED_FIELDS if r.get(k))
 
@@ -973,10 +1000,24 @@ def _try_vendor_commands(conn: DeviceConnection, vendor: str) -> dict:
     commands = _DEEP_COMMANDS.get(vendor, _DEEP_COMMANDS["cisco_ios"])
     r: dict = {"vendor": vendor}
     # Initialize all fields to None
-    for fld in ("version", "model", "serial", "hostname", "uptime", "image",
-                "hardware_revision", "total_memory", "free_memory", "reload_reason",
-                "mac_address", "config_register", "cpu_type", "flash_size",
-                "domain_name", "interface_count"):
+    for fld in (
+        "version",
+        "model",
+        "serial",
+        "hostname",
+        "uptime",
+        "image",
+        "hardware_revision",
+        "total_memory",
+        "free_memory",
+        "reload_reason",
+        "mac_address",
+        "config_register",
+        "cpu_type",
+        "flash_size",
+        "domain_name",
+        "interface_count",
+    ):
         r[fld] = None
 
     try:
@@ -1209,9 +1250,7 @@ def deep_enrich(
             known_vendor = info.get("vendor")
             if known_vendor == "unknown":
                 known_vendor = None
-            fut = pool.submit(
-                _deep_scan_host, host, username, password, known_vendor, timeout
-            )
+            fut = pool.submit(_deep_scan_host, host, username, password, known_vendor, timeout)
             futures[fut] = (name, info)
 
         for fut in concurrent.futures.as_completed(futures):
@@ -1226,10 +1265,22 @@ def deep_enrich(
 
                 # Propagate all deep-scan fields as top-level inventory keys
                 _DEEP_FIELDS = (
-                    "version", "model", "serial", "hostname", "uptime", "image",
-                    "hardware_revision", "total_memory", "free_memory",
-                    "reload_reason", "mac_address", "config_register",
-                    "cpu_type", "flash_size", "domain_name", "interface_count",
+                    "version",
+                    "model",
+                    "serial",
+                    "hostname",
+                    "uptime",
+                    "image",
+                    "hardware_revision",
+                    "total_memory",
+                    "free_memory",
+                    "reload_reason",
+                    "mac_address",
+                    "config_register",
+                    "cpu_type",
+                    "flash_size",
+                    "domain_name",
+                    "interface_count",
                 )
                 for fld in _DEEP_FIELDS:
                     val = result.get(fld)
@@ -1254,6 +1305,7 @@ def deep_enrich(
     )
     return fragment
 
+
 def _parse_hosts_file(path: str) -> list[str]:
     """Parse a CSV or plain-text file of IPs/hostnames.
 
@@ -1277,7 +1329,15 @@ def _parse_hosts_file(path: str) -> list[str]:
             # Find the best column
             fields_lower = {f.strip().lower(): f for f in reader.fieldnames}
             col = None
-            for candidate in ("ip", "ip_address", "address", "host", "hostname", "target", "device"):
+            for candidate in (
+                "ip",
+                "ip_address",
+                "address",
+                "host",
+                "hostname",
+                "target",
+                "device",
+            ):
                 if candidate in fields_lower:
                     col = fields_lower[candidate]
                     break
@@ -1323,8 +1383,19 @@ def _fragment_to_csv(fragment: dict, dest: IO[str] | str | Path) -> int:
     devices = fragment.get("devices", {})
 
     # Stable column order: name, host, vendor, model, version, serial first
-    priority = ["name", "host", "vendor", "model", "version", "serial",
-                "hostname", "mac_address", "site", "uptime", "image"]
+    priority = [
+        "name",
+        "host",
+        "vendor",
+        "model",
+        "version",
+        "serial",
+        "hostname",
+        "mac_address",
+        "site",
+        "uptime",
+        "image",
+    ]
 
     # Collect all possible field names across devices; seed with priority columns
     # so that empty fragments still produce a useful default header.
@@ -1379,7 +1450,8 @@ def main() -> None:
     )
     parser.add_argument("--subnet", help="Subnet in CIDR notation (e.g. 10.0.0.0/24)")
     parser.add_argument(
-        "--csv", dest="hosts_file_csv",
+        "--csv",
+        dest="hosts_file_csv",
         help="CSV file with IPs/hostnames (columns: ip, host, hostname, or address)",
     )
     parser.add_argument(

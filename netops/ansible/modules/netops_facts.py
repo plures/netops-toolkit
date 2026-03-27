@@ -150,6 +150,7 @@ def _gather_interfaces(conn: BaseConnection) -> list[dict]:
     try:
         if "nokia" in conn.device_type or "sros" in conn.device_type:
             from netops.parsers.nokia_sros import parse_interfaces
+
             raw = conn.send_command("show port")
             return parse_interfaces(raw)
         else:
@@ -166,10 +167,12 @@ def _gather_bgp(conn: BaseConnection) -> list[dict]:
     try:
         if "nokia" in conn.device_type or "sros" in conn.device_type:
             from netops.parsers.nokia_sros import parse_bgp_summary
+
             raw = conn.send_command("show router bgp summary")
             return parse_bgp_summary(raw)
         else:
             from netops.parsers.bgp import parse_bgp_summary_cisco
+
             raw = conn.send_command("show bgp summary")
             return parse_bgp_summary_cisco(raw)
     except Exception:  # noqa: BLE001
@@ -180,6 +183,7 @@ def _gather_vlans(conn: BaseConnection) -> list[dict]:
     """Collect VLAN facts (Cisco IOS / IOS-XE only)."""
     try:
         from netops.parsers.vlan import parse_vlan_brief
+
         raw = conn.send_command("show vlan brief")
         return parse_vlan_brief(raw)
     except Exception:  # noqa: BLE001

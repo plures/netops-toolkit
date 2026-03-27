@@ -465,7 +465,9 @@ def run_health_check(
 
     try:
         with DeviceConnection(params) as conn:
-            result["checks"]["cpu_memory"] = check_eos_cpu_memory(conn, cpu_threshold, mem_threshold)
+            result["checks"]["cpu_memory"] = check_eos_cpu_memory(
+                conn, cpu_threshold, mem_threshold
+            )
             result["checks"]["interfaces"] = check_eos_interfaces(conn)
             if check_transceivers:
                 result["checks"]["transceivers"] = check_eos_transceivers(conn)
@@ -483,9 +485,7 @@ def run_health_check(
         result["error"] = str(exc)
         return result
 
-    result["overall_alert"] = any(
-        result["checks"][k].get("alert", False) for k in result["checks"]
-    )
+    result["overall_alert"] = any(result["checks"][k].get("alert", False) for k in result["checks"])
     return result
 
 
@@ -594,10 +594,7 @@ def _print_result(result: dict) -> None:
     bgp = checks.get("bgp")
     if bgp is not None:
         bgp_alert = " ⚠️  ALERT" if bgp.get("alert") else ""
-        print(
-            f"   BGP  : {bgp.get('established', 0)}/{bgp.get('total', 0)}"
-            f" established{bgp_alert}"
-        )
+        print(f"   BGP  : {bgp.get('established', 0)}/{bgp.get('total', 0)} established{bgp_alert}")
 
     # EVPN BGP
     evpn = checks.get("bgp_evpn")
@@ -613,8 +610,7 @@ def _print_result(result: dict) -> None:
     if ospf is not None:
         ospf_alert = " ⚠️  ALERT" if ospf.get("alert") else ""
         print(
-            f"   OSPF : {ospf.get('full', 0)}/{ospf.get('total', 0)}"
-            f" full adjacencies{ospf_alert}"
+            f"   OSPF : {ospf.get('full', 0)}/{ospf.get('total', 0)} full adjacencies{ospf_alert}"
         )
 
     # MLAG

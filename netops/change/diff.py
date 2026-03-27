@@ -63,7 +63,9 @@ __all__ = [
 _SECURITY_PATTERNS: list[re.Pattern] = [
     re.compile(r"\b(ip\s+access(-list|-group)?|access-list)\b", re.IGNORECASE),
     re.compile(r"\b(acl|permit\s|deny\s)\b", re.IGNORECASE),
-    re.compile(r"\b(username|password|secret|enable\s+secret|crypto\s+key|ssh\s+key)\b", re.IGNORECASE),
+    re.compile(
+        r"\b(username|password|secret|enable\s+secret|crypto\s+key|ssh\s+key)\b", re.IGNORECASE
+    ),
     re.compile(r"\b(aaa\s+(authentication|authorization|accounting))\b", re.IGNORECASE),
     re.compile(r"\b(tacacs(-server|\+)?|radius(-server)?)\b", re.IGNORECASE),
     re.compile(r"\b(route(-map|-policy)?|prefix-list|community-list)\b", re.IGNORECASE),
@@ -382,7 +384,8 @@ def _diff_nodes(
                     path=node_path,
                     before_lines=[],
                     after_lines=lines,
-                    is_security=a_node.is_security or any(_is_security_sensitive(ln) for ln in lines),
+                    is_security=a_node.is_security
+                    or any(_is_security_sensitive(ln) for ln in lines),
                 )
             )
         elif b_node is not None and a_node is None:
@@ -394,7 +397,8 @@ def _diff_nodes(
                     path=node_path,
                     before_lines=lines,
                     after_lines=[],
-                    is_security=b_node.is_security or any(_is_security_sensitive(ln) for ln in lines),
+                    is_security=b_node.is_security
+                    or any(_is_security_sensitive(ln) for ln in lines),
                 )
             )
         else:
@@ -639,7 +643,9 @@ Examples:
   python -m netops.change.diff --before b.txt --after a.txt --style junos --format unified
 """,
     )
-    parser.add_argument("--before", required=True, metavar="FILE", help="Before (original) config file")
+    parser.add_argument(
+        "--before", required=True, metavar="FILE", help="Before (original) config file"
+    )
     parser.add_argument("--after", required=True, metavar="FILE", help="After (new) config file")
     parser.add_argument(
         "--format",

@@ -226,9 +226,7 @@ class TestGitInit:
         mock_run.assert_not_called()
 
     def test_returns_false_on_oserror(self, tmp_path):
-        with patch(
-            "netops.collect.backup.subprocess.run", side_effect=OSError("git not found")
-        ):
+        with patch("netops.collect.backup.subprocess.run", side_effect=OSError("git not found")):
             result = git_init(tmp_path)
         assert result is False
 
@@ -274,9 +272,7 @@ class TestGitCommit:
 
     def test_nothing_to_commit_returns_true(self, tmp_path):
         add_result = self._make_run()
-        commit_result = self._make_run(
-            stdout="nothing to commit, working tree clean", returncode=1
-        )
+        commit_result = self._make_run(stdout="nothing to commit, working tree clean", returncode=1)
 
         with patch("netops.collect.backup.subprocess.run") as mock_run:
             mock_run.side_effect = [add_result, commit_result]
@@ -295,9 +291,7 @@ class TestGitCommit:
         assert result is False
 
     def test_oserror_returns_false(self, tmp_path):
-        with patch(
-            "netops.collect.backup.subprocess.run", side_effect=OSError("git not found")
-        ):
+        with patch("netops.collect.backup.subprocess.run", side_effect=OSError("git not found")):
             result = git_commit(tmp_path, "backup 20240101")
         assert result is False
 

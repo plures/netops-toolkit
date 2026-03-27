@@ -202,8 +202,16 @@ class TestParseBgpSummary:
 
     def test_required_keys_present(self):
         for peer in parse_bgp_summary(BGP_SUMMARY_OUTPUT):
-            for key in ("neighbor", "peer_as", "state", "received", "sent",
-                        "active", "up_down", "description"):
+            for key in (
+                "neighbor",
+                "peer_as",
+                "state",
+                "received",
+                "sent",
+                "active",
+                "up_down",
+                "description",
+            ):
                 assert key in peer
 
     def test_empty_peer_table_returns_empty_list(self):
@@ -703,10 +711,12 @@ class TestParseRouterInterface:
 class TestVendorIdentification:
     def test_alcatel_detected_as_nokia(self):
         from netops.inventory.scan import identify_vendor
+
         assert identify_vendor("Alcatel-Lucent 7750 SR-12") == "nokia_sros"
         assert identify_vendor("TiMOS-B-16.0.R8 Alcatel-Lucent") == "nokia_sros"
 
     def test_nokia_detected(self):
         from netops.inventory.scan import identify_vendor
+
         assert identify_vendor("TiMOS-B-23.10.R1 Nokia 7750 SR") == "nokia_sros"
         assert identify_vendor("Nokia SR Linux") == "nokia_srl"

@@ -22,7 +22,7 @@ SHOW = {
 HEALTH = {
     "re_cpu_memory": "show chassis routing-engine",
     "fpc_status": "show chassis fpc",
-    "interface_errors": "show interfaces extensive | match \"error|drop\"",
+    "interface_errors": 'show interfaces extensive | match "error|drop"',
     "bgp_summary": "show bgp summary",
     "ospf_neighbors": "show ospf neighbor",
     "chassis_alarms": "show chassis alarms",

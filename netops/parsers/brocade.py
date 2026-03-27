@@ -197,15 +197,11 @@ def parse_fabric(output: str) -> dict:
 
         sw = re.match(r"Switch:\s+(\S+)\s+\(domain\s+(\d+)\)", line)
         if sw:
-            result["switches"].append(
-                {"name": sw.group(1), "domain": int(sw.group(2))}
-            )
+            result["switches"].append({"name": sw.group(1), "domain": int(sw.group(2))})
             continue
 
         port = re.match(r"\s+Port\s+(\S+):\s+(Online|Offline)", line)
         if port:
-            result["ports"].append(
-                {"port": port.group(1), "state": port.group(2)}
-            )
+            result["ports"].append({"port": port.group(1), "state": port.group(2)})
 
     return result

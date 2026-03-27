@@ -178,9 +178,7 @@ def parse_interfaces_eos(data: dict) -> list[dict]:
                 "in_discards": in_discards,
                 "out_discards": out_discards,
                 "crc_errors": crc_errors,
-                "has_errors": any(
-                    [in_errors, out_errors, in_discards, out_discards, crc_errors]
-                ),
+                "has_errors": any([in_errors, out_errors, in_discards, out_discards, crc_errors]),
                 "is_up": line_proto == "up" and intf_status == "connected",
             }
         )
@@ -274,15 +272,9 @@ def parse_transceivers_eos(data: dict) -> list[dict]:
         lanes = details.get("laneValues", {})
         if lanes:
             # Multi-lane (QSFP) – average across lanes
-            tx_vals = [
-                v.get("txPower") for v in lanes.values() if v.get("txPower") is not None
-            ]
-            rx_vals = [
-                v.get("rxPower") for v in lanes.values() if v.get("rxPower") is not None
-            ]
-            bias_vals = [
-                v.get("txBias") for v in lanes.values() if v.get("txBias") is not None
-            ]
+            tx_vals = [v.get("txPower") for v in lanes.values() if v.get("txPower") is not None]
+            rx_vals = [v.get("rxPower") for v in lanes.values() if v.get("rxPower") is not None]
+            bias_vals = [v.get("txBias") for v in lanes.values() if v.get("txBias") is not None]
             tx_dbm = round(sum(tx_vals) / len(tx_vals), 2) if tx_vals else None
             rx_dbm = round(sum(rx_vals) / len(rx_vals), 2) if rx_vals else None
             bias_ma = round(sum(bias_vals) / len(bias_vals), 2) if bias_vals else None
@@ -445,9 +437,11 @@ def parse_mlag_eos(data: dict) -> dict:
     peer_link = data.get("peerLink", "")
     peer_link_status = data.get("peerLinkStatus", "")
     local_intf = data.get("localInterface", "")
-    local_ip = data.get("localIntfStatus", {}).get("localIpAddr", "") if isinstance(
-        data.get("localIntfStatus"), dict
-    ) else ""
+    local_ip = (
+        data.get("localIntfStatus", {}).get("localIpAddr", "")
+        if isinstance(data.get("localIntfStatus"), dict)
+        else ""
+    )
     peer_ip = data.get("peerAddress", "")
     config_sanity = data.get("configSanity", "")
 
@@ -549,8 +543,12 @@ def parse_environment_eos(data: dict) -> dict:
     temperatures: list[dict] = []
 
     if not isinstance(data, dict):
-        return {"power_supplies": power_supplies, "fans": fans,
-                "temperatures": temperatures, "overall_ok": True}
+        return {
+            "power_supplies": power_supplies,
+            "fans": fans,
+            "temperatures": temperatures,
+            "overall_ok": True,
+        }
 
     # ---- Power supplies ----
     psu_slots = data.get("powerSupplySlots", [])
@@ -645,13 +643,13 @@ def parse_bgp_summary_eos_text(output: str) -> list[dict]:
     peers: list[dict] = []
     # Look for lines with IP address + AS + state
     peer_re = re.compile(
-        r"^\s*([\d.]+)\s+"          # neighbor IP
-        r"\d+\s+"                   # BGP version
-        r"(\d+)\s+"                 # peer AS
+        r"^\s*([\d.]+)\s+"  # neighbor IP
+        r"\d+\s+"  # BGP version
+        r"(\d+)\s+"  # peer AS
         r"\d+\s+\d+\s+\d+\s+\d+\s+"  # MsgRcvd MsgSent InQ OutQ
-        r"(\S+)\s+"                 # Up/Down
-        r"(\S+)"                    # State
-        r"(?:\s+(\d+))?",           # optional PfxRcd
+        r"(\S+)\s+"  # Up/Down
+        r"(\S+)"  # State
+        r"(?:\s+(\d+))?",  # optional PfxRcd
     )
     for line in output.splitlines():
         m = peer_re.match(line)
@@ -690,12 +688,12 @@ def parse_ospf_neighbors_eos_text(output: str) -> list[dict]:
     # Skip header line(s)
     header_re = re.compile(r"Neighbor\s+ID", re.IGNORECASE)
     row_re = re.compile(
-        r"^\s*([\d.]+)\s+"      # Neighbor ID
-        r"(\d+)\s+"             # Priority
-        r"(\S+)\s+"             # State (e.g. Full/DR)
-        r"(\S+)\s+"             # Dead Time
-        r"([\d.]+)\s+"          # Address
-        r"(\S+)",               # Interface
+        r"^\s*([\d.]+)\s+"  # Neighbor ID
+        r"(\d+)\s+"  # Priority
+        r"(\S+)\s+"  # State (e.g. Full/DR)
+        r"(\S+)\s+"  # Dead Time
+        r"([\d.]+)\s+"  # Address
+        r"(\S+)",  # Interface
     )
     for line in output.splitlines():
         if header_re.search(line):

@@ -16,9 +16,7 @@ import yaml
 # Helpers
 # ---------------------------------------------------------------------------
 
-ROLES_ROOT = (
-    Path(__file__).parent.parent / "netops" / "ansible" / "roles"
-)
+ROLES_ROOT = Path(__file__).parent.parent / "netops" / "ansible" / "roles"
 
 ROLE_NAMES = [
     "netops_backup",
@@ -106,9 +104,7 @@ def test_galaxy_meta_role_name_matches(role: str) -> None:
 @pytest.mark.parametrize("role", ROLE_NAMES)
 def test_galaxy_meta_license_is_mit(role: str) -> None:
     meta = _load_yaml(ROLES_ROOT / role / "meta/main.yml")
-    assert meta["galaxy_info"]["license"] == "MIT", (
-        f"{role}/meta/main.yml license should be MIT"
-    )
+    assert meta["galaxy_info"]["license"] == "MIT", f"{role}/meta/main.yml license should be MIT"
 
 
 # ---------------------------------------------------------------------------
@@ -143,16 +139,12 @@ def test_update_defaults_dry_run_is_true() -> None:
 
 def test_acl_defaults_list_is_empty() -> None:
     defaults = _load_yaml(ROLES_ROOT / "netops_acl" / "defaults/main.yml")
-    assert defaults["netops_acl_list"] == [], (
-        "netops_acl_list default should be empty list"
-    )
+    assert defaults["netops_acl_list"] == [], "netops_acl_list default should be empty list"
 
 
 def test_ntp_defaults_servers_is_empty() -> None:
     defaults = _load_yaml(ROLES_ROOT / "netops_ntp" / "defaults/main.yml")
-    assert defaults["netops_ntp_servers"] == [], (
-        "netops_ntp_servers default should be empty list"
-    )
+    assert defaults["netops_ntp_servers"] == [], "netops_ntp_servers default should be empty list"
 
 
 def test_ntp_defaults_validate_sync_is_true() -> None:

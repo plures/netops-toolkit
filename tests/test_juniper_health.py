@@ -854,8 +854,15 @@ class TestParseThresholds:
 
 class TestJunosHealthTemplate:
     def test_required_keys_present(self):
-        for key in ("re_cpu_memory", "fpc_status", "bgp_summary", "ospf_neighbors",
-                    "chassis_alarms", "chassis_environment", "route_summary"):
+        for key in (
+            "re_cpu_memory",
+            "fpc_status",
+            "bgp_summary",
+            "ospf_neighbors",
+            "chassis_alarms",
+            "chassis_environment",
+            "route_summary",
+        ):
             assert key in JUNOS_HEALTH, f"Missing key: {key}"
 
     def test_commands_are_strings(self):
@@ -1035,9 +1042,7 @@ class TestRunJunosHealthCheck:
             def __exit__(self_inner, *_):
                 pass
 
-        monkeypatch.setattr(
-            "netops.check.juniper.DeviceConnection", lambda _p: _FakeConn()
-        )
+        monkeypatch.setattr("netops.check.juniper.DeviceConnection", lambda _p: _FakeConn())
         result = run_junos_health_check(self._make_params())
         assert result["success"] is True
         assert result["error"] is None
@@ -1058,9 +1063,7 @@ class TestRunJunosHealthCheck:
             def __exit__(self_inner, *_):
                 pass
 
-        monkeypatch.setattr(
-            "netops.check.juniper.DeviceConnection", lambda _p: _FailConn()
-        )
+        monkeypatch.setattr("netops.check.juniper.DeviceConnection", lambda _p: _FailConn())
         result = run_junos_health_check(self._make_params())
         assert result["success"] is False
         assert result["error"] is not None
@@ -1075,12 +1078,8 @@ class TestRunJunosHealthCheck:
             def __exit__(self_inner, *_):
                 pass
 
-        monkeypatch.setattr(
-            "netops.check.juniper.DeviceConnection", lambda _p: _FakeConn()
-        )
-        result = run_junos_health_check(
-            self._make_params(), check_bgp=False, check_ospf=False
-        )
+        monkeypatch.setattr("netops.check.juniper.DeviceConnection", lambda _p: _FakeConn())
+        result = run_junos_health_check(self._make_params(), check_bgp=False, check_ospf=False)
         assert result["success"] is True
         assert "bgp" not in result["checks"]
         assert "ospf" not in result["checks"]
@@ -1106,9 +1105,7 @@ class TestRunJunosHealthCheck:
             def __exit__(self_inner, *_):
                 pass
 
-        monkeypatch.setattr(
-            "netops.check.juniper.DeviceConnection", lambda _p: _FakeConn()
-        )
+        monkeypatch.setattr("netops.check.juniper.DeviceConnection", lambda _p: _FakeConn())
         result = run_junos_health_check(self._make_params(), cpu_threshold=50.0)
         assert result["success"] is True
         assert result["overall_alert"] is True

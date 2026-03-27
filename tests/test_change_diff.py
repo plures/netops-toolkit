@@ -558,9 +558,7 @@ class TestHierarchicalContext:
         """A changed child line's path must include the parent block header."""
         result = diff_configs(CISCO_BEFORE, CISCO_AFTER, style=ConfigStyle.CISCO)
         # description WAN uplink was added inside interface GigabitEthernet0/0
-        description_entries = [
-            e for e in result.added if any("description" in p for p in e.path)
-        ]
+        description_entries = [e for e in result.added if any("description" in p for p in e.path)]
         assert description_entries, "Expected 'description' addition to be detected"
         entry = description_entries[0]
         # Parent path should contain interface header
@@ -569,9 +567,7 @@ class TestHierarchicalContext:
     def test_section_property_shows_parent(self):
         """DiffEntry.section should reference the parent block, not just the leaf."""
         result = diff_configs(CISCO_BEFORE, CISCO_AFTER, style=ConfigStyle.CISCO)
-        description_entries = [
-            e for e in result.added if any("description" in p for p in e.path)
-        ]
+        description_entries = [e for e in result.added if any("description" in p for p in e.path)]
         assert description_entries
         section = description_entries[0].section
         assert "GigabitEthernet0/0" in section

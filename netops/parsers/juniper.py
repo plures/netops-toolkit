@@ -126,9 +126,7 @@ def parse_re_status(output: str) -> list[dict]:
         if m:
             current["memory_util"] = int(m.group(1))
             if current["memory_total"] is not None:
-                current["memory_used"] = int(
-                    current["memory_total"] * current["memory_util"] / 100
-                )
+                current["memory_used"] = int(current["memory_total"] * current["memory_util"] / 100)
             continue
 
         m = cpu_idle_re.search(line)
@@ -354,9 +352,7 @@ def parse_bgp_summary_junos(output: str) -> list[dict]:
     # Fixed leading fields: IP  AS  InPkt  OutPkt  OutQ  Flaps  <rest>
     # <rest> is "Last Up/Dwn State" where Up/Dwn may contain a space (e.g. "5d 3:14")
     # so we capture the remaining text and split off the last word as the state.
-    peer_re = re.compile(
-        r"^(\d[\d.:a-fA-F:]+)\s+(\d+)\s+(\d+)\s+(\d+)\s+\d+\s+\d+\s+(.+)$"
-    )
+    peer_re = re.compile(r"^(\d[\d.:a-fA-F:]+)\s+(\d+)\s+(\d+)\s+(\d+)\s+\d+\s+\d+\s+(.+)$")
     # Continuation line with prefix counts: "  inet.0: 38/40/40/0"
     prefix_re = re.compile(r"^\s+\S+:\s*(\d+)/(\d+)/")
 
@@ -567,11 +563,7 @@ def parse_chassis_environment(output: str) -> dict:
                 }
             )
 
-    overall_ok = all(
-        item["ok"]
-        for group in (power_supplies, fans, temperatures)
-        for item in group
-    )
+    overall_ok = all(item["ok"] for group in (power_supplies, fans, temperatures) for item in group)
 
     return {
         "power_supplies": power_supplies,

@@ -270,9 +270,7 @@ def parse_inventory_cisco(output: str) -> list[dict]:
 
     for line in output.splitlines():
         # NAME: "...", DESCR: "..."
-        name_match = re.match(
-            r'^NAME:\s*"([^"]*)".*?DESCR:\s*"([^"]*)"', line, re.IGNORECASE
-        )
+        name_match = re.match(r'^NAME:\s*"([^"]*)".*?DESCR:\s*"([^"]*)"', line, re.IGNORECASE)
         if name_match:
             current_name = name_match.group(1)
             current_descr = name_match.group(2)
@@ -283,13 +281,15 @@ def parse_inventory_cisco(output: str) -> list[dict]:
             r"^PID:\s*(\S*)\s*,\s*VID:\s*(\S*)\s*,\s*SN:\s*(\S*)", line, re.IGNORECASE
         )
         if pid_match and current_name is not None:
-            entries.append({
-                "name": current_name,
-                "descr": current_descr or "",
-                "pid": pid_match.group(1),
-                "vid": pid_match.group(2),
-                "sn": pid_match.group(3),
-            })
+            entries.append(
+                {
+                    "name": current_name,
+                    "descr": current_descr or "",
+                    "pid": pid_match.group(1),
+                    "vid": pid_match.group(2),
+                    "sn": pid_match.group(3),
+                }
+            )
             current_name = None
             current_descr = None
 

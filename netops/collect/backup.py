@@ -299,9 +299,7 @@ def run_backup(
 
 def main() -> None:
     """CLI entry point for bulk configuration backup."""
-    parser = argparse.ArgumentParser(
-        description="Bulk configuration backup with diff tracking"
-    )
+    parser = argparse.ArgumentParser(description="Bulk configuration backup with diff tracking")
     parser.add_argument("--inventory", "-i", required=True, help="Inventory file (YAML/JSON)")
     parser.add_argument("--output", "-o", required=True, help="Output directory for backups")
     parser.add_argument("--group", "-g", help="Inventory group to target")
@@ -313,9 +311,7 @@ def main() -> None:
     parser.add_argument(
         "--git", action="store_true", help="Commit backups to a local git repository"
     )
-    parser.add_argument(
-        "--no-alert", action="store_true", help="Suppress change alerts on stderr"
-    )
+    parser.add_argument("--no-alert", action="store_true", help="Suppress change alerts on stderr")
     parser.add_argument("--json", action="store_true", help="Output summary as JSON to stdout")
     args = parser.parse_args()
 

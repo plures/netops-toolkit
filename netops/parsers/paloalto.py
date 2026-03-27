@@ -71,9 +71,7 @@ def parse_system_info(output: str) -> dict:
         "panos_version": re.compile(r"^PAN-OS [Vv]ersion\s*:\s*(.+)", re.IGNORECASE),
         "app_version": re.compile(r"^App [Vv]ersion\s*:\s*(.+)", re.IGNORECASE),
         "threat_version": re.compile(r"^Threat [Vv]ersion\s*:\s*(.+)", re.IGNORECASE),
-        "url_version": re.compile(
-            r"^URL filtering [Vv]ersion\s*:\s*(.+)", re.IGNORECASE
-        ),
+        "url_version": re.compile(r"^URL filtering [Vv]ersion\s*:\s*(.+)", re.IGNORECASE),
         "ha_mode": re.compile(r"^HA [Mm]ode\s*:\s*(.+)", re.IGNORECASE),
         "ha_state": re.compile(r"^HA [Ss]tate\s*:\s*(.+)", re.IGNORECASE),
     }

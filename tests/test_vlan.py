@@ -285,8 +285,10 @@ class TestFindExtraVlans:
 
 class TestCheckNameMismatches:
     def _vlans(self, *pairs):
-        return [{"vlan_id": vlan_id, "name": name, "status": "active", "ports": []}
-                for vlan_id, name in pairs]
+        return [
+            {"vlan_id": vlan_id, "name": name, "status": "active", "ports": []}
+            for vlan_id, name in pairs
+        ]
 
     def test_no_mismatches(self):
         vlans = self._vlans((10, "MANAGEMENT"), (20, "SERVERS"))

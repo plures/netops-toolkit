@@ -146,9 +146,14 @@ class TestComputeRisk:
 
     def test_multi_device_adds_bonus(self):
         steps = [
-            ChangeStep(host="h1", device_type="cisco_ios", device_role=DeviceRole.ACCESS, commands=[]),
-            ChangeStep(host="h2", device_type="cisco_ios", device_role=DeviceRole.ACCESS, commands=[]),
+            ChangeStep(
+                host="h1", device_type="cisco_ios", device_role=DeviceRole.ACCESS, commands=[]
+            ),
+            ChangeStep(
+                host="h2", device_type="cisco_ios", device_role=DeviceRole.ACCESS, commands=[]
+            ),
         ]
+
         def _empty_diff() -> MagicMock:
             m = MagicMock(spec=DiffResult)
             m.added = []

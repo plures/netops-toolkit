@@ -93,9 +93,7 @@ class DeviceConnection:
         try:
             from netmiko import ConnectHandler
         except ImportError:
-            raise ImportError(
-                "netmiko is required: pip install netmiko"
-            )
+            raise ImportError("netmiko is required: pip install netmiko")
 
         device_params = {
             "device_type": self._resolve_device_type(),

@@ -68,8 +68,14 @@ class Inventory:
         """Look up a device by hostname; returns ``None`` if not found."""
         return self.devices.get(hostname)
 
-    def filter(self, group: str | None = None, vendor: str | None = None,
-               role: str | None = None, site: str | None = None, tag: tuple | None = None) -> list[Device]:
+    def filter(
+        self,
+        group: str | None = None,
+        vendor: str | None = None,
+        role: str | None = None,
+        site: str | None = None,
+        tag: tuple | None = None,
+    ) -> list[Device]:
         """Filter devices by criteria."""
         results = list(self.devices.values())
         if group:
@@ -93,6 +99,7 @@ class Inventory:
         if path.suffix in (".yaml", ".yml"):
             try:
                 import yaml
+
                 data = yaml.safe_load(path.read_text())
             except ImportError:
                 raise ImportError("PyYAML required for YAML inventory: pip install pyyaml")
@@ -152,9 +159,7 @@ class Inventory:
             ansible_inv["all"]["hosts"][hostname] = host_vars
 
         for group, hostnames in self.groups.items():
-            ansible_inv["all"]["children"][group] = {
-                "hosts": {h: {} for h in hostnames}
-            }
+            ansible_inv["all"]["children"][group] = {"hosts": {h: {} for h in hostnames}}
 
         return ansible_inv
 
@@ -180,6 +185,7 @@ class Inventory:
         if format == "yaml":
             try:
                 import yaml
+
                 path.write_text(yaml.dump(data, default_flow_style=False))
             except ImportError:
                 format = "json"
@@ -224,23 +230,30 @@ def main() -> None:
             content = inv.to_ansible_json()
         elif fmt == "json":
             content = json.dumps(
-                {"defaults": inv.defaults,
-                 "devices": {n: d.to_dict() for n, d in inv.devices.items()}},
+                {
+                    "defaults": inv.defaults,
+                    "devices": {n: d.to_dict() for n, d in inv.devices.items()},
+                },
                 indent=2,
             )
         else:  # yaml / native
             try:
                 import yaml
+
                 content = yaml.dump(
-                    {"defaults": inv.defaults,
-                     "devices": {n: d.to_dict() for n, d in inv.devices.items()}},
+                    {
+                        "defaults": inv.defaults,
+                        "devices": {n: d.to_dict() for n, d in inv.devices.items()},
+                    },
                     default_flow_style=False,
                 )
             except ImportError:
                 print("PyYAML not installed; falling back to JSON", file=sys.stderr)
                 content = json.dumps(
-                    {"defaults": inv.defaults,
-                     "devices": {n: d.to_dict() for n, d in inv.devices.items()}},
+                    {
+                        "defaults": inv.defaults,
+                        "devices": {n: d.to_dict() for n, d in inv.devices.items()},
+                    },
                     indent=2,
                 )
 
