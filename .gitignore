@@ -19,3 +19,6 @@ site/
 *.pem
 credentials.yaml
 secrets.yaml
+node_modules/
+.env
+coverage/
