@@ -30,6 +30,12 @@ def expand_vlan_range(ranges: str) -> set[int]:
     * ``""``           → ``set()``
 
     Non-parseable tokens are silently ignored.
+
+    Returns
+    -------
+    set
+        Set of integer VLAN IDs.
+
     """
     vlans: set[int] = set()
     if not ranges or ranges.strip().lower() == "none":
@@ -57,6 +63,11 @@ def parse_vlan_brief(output: str) -> list[dict]:
 
     Handles Cisco IOS and IOS-XE formats.
 
+    Returns
+    -------
+    list
+        List of per-VLAN dicts. Returns an empty list when the output cannot be parsed.
+
     Each returned dict contains:
 
     * ``vlan_id`` – VLAN ID (``int``)
@@ -64,7 +75,6 @@ def parse_vlan_brief(output: str) -> list[dict]:
     * ``status``  – status string, e.g. ``'active'``, ``'act/unsup'``
     * ``ports``   – list of access-port names assigned to this VLAN
 
-    Returns an empty list when the output cannot be parsed.
     """
     vlans: list[dict] = []
     in_data = False
@@ -114,6 +124,12 @@ def parse_interfaces_trunk(output: str) -> list[dict]:
     3. Port / VLANs allowed and active in management domain
     4. Port / VLANs in spanning tree forwarding state and not pruned
 
+    Returns
+    -------
+    list
+        List of per-interface trunk dicts. Returns an empty list when the
+        output cannot be parsed or contains no trunking ports.
+
     Each returned dict contains:
 
     * ``port``             – interface name
@@ -125,8 +141,6 @@ def parse_interfaces_trunk(output: str) -> list[dict]:
     * ``active_vlans``     – set of active VLAN IDs (``set[int]``)
     * ``forwarding_vlans`` – set of forwarding VLAN IDs (``set[int]``)
 
-    Returns an empty list when the output cannot be parsed or contains no
-    trunking ports.
     """
     # section: 0=preamble, 1=mode/status, 2=allowed, 3=active, 4=forwarding
     section = 0

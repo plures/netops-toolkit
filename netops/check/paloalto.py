@@ -123,15 +123,19 @@ def run_policy_audit(conn: DeviceConnection) -> dict:
     * **unused rules** – rules with zero hits
     * **shadowed rules** – rules obscured by a broader preceding rule
 
-    Returns a dict with keys:
+    Returns
+    -------
+    dict
+        Dict with keys:
 
-    * ``policy``         – full list of parsed security rules
-    * ``stats``          – full list of hit-count records
-    * ``unused_rules``   – list of rules with no hits
-    * ``shadowed_rules`` – list of rules shadowed by an earlier rule
-    * ``rule_count``     – total number of security rules
-    * ``alert``          – ``True`` when unused or shadowed rules were found
-    * ``error``          – error message on failure, else ``None``
+        * ``policy``         – full list of parsed security rules
+        * ``stats``          – full list of hit-count records
+        * ``unused_rules``   – list of rules with no hits
+        * ``shadowed_rules`` – list of rules shadowed by an earlier rule
+        * ``rule_count``     – total number of security rules
+        * ``alert``          – ``True`` when unused or shadowed rules were found
+        * ``error``          – error message on failure, else ``None``
+
     """
     result: dict = {
         "policy": [],
@@ -167,16 +171,20 @@ def run_policy_audit(conn: DeviceConnection) -> dict:
 def check_ha(conn: DeviceConnection) -> dict:
     """Return HA state check result.
 
-    Returns a dict with keys:
+    Returns
+    -------
+    dict
+        Dict with keys:
 
-    * ``enabled``     – ``True`` when HA is configured
-    * ``mode``        – HA mode string (e.g. ``'Active-Passive'``)
-    * ``local_state`` – local HA state (e.g. ``'active'``)
-    * ``peer_state``  – peer HA state
-    * ``peer_ip``     – peer management IP
-    * ``alert``       – ``True`` when local state is not ``'active'`` or
-                        ``'passive'`` in a known-good pair
-    * ``error``       – error message on failure, else ``None``
+        * ``enabled``     – ``True`` when HA is configured
+        * ``mode``        – HA mode string (e.g. ``'Active-Passive'``)
+        * ``local_state`` – local HA state (e.g. ``'active'``)
+        * ``peer_state``  – peer HA state
+        * ``peer_ip``     – peer management IP
+        * ``alert``       – ``True`` when local state is not ``'active'`` or
+                            ``'passive'`` in a known-good pair
+        * ``error``       – error message on failure, else ``None``
+
     """
     try:
         output = conn.send("show high-availability state")
@@ -203,14 +211,18 @@ def check_ha(conn: DeviceConnection) -> dict:
 def check_sessions(conn: DeviceConnection, threshold: float) -> dict:
     """Return session table utilization check result.
 
-    Returns a dict with keys:
+    Returns
+    -------
+    dict
+        Dict with keys:
 
-    * ``max_sessions``        – maximum supported sessions
-    * ``active_sessions``     – current active sessions
-    * ``session_utilization`` – utilization percentage (``float``)
-    * ``threshold``           – alert threshold percentage
-    * ``alert``               – ``True`` when utilization >= threshold
-    * ``error``               – error message on failure, else ``None``
+        * ``max_sessions``        – maximum supported sessions
+        * ``active_sessions``     – current active sessions
+        * ``session_utilization`` – utilization percentage (``float``)
+        * ``threshold``           – alert threshold percentage
+        * ``alert``               – ``True`` when utilization >= threshold
+        * ``error``               – error message on failure, else ``None``
+
     """
     try:
         output = conn.send("show session info")
@@ -237,13 +249,17 @@ def check_sessions(conn: DeviceConnection, threshold: float) -> dict:
 def check_threat_status(conn: DeviceConnection) -> dict:
     """Return threat and URL filtering content status.
 
-    Returns a dict with keys:
+    Returns
+    -------
+    dict
+        Dict with keys:
 
-    * ``threat_version``  – installed threat content version
-    * ``url_version``     – installed URL filtering database version
-    * ``ha_mode``         – HA mode from ``show system info``
-    * ``alert``           – always ``False`` (informational only)
-    * ``error``           – error message on failure, else ``None``
+        * ``threat_version``  – installed threat content version
+        * ``url_version``     – installed URL filtering database version
+        * ``ha_mode``         – HA mode from ``show system info``
+        * ``alert``           – always ``False`` (informational only)
+        * ``error``           – error message on failure, else ``None``
+
     """
     try:
         output = conn.send("show system info")
@@ -278,14 +294,18 @@ def run_health_check(
     * **Sessions** – checks session-table utilization against *session_threshold*
     * **Threat status** – reports content versions (informational)
 
-    Returns a result dict with keys:
+    Returns
+    -------
+    dict
+        Result dict with keys:
 
-    * ``host``          – device IP/hostname
-    * ``timestamp``     – ISO-8601 UTC timestamp
-    * ``success``       – ``True`` when connection succeeded
-    * ``checks``        – dict of individual check results
-    * ``overall_alert`` – ``True`` when any check triggered an alert
-    * ``error``         – error message when connection failed
+        * ``host``          – device IP/hostname
+        * ``timestamp``     – ISO-8601 UTC timestamp
+        * ``success``       – ``True`` when connection succeeded
+        * ``checks``        – dict of individual check results
+        * ``overall_alert`` – ``True`` when any check triggered an alert
+        * ``error``         – error message when connection failed
+
     """
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     result: dict = {

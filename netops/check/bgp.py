@@ -160,15 +160,18 @@ def check_bgp_peers(
         Percentage threshold for prefix-count deviation alerts
         (default: 20%).
 
-    Returns a result dict with keys:
+    Returns
+    -------
+    dict
+        Result dict with keys:
 
-    * ``host``          – device IP/hostname
-    * ``timestamp``     – ISO-8601 UTC timestamp
-    * ``success``       – ``True`` when the device was reached
-    * ``peers``         – list of per-peer check dicts
-    * ``summary``       – aggregate counts across all peers on this device
-    * ``overall_alert`` – ``True`` when any alert fired
-    * ``error``         – error message when connection failed
+        * ``host``          – device IP/hostname
+        * ``timestamp``     – ISO-8601 UTC timestamp
+        * ``success``       – ``True`` when the device was reached
+        * ``peers``         – list of per-peer check dicts
+        * ``summary``       – aggregate counts across all peers on this device
+        * ``overall_alert`` – ``True`` when any alert fired
+        * ``error``         – error message when connection failed
 
     """
     if expected_prefixes is None:
@@ -236,17 +239,20 @@ def build_bgp_report(results: list[dict]) -> dict:
     results:
         List of dicts returned by :func:`check_bgp_peers`.
 
-    Returns a summary dict with keys:
+    Returns
+    -------
+    dict
+        Summary dict with keys:
 
-    * ``routers``             – total routers polled
-    * ``routers_reachable``   – routers successfully reached
-    * ``total_peers``         – total BGP peers across all routers
-    * ``established``         – peers in Established state
-    * ``not_established``     – peers not in Established state
-    * ``flapping``            – peers flagged as potentially flapping
-    * ``prefix_alerts``       – peers with prefix-count deviations
-    * ``overall_alert``       – ``True`` when any alert fired
-    * ``peers``               – flat list of all peer dicts with ``router`` key
+        * ``routers``             – total routers polled
+        * ``routers_reachable``   – routers successfully reached
+        * ``total_peers``         – total BGP peers across all routers
+        * ``established``         – peers in Established state
+        * ``not_established``     – peers not in Established state
+        * ``flapping``            – peers flagged as potentially flapping
+        * ``prefix_alerts``       – peers with prefix-count deviations
+        * ``overall_alert``       – ``True`` when any alert fired
+        * ``peers``               – flat list of all peer dicts with ``router`` key
 
     """
     all_peers: list[dict] = []

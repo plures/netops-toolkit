@@ -123,8 +123,11 @@ class ReportGenerator:
             Optional description of the reporting period, e.g.
             ``"2024-03-23 to 2024-03-24"``.
 
-        Returns a dict with keys ``title``, ``generated_at``, ``period``,
-        ``sections``, and ``overall_alert``.
+        Returns
+        -------
+        ReportData
+            Dict with keys ``title``, ``generated_at``, ``period``,
+            ``sections``, and ``overall_alert``.
 
         """
         sections = sections or []
@@ -157,7 +160,10 @@ class ReportGenerator:
             being returned.  Relative paths are resolved against
             *output_dir*.
 
-        Returns the rendered HTML string.
+        Returns
+        -------
+        str
+            Rendered HTML string.
 
         Raises
         ------
@@ -215,7 +221,10 @@ class ReportGenerator:
             If given, the PDF bytes are written to this file path in
             addition to being returned.
 
-        Returns the PDF as a :class:`bytes` object.
+        Returns
+        -------
+        bytes
+            PDF document bytes.
 
         Raises
         ------
@@ -309,9 +318,11 @@ def generate_report(
         Path for the PDF output file.  Use ``"auto"`` for a timestamped name.
         Requires ``weasyprint`` (``pip install netops-toolkit[report-pdf]``).
 
-    Returns the assembled ``report_data`` dict (``sections``, ``title``,
-    ``overall_alert``, etc.) with an additional ``html`` key containing the
-    rendered HTML string.
+    Returns
+    -------
+    ReportDataWithHtml
+        Assembled report data dict with an additional ``html`` key containing
+        the rendered HTML string.
 
     """
     gen = ReportGenerator(template_path=template_path, output_dir=output_dir)

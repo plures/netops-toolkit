@@ -538,6 +538,8 @@ def scan_subnet(
         skip_snmp: Skip SNMP — perform a ping-sweep only.
 
     Returns:
+    -------
+    list
         Sorted list of :class:`ScanResult` objects (one per reachable host).
 
     Requires:
@@ -620,6 +622,8 @@ def merge_inventory(existing_path: str, fragment: dict) -> dict:
         fragment: Inventory fragment produced by :func:`results_to_inventory_fragment`.
 
     Returns:
+    -------
+    dict
         Merged inventory dict.
 
     """
@@ -1233,6 +1237,8 @@ def deep_enrich(
         timeout: Per-device connection timeout in seconds.
 
     Returns:
+    -------
+    dict
         The enriched fragment (modified in-place and returned).
 
     """

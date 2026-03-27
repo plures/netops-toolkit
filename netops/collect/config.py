@@ -21,7 +21,14 @@ logger = logging.getLogger(__name__)
 
 
 def collect_config(params: ConnectionParams) -> dict:
-    """Collect running config from a device. Returns structured result."""
+    """Collect running config from a device.
+
+    Returns
+    -------
+    dict
+        Structured result dict with keys: host, device_type, collected_at, success, config, error.
+
+    """
     result = {
         "host": params.host,
         "device_type": params.device_type,

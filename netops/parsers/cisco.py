@@ -23,6 +23,12 @@ __all__ = [
 def parse_ospf_neighbors(output: str) -> list[dict]:
     """Parse ``show ip ospf neighbor`` output from Cisco IOS/IOS-XE.
 
+    Returns
+    -------
+    list
+        List of per-neighbor dicts. Returns an empty list when no neighbors
+        are parsed.
+
     Each returned dict contains:
 
     * ``neighbor_id`` – OSPF router-ID of the neighbor (``str``)
@@ -33,14 +39,13 @@ def parse_ospf_neighbors(output: str) -> list[dict]:
     * ``interface``   – local interface name (``str``)
     * ``is_full``     – ``True`` when the state starts with ``'FULL'``
 
-    Returns an empty list when no neighbors are parsed.
-
     Example input::
 
         Neighbor ID     Pri   State           Dead Time   Address         Interface
         192.168.1.2       1   FULL/DR         00:00:37    10.0.0.2        GigabitEthernet0/0
         192.168.1.3       1   FULL/BDR        00:00:38    10.0.0.3        GigabitEthernet0/0
         192.168.1.4       0   INIT/DROTHER    00:00:35    10.0.0.4        GigabitEthernet0/1
+
     """
     neighbors: list[dict] = []
 
@@ -77,16 +82,19 @@ def parse_environment_cisco(output: str) -> dict:
 
     Handles both IOS (router) and IOS-XE (Catalyst switch) output formats.
 
-    Returns a dict with keys:
+    Returns
+    -------
+    dict
+        Dict with keys:
 
-    * ``fans``           – list of fan dicts (``name``, ``status``, ``ok``)
-    * ``temperatures``   – list of temperature dicts
-                           (``name``, ``celsius`` or ``None``, ``status``, ``ok``)
-    * ``power_supplies`` – list of power-supply dicts (``name``, ``status``, ``ok``)
-    * ``overall_ok``     – ``True`` when every reported component is OK;
-                           ``True`` when no components were parsed (unknown state)
+        * ``fans``           – list of fan dicts (``name``, ``status``, ``ok``)
+        * ``temperatures``   – list of temperature dicts
+                               (``name``, ``celsius`` or ``None``, ``status``, ``ok``)
+        * ``power_supplies`` – list of power-supply dicts (``name``, ``status``, ``ok``)
+        * ``overall_ok``     – ``True`` when every reported component is OK;
+                               ``True`` when no components were parsed (unknown state)
 
-    Returns a dict with empty lists when the output cannot be parsed.
+        Returns a dict with empty lists when the output cannot be parsed.
 
     Example IOS-XE input lines::
 
@@ -95,6 +103,7 @@ def parse_environment_cisco(output: str) -> dict:
         SYSTEM INLET       : 28 Celsius, Critical threshold is 60 Celsius
         Switch 1: POWER-SUPPLY 1 is PRESENT
         Switch 1: POWER-SUPPLY 2 is NOT PRESENT
+
     """
     fans: list[dict] = []
     temperatures: list[dict] = []
@@ -182,15 +191,18 @@ def parse_environment_cisco(output: str) -> dict:
 def parse_version_cisco(output: str) -> dict:
     """Parse ``show version`` output from Cisco IOS/IOS-XE.
 
-    Returns a dict with keys:
+    Returns
+    -------
+    dict
+        Dict with keys:
 
-    * ``version``       – IOS/IOS-XE version string (``str`` or ``None``)
-    * ``platform``      – hardware platform identifier (``str`` or ``None``)
-    * ``uptime``        – uptime string as reported by the device (``str`` or ``None``)
-    * ``reload_reason`` – last reload/restart reason (``str`` or ``None``)
-    * ``image``         – system image file path (``str`` or ``None``)
+        * ``version``       – IOS/IOS-XE version string (``str`` or ``None``)
+        * ``platform``      – hardware platform identifier (``str`` or ``None``)
+        * ``uptime``        – uptime string as reported by the device (``str`` or ``None``)
+        * ``reload_reason`` – last reload/restart reason (``str`` or ``None``)
+        * ``image``         – system image file path (``str`` or ``None``)
 
-    Returns a dict with all ``None`` values when the output cannot be parsed.
+        Returns a dict with all ``None`` values when the output cannot be parsed.
 
     Example input lines::
 
@@ -199,6 +211,7 @@ def parse_version_cisco(output: str) -> dict:
         Switch uptime is 2 weeks, 3 days, 4 hours, 5 minutes
         Last reload reason: Reload command
         System image file is "flash:c3750x-ipservicesk9-mz.152-4.E8.bin"
+
     """
     result: dict = {
         "version": None,
@@ -251,18 +264,22 @@ def parse_version_cisco(output: str) -> dict:
 def parse_inventory_cisco(output: str) -> list[dict]:
     """Parse ``show inventory`` output from Cisco IOS/NX-OS/IOS-XE.
 
-    Returns a list of dicts, each with:
+    Returns
+    -------
+    list
+        List of dicts, each with:
 
-    * ``name``   – component name (e.g. "Chassis", "Slot 1")
-    * ``descr``  – description string
-    * ``pid``    – product ID
-    * ``vid``    – version ID
-    * ``sn``     – serial number
+        * ``name``   – component name (e.g. "Chassis", "Slot 1")
+        * ``descr``  – description string
+        * ``pid``    – product ID
+        * ``vid``    – version ID
+        * ``sn``     – serial number
 
     Example input::
 
         NAME: "Chassis", DESCR: "Nexus 9000 Series Chassis"
         PID: N9K-C93180YC-FX3, VID: V01, SN: FDO23456789
+
     """
     entries: list[dict] = []
     current_name = None
@@ -299,9 +316,13 @@ def parse_inventory_cisco(output: str) -> list[dict]:
 def parse_serial_cisco(output: str) -> str | None:
     """Extract the chassis serial number from ``show inventory`` output.
 
-    Returns the serial number string for the first entry whose name contains
-    "chassis" (case-insensitive), or the first entry if no chassis is found.
-    Returns ``None`` if parsing fails.
+    Returns
+    -------
+    str or None
+        The serial number string for the first entry whose name contains
+        "chassis" (case-insensitive), or the first entry if no chassis
+        is found. Returns ``None`` if parsing fails.
+
     """
     entries = parse_inventory_cisco(output)
     if not entries:

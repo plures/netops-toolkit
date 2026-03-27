@@ -61,12 +61,16 @@ DEFAULT_MEM_THRESHOLD = 85.0
 def check_cisco_cpu(conn: DeviceConnection, threshold: float) -> dict:
     """Return CPU utilisation check result for a Cisco IOS/IOS-XE device.
 
-    Returns a dict with keys:
+    Returns
+    -------
+    dict
+        Dict with keys:
 
-    * ``utilization``  – 1-minute average CPU % (``float``) or ``None`` on parse failure
-    * ``threshold``    – configured alert threshold
-    * ``alert``        – ``True`` when ``utilization >= threshold``
-    * ``raw``          – full parsed data from the ``show processes cpu`` output
+        * ``utilization``  – 1-minute average CPU % (``float``) or ``None`` on parse failure
+        * ``threshold``    – configured alert threshold
+        * ``alert``        – ``True`` when ``utilization >= threshold``
+        * ``raw``          – full parsed data from the ``show processes cpu`` output
+
     """
     try:
         output = conn.send("show processes cpu")
@@ -86,12 +90,16 @@ def check_cisco_cpu(conn: DeviceConnection, threshold: float) -> dict:
 def check_cisco_memory(conn: DeviceConnection, threshold: float) -> dict:
     """Return memory utilisation check result for a Cisco IOS/IOS-XE device.
 
-    Returns a dict with keys:
+    Returns
+    -------
+    dict
+        Dict with keys:
 
-    * ``utilization``  – memory used % (``float``) or ``None`` on parse failure
-    * ``threshold``    – configured alert threshold
-    * ``alert``        – ``True`` when ``utilization >= threshold``
-    * ``raw``          – full parsed data from the ``show processes memory`` output
+        * ``utilization``  – memory used % (``float``) or ``None`` on parse failure
+        * ``threshold``    – configured alert threshold
+        * ``alert``        – ``True`` when ``utilization >= threshold``
+        * ``raw``          – full parsed data from the ``show processes memory`` output
+
     """
     try:
         output = conn.send("show processes memory")
@@ -111,12 +119,16 @@ def check_cisco_memory(conn: DeviceConnection, threshold: float) -> dict:
 def check_cisco_interfaces(conn: DeviceConnection) -> dict:
     """Return interface error-counter check result for a Cisco IOS/IOS-XE device.
 
-    Returns a dict with keys:
+    Returns
+    -------
+    dict
+        Dict with keys:
 
-    * ``interfaces``   – list of per-interface error dicts
-    * ``total``        – total number of interfaces parsed
-    * ``with_errors``  – count of interfaces that have at least one error counter > 0
-    * ``alert``        – ``True`` when any interface has errors
+        * ``interfaces``   – list of per-interface error dicts
+        * ``total``        – total number of interfaces parsed
+        * ``with_errors``  – count of interfaces that have at least one error counter > 0
+        * ``alert``        – ``True`` when any interface has errors
+
     """
     try:
         output = conn.send("show interfaces")
@@ -136,12 +148,16 @@ def check_cisco_interfaces(conn: DeviceConnection) -> dict:
 def check_cisco_logs(conn: DeviceConnection) -> dict:
     """Return log-scan check result (severity 0–3 events) for a Cisco IOS/IOS-XE device.
 
-    Returns a dict with keys:
+    Returns
+    -------
+    dict
+        Dict with keys:
 
-    * ``critical_count`` – count of severity 0–2 events
-    * ``major_count``    – count of severity 3 events
-    * ``events``         – list of parsed event dicts
-    * ``alert``          – ``True`` when any critical or major events are present
+        * ``critical_count`` – count of severity 0–2 events
+        * ``major_count``    – count of severity 3 events
+        * ``events``         – list of parsed event dicts
+        * ``alert``          – ``True`` when any critical or major events are present
+
     """
     try:
         output = conn.send("show logging")
@@ -168,13 +184,17 @@ def check_cisco_logs(conn: DeviceConnection) -> dict:
 def check_cisco_bgp(conn: DeviceConnection, device_type: str = "cisco_ios") -> dict:
     """Return BGP neighbour state check result for a Cisco IOS/IOS-XE device.
 
-    Returns a dict with keys:
+    Returns
+    -------
+    dict
+        Dict with keys:
 
-    * ``peers``              – list of peer dicts from the BGP summary parser
-    * ``total``              – total BGP peers parsed
-    * ``established``        – count of peers in Established state
-    * ``not_established``    – count of peers not in Established state
-    * ``alert``              – ``True`` when any peer is not Established
+        * ``peers``              – list of peer dicts from the BGP summary parser
+        * ``total``              – total BGP peers parsed
+        * ``established``        – count of peers in Established state
+        * ``not_established``    – count of peers not in Established state
+        * ``alert``              – ``True`` when any peer is not Established
+
     """
     try:
         if device_type == "cisco_xr":
@@ -206,13 +226,17 @@ def check_cisco_bgp(conn: DeviceConnection, device_type: str = "cisco_ios") -> d
 def check_cisco_ospf(conn: DeviceConnection) -> dict:
     """Return OSPF adjacency check result for a Cisco IOS/IOS-XE device.
 
-    Returns a dict with keys:
+    Returns
+    -------
+    dict
+        Dict with keys:
 
-    * ``neighbors``      – list of neighbour dicts from the OSPF parser
-    * ``total``          – total OSPF neighbours parsed
-    * ``full``           – count of neighbours in FULL state
-    * ``not_full``       – count of neighbours not in FULL state
-    * ``alert``          – ``True`` when any neighbour is not in FULL state
+        * ``neighbors``      – list of neighbour dicts from the OSPF parser
+        * ``total``          – total OSPF neighbours parsed
+        * ``full``           – count of neighbours in FULL state
+        * ``not_full``       – count of neighbours not in FULL state
+        * ``alert``          – ``True`` when any neighbour is not in FULL state
+
     """
     try:
         output = conn.send("show ip ospf neighbor")
@@ -241,13 +265,17 @@ def check_cisco_ospf(conn: DeviceConnection) -> dict:
 def check_cisco_environment(conn: DeviceConnection) -> dict:
     """Return environment check result for a Cisco IOS/IOS-XE device.
 
-    Returns a dict with keys:
+    Returns
+    -------
+    dict
+        Dict with keys:
 
-    * ``fans``           – list of fan status dicts
-    * ``temperatures``   – list of temperature sensor dicts
-    * ``power_supplies`` – list of power-supply status dicts
-    * ``overall_ok``     – ``True`` when all reported components are OK
-    * ``alert``          – ``True`` when ``overall_ok`` is ``False``
+        * ``fans``           – list of fan status dicts
+        * ``temperatures``   – list of temperature sensor dicts
+        * ``power_supplies`` – list of power-supply status dicts
+        * ``overall_ok``     – ``True`` when all reported components are OK
+        * ``alert``          – ``True`` when ``overall_ok`` is ``False``
+
     """
     try:
         output = conn.send("show environment all")
@@ -274,14 +302,18 @@ def check_cisco_environment(conn: DeviceConnection) -> dict:
 def check_cisco_uptime(conn: DeviceConnection) -> dict:
     """Return uptime and reload reason check result for a Cisco IOS/IOS-XE device.
 
-    Returns a dict with keys:
+    Returns
+    -------
+    dict
+        Dict with keys:
 
-    * ``version``       – IOS/IOS-XE version string
-    * ``platform``      – hardware platform identifier
-    * ``uptime``        – uptime string as reported by the device
-    * ``reload_reason`` – last reload or restart reason
-    * ``image``         – system image file path
-    * ``alert``         – always ``False`` (informational only)
+        * ``version``       – IOS/IOS-XE version string
+        * ``platform``      – hardware platform identifier
+        * ``uptime``        – uptime string as reported by the device
+        * ``reload_reason`` – last reload or restart reason
+        * ``image``         – system image file path
+        * ``alert``         – always ``False`` (informational only)
+
     """
     try:
         output = conn.send("show version")
@@ -322,26 +354,6 @@ def run_cisco_health_check(
 ) -> dict:
     """Run all Cisco IOS/IOS-XE health checks against a single device.
 
-    Returns a result dict matching the standard health-check schema::
-
-        {
-            "host":          <str>,
-            "timestamp":     <ISO-8601 UTC>,
-            "success":       <bool>,
-            "checks": {
-                "cpu":               { "utilization": <float>, "alert": <bool>, ... },
-                "memory":            { "utilization": <float>, "alert": <bool>, ... },
-                "interface_errors":  { "with_errors": <int>,   "alert": <bool>, ... },
-                "logs":              { "critical_count": <int>, "alert": <bool>, ... },
-                "bgp":               { "not_established": <int>, "alert": <bool>, ... },
-                "ospf":              { "not_full": <int>,      "alert": <bool>, ... },
-                "environment":       { "overall_ok": <bool>,   "alert": <bool>, ... },
-                "uptime":            { "uptime": <str>,        "alert": False, ... },
-            },
-            "overall_alert": <bool>,
-            "error":         <str | None>,
-        }
-
     Parameters
     ----------
     params:
@@ -356,6 +368,29 @@ def run_cisco_health_check(
         When ``True`` (default), run the OSPF adjacency check.
     include_environment:
         When ``True`` (default), run the environment check.
+
+    Returns
+    -------
+    dict
+        Result dict matching the standard health-check schema::
+
+            {
+                "host":          <str>,
+                "timestamp":     <ISO-8601 UTC>,
+                "success":       <bool>,
+                "checks": {
+                    "cpu":               { "utilization": <float>, "alert": <bool>, ... },
+                    "memory":            { "utilization": <float>, "alert": <bool>, ... },
+                    "interface_errors":  { "with_errors": <int>,   "alert": <bool>, ... },
+                    "logs":              { "critical_count": <int>, "alert": <bool>, ... },
+                    "bgp":               { "not_established": <int>, "alert": <bool>, ... },
+                    "ospf":              { "not_full": <int>,      "alert": <bool>, ... },
+                    "environment":       { "overall_ok": <bool>,   "alert": <bool>, ... },
+                    "uptime":            { "uptime": <str>,        "alert": False, ... },
+                },
+                "overall_alert": <bool>,
+                "error":         <str | None>,
+            }
 
     """
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -399,20 +434,23 @@ def build_cisco_health_report(results: list[dict]) -> dict:
     results:
         List of dicts returned by :func:`run_cisco_health_check`.
 
-    Returns a summary dict with keys:
+    Returns
+    -------
+    dict
+        Summary dict with keys:
 
-    * ``devices``                  – total devices polled
-    * ``devices_reachable``        – devices successfully reached
-    * ``devices_with_alerts``      – count of devices with at least one alert
-    * ``cpu_alerts``               – devices with a CPU alert
-    * ``memory_alerts``            – devices with a memory alert
-    * ``interface_error_alerts``   – devices with interface error alerts
-    * ``log_alerts``               – devices with log alerts
-    * ``bgp_alerts``               – devices with BGP peer alerts
-    * ``ospf_alerts``              – devices with OSPF adjacency alerts
-    * ``environment_alerts``       – devices with environment alerts
-    * ``overall_alert``            – ``True`` when any device triggered an alert
-    * ``results``                  – original per-device result list
+        * ``devices``                  – total devices polled
+        * ``devices_reachable``        – devices successfully reached
+        * ``devices_with_alerts``      – count of devices with at least one alert
+        * ``cpu_alerts``               – devices with a CPU alert
+        * ``memory_alerts``            – devices with a memory alert
+        * ``interface_error_alerts``   – devices with interface error alerts
+        * ``log_alerts``               – devices with log alerts
+        * ``bgp_alerts``               – devices with BGP peer alerts
+        * ``ospf_alerts``              – devices with OSPF adjacency alerts
+        * ``environment_alerts``       – devices with environment alerts
+        * ``overall_alert``            – ``True`` when any device triggered an alert
+        * ``results``                  – original per-device result list
 
     """
     reachable = [r for r in results if r.get("success")]

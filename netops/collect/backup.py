@@ -71,7 +71,11 @@ def _latest_backup_before(device_dir: Path, current_filename: str) -> Path | Non
 def generate_diff(old_path: Path, new_config: str) -> str:
     """Return a unified diff between *old_path* on disk and *new_config* text.
 
-    Returns an empty string when the configs are identical.
+    Returns
+    -------
+    str
+        Unified diff string. Returns an empty string when the configs are identical.
+
     """
     old_lines = old_path.read_text().splitlines(keepends=True)
     new_lines = new_config.splitlines(keepends=True)
@@ -101,8 +105,11 @@ def save_backup(result: dict, output_dir: Path, timestamp: str) -> dict:
             20240102-130000.cfg
             ...
 
-    Returns a summary dict with keys:
-        host, success, saved_path, diff, changed, error
+    Returns
+    -------
+    dict
+        Summary dict with keys: host, success, saved_path, diff, changed, error
+
     """
     summary: dict = {
         "host": result["host"],
@@ -170,7 +177,11 @@ def git_init(output_dir: Path) -> bool:
 def git_commit(output_dir: Path, message: str) -> bool:
     """Stage all changes in *output_dir* and create a git commit.
 
-    Returns True on success (including the *nothing to commit* case).
+    Returns
+    -------
+    bool
+        True on success (including the *nothing to commit* case).
+
     """
     try:
         subprocess.run(
@@ -215,20 +226,32 @@ def run_backup(
 ) -> list[dict]:
     """Collect configs from all devices and save them with diff tracking.
 
-    Args:
-        params_list: Connection parameters for each target device.
-        output_dir: Root directory for the backup archive.
-        workers: Maximum number of concurrent collection threads.
-        git: When True, commit every changed file to a local git repository.
-        alert_on_change: When True, write change alerts to *stderr*.
-        _timestamp: Override the timestamp string (intended for tests only).
+    Parameters
+    ----------
+    params_list:
+        Connection parameters for each target device.
+    output_dir:
+        Root directory for the backup archive.
+    workers:
+        Maximum number of concurrent collection threads.
+    git:
+        When True, commit every changed file to a local git repository.
+    alert_on_change:
+        When True, write change alerts to *stderr*.
+    _timestamp:
+        Override the timestamp string (intended for tests only).
 
-    Returns:
-        A list of per-device summary dicts (see :func:`save_backup`).
+    Returns
+    -------
+    list
+        List of per-device summary dicts (see :func:`save_backup`).
 
-    Raises:
-        ValueError: If *workers* is less than 1.
-        RuntimeError: If *git* is True and git initialisation or commit fails.
+    Raises
+    ------
+    ValueError
+        If *workers* is less than 1.
+    RuntimeError
+        If *git* is True and git initialisation or commit fails.
 
     """
     if workers < 1:

@@ -15,8 +15,14 @@ __all__ = [
 def parse_interfaces(output: str) -> list[dict]:
     """Parse ``show interfaces`` or ``show interface brief`` output.
 
-    Supports Brocade FastIron/ICX interface summary lines.  Each returned dict
-    contains:
+    Supports Brocade FastIron/ICX interface summary lines.
+
+    Returns
+    -------
+    list
+        List of per-interface dicts.
+
+    Each returned dict contains:
 
     * ``name``     – interface identifier (e.g. ``'GigabitEthernet1/1/1'``)
     * ``status``   – administrative state: ``'up'`` or ``'down'``
@@ -33,6 +39,7 @@ def parse_interfaces(output: str) -> list[dict]:
     and the brief tabular form::
 
         GigabitEthernet1/1/1    up         up        ...
+
     """
     interfaces: list[dict] = []
 
@@ -85,6 +92,11 @@ def parse_interfaces(output: str) -> list[dict]:
 def parse_ip_routes(output: str) -> list[dict]:
     """Parse ``show ip route`` output from Brocade FastIron/ICX.
 
+    Returns
+    -------
+    list
+        List of per-route dicts. Returns an empty list when the output cannot be parsed.
+
     Each returned dict contains:
 
     * ``type``      – route type code (e.g. ``'B'``, ``'C'``, ``'S'``, ``'R'``)
@@ -93,13 +105,12 @@ def parse_ip_routes(output: str) -> list[dict]:
     * ``interface`` – egress interface (e.g. ``'e1/1/1'``)
     * ``metric``    – route metric / cost (``int``)
 
-    Returns an empty list when the output cannot be parsed.
-
     Example input lines::
 
         B    10.0.0.0/8         192.168.1.254    e1/1  1
         C    192.168.1.0/24     DIRECT           e1/2  1
         S    0.0.0.0/0          10.0.0.1         e1/1  1
+
     """
     routes: list[dict] = []
 
@@ -128,18 +139,22 @@ def parse_ip_routes(output: str) -> list[dict]:
 def parse_version(output: str) -> dict:
     """Parse ``show version`` output from a Brocade FastIron/ICX device.
 
-    Returns a dict with keys:
+    Returns
+    -------
+    dict
+        Dict with keys:
 
-    * ``model``    – hardware model string (e.g. ``'ICX7550-48'``)
-    * ``version``  – software version string (e.g. ``'09.0.10T215'``)
-    * ``vendor``   – always ``'Brocade'``
+        * ``model``    – hardware model string (e.g. ``'ICX7550-48'``)
+        * ``version``  – software version string (e.g. ``'09.0.10T215'``)
+        * ``vendor``   – always ``'Brocade'``
 
-    Returns a dict with ``None`` values when the output cannot be parsed.
+        Returns a dict with ``None`` values when the output cannot be parsed.
 
     Example input lines::
 
         HW: ICX7550-48
         SW: Version 09.0.10T215 Copyright (c) 1996-2023 Ruckus Networks, Inc.
+
     """
     result: dict = {"model": None, "version": None, "vendor": "Brocade"}
 
@@ -158,16 +173,19 @@ def parse_version(output: str) -> dict:
 def parse_fabric(output: str) -> dict:
     """Parse ``show fabric`` output from a Brocade Fabric OS (FOS) SAN switch.
 
-    Returns a dict with keys:
+    Returns
+    -------
+    dict
+        Dict with keys:
 
-    * ``fabric_name`` – fabric name string, or ``None``
-    * ``fabric_os``   – Fabric OS version string, or ``None``
-    * ``switches``    – list of switch dicts, each containing ``name`` and
-                        ``domain``
-    * ``ports``       – list of port dicts, each containing ``port``,
-                        ``state`` (``'Online'`` / ``'Offline'``)
+        * ``fabric_name`` – fabric name string, or ``None``
+        * ``fabric_os``   – Fabric OS version string, or ``None``
+        * ``switches``    – list of switch dicts, each containing ``name`` and
+                            ``domain``
+        * ``ports``       – list of port dicts, each containing ``port``,
+                            ``state`` (``'Online'`` / ``'Offline'``)
 
-    Returns a dict with empty defaults when the output cannot be parsed.
+        Returns a dict with empty defaults when the output cannot be parsed.
 
     Example input::
 
@@ -176,6 +194,7 @@ def parse_fabric(output: str) -> dict:
         Switch: fc-sw-01 (domain 1)
           Port 0/1: Online
           Port 0/2: Offline
+
     """
     result: dict = {
         "fabric_name": None,

@@ -59,18 +59,22 @@ def parse_cpu_memory_eos(data: dict) -> dict:
     Arista's ``show version`` JSON includes a ``systemStats`` sub-dict with:
     ``cpuInfo`` (per-core usage) and ``memUsed`` / ``memTotal`` fields.
 
-    Returns a dict with:
+    Returns
+    -------
+    dict
+        Dict with:
 
-    * ``cpu_utilization``   – overall CPU % (float) or ``None``
-    * ``memory_total_kb``   – total physical RAM in KB (int) or ``None``
-    * ``memory_used_kb``    – used RAM in KB (int) or ``None``
-    * ``memory_util``       – memory utilisation % (float) or ``None``
-    * ``uptime_seconds``    – system uptime in seconds (float) or ``None``
-    * ``eos_version``       – EOS software version string or ``None``
-    * ``serial_number``     – chassis serial number or ``None``
-    * ``model``             – hardware model string or ``None``
+        * ``cpu_utilization``   – overall CPU % (float) or ``None``
+        * ``memory_total_kb``   – total physical RAM in KB (int) or ``None``
+        * ``memory_used_kb``    – used RAM in KB (int) or ``None``
+        * ``memory_util``       – memory utilisation % (float) or ``None``
+        * ``uptime_seconds``    – system uptime in seconds (float) or ``None``
+        * ``eos_version``       – EOS software version string or ``None``
+        * ``serial_number``     – chassis serial number or ``None``
+        * ``model``             – hardware model string or ``None``
 
-    Returns a dict with all values ``None`` when parsing fails.
+        Returns a dict with all values ``None`` when parsing fails.
+
     """
     result: dict = {
         "cpu_utilization": None,
@@ -135,20 +139,24 @@ def parse_cpu_memory_eos(data: dict) -> dict:
 def parse_interfaces_eos(data: dict) -> list[dict]:
     """Parse ``show interfaces`` eAPI JSON response.
 
-    Returns a list of per-interface dicts:
+    Returns
+    -------
+    list
+        List of per-interface dicts:
 
-    * ``name``           – interface name (str)
-    * ``description``    – interface description (str)
-    * ``line_protocol``  – line-protocol status (``'up'`` / ``'down'``)
-    * ``oper_status``    – operational status string
-    * ``link_status``    – link status (``'connected'`` / ``'notconnect'`` / …)
-    * ``in_errors``      – input error count (int)
-    * ``out_errors``     – output error count (int)
-    * ``in_discards``    – input discard count (int)
-    * ``out_discards``   – output discard count (int)
-    * ``crc_errors``     – CRC align errors (int)
-    * ``has_errors``     – ``True`` when any error counter > 0
-    * ``is_up``          – ``True`` when both oper and line-protocol are up
+        * ``name``           – interface name (str)
+        * ``description``    – interface description (str)
+        * ``line_protocol``  – line-protocol status (``'up'`` / ``'down'``)
+        * ``oper_status``    – operational status string
+        * ``link_status``    – link status (``'connected'`` / ``'notconnect'`` / …)
+        * ``in_errors``      – input error count (int)
+        * ``out_errors``     – output error count (int)
+        * ``in_discards``    – input discard count (int)
+        * ``out_discards``   – output discard count (int)
+        * ``crc_errors``     – CRC align errors (int)
+        * ``has_errors``     – ``True`` when any error counter > 0
+        * ``is_up``          – ``True`` when both oper and line-protocol are up
+
     """
     interfaces: list[dict] = []
     ifaces = data.get("interfaces", {})
@@ -194,16 +202,20 @@ def parse_interfaces_eos(data: dict) -> list[dict]:
 def parse_interface_counters_eos(data: dict) -> list[dict]:
     """Parse ``show interfaces counters errors`` eAPI JSON response.
 
-    Returns a list of per-interface error-counter dicts:
+    Returns
+    -------
+    list
+        List of per-interface error-counter dicts:
 
-    * ``name``          – interface name (str)
-    * ``fcs_errors``    – FCS / CRC errors (int)
-    * ``align_errors``  – alignment errors (int)
-    * ``symbol_errors`` – symbol errors (int)
-    * ``rx_pause``      – received pause frames (int)
-    * ``in_errors``     – total input errors (int)
-    * ``out_errors``    – total output errors (int)
-    * ``has_errors``    – ``True`` when any counter > 0
+        * ``name``          – interface name (str)
+        * ``fcs_errors``    – FCS / CRC errors (int)
+        * ``align_errors``  – alignment errors (int)
+        * ``symbol_errors`` – symbol errors (int)
+        * ``rx_pause``      – received pause frames (int)
+        * ``in_errors``     – total input errors (int)
+        * ``out_errors``    – total output errors (int)
+        * ``has_errors``    – ``True`` when any counter > 0
+
     """
     result: list[dict] = []
     ifaces = data.get("interfaceErrorCounters", {})
@@ -242,16 +254,20 @@ def parse_interface_counters_eos(data: dict) -> list[dict]:
 def parse_transceivers_eos(data: dict) -> list[dict]:
     """Parse ``show interfaces transceiver`` eAPI JSON response.
 
-    Returns a list of per-interface transceiver dicts:
+    Returns
+    -------
+    list
+        List of per-interface transceiver dicts:
 
-    * ``interface``       – interface name (str)
-    * ``media_type``      – SFP/QSFP media type string
-    * ``tx_power_dbm``    – transmit optical power in dBm (float) or ``None``
-    * ``rx_power_dbm``    – receive optical power in dBm (float) or ``None``
-    * ``tx_bias_ma``      – laser bias current in mA (float) or ``None``
-    * ``temperature_c``   – module temperature in °C (float) or ``None``
-    * ``supply_voltage``  – module supply voltage (float) or ``None``
-    * ``alert``           – ``True`` when any DOM value is outside vendor limits
+        * ``interface``       – interface name (str)
+        * ``media_type``      – SFP/QSFP media type string
+        * ``tx_power_dbm``    – transmit optical power in dBm (float) or ``None``
+        * ``rx_power_dbm``    – receive optical power in dBm (float) or ``None``
+        * ``tx_bias_ma``      – laser bias current in mA (float) or ``None``
+        * ``temperature_c``   – module temperature in °C (float) or ``None``
+        * ``supply_voltage``  – module supply voltage (float) or ``None``
+        * ``alert``           – ``True`` when any DOM value is outside vendor limits
+
     """
     result: list[dict] = []
     ifaces = data.get("interfaces", {})
@@ -315,14 +331,18 @@ def parse_transceivers_eos(data: dict) -> list[dict]:
 def parse_bgp_summary_eos(data: dict) -> list[dict]:
     """Parse ``show bgp summary`` eAPI JSON response (IPv4 unicast).
 
-    Returns a list of BGP peer dicts:
+    Returns
+    -------
+    list
+        List of BGP peer dicts:
 
-    * ``neighbor``       – peer IP address (str)
-    * ``peer_as``        – remote AS number (int) or ``None``
-    * ``state``          – session state (``'Established'`` / ``'Active'`` / …)
-    * ``up_down``        – up/down time string
-    * ``prefixes_rcvd``  – received prefix count (int)
-    * ``is_established`` – ``True`` when state is ``'Established'``
+        * ``neighbor``       – peer IP address (str)
+        * ``peer_as``        – remote AS number (int) or ``None``
+        * ``state``          – session state (``'Established'`` / ``'Active'`` / …)
+        * ``up_down``        – up/down time string
+        * ``prefixes_rcvd``  – received prefix count (int)
+        * ``is_established`` – ``True`` when state is ``'Established'``
+
     """
     peers: list[dict] = []
     # vrfs → default → peers
@@ -359,7 +379,11 @@ def parse_bgp_summary_eos(data: dict) -> list[dict]:
 def parse_bgp_evpn_eos(data: dict) -> list[dict]:
     """Parse ``show bgp evpn summary`` eAPI JSON response.
 
-    Returns the same per-peer structure as :func:`parse_bgp_summary_eos`.
+    Returns
+    -------
+    list
+        Same per-peer structure as :func:`parse_bgp_summary_eos`.
+
     """
     return parse_bgp_summary_eos(data)
 
@@ -372,15 +396,19 @@ def parse_bgp_evpn_eos(data: dict) -> list[dict]:
 def parse_ospf_neighbors_eos(data: dict) -> list[dict]:
     """Parse ``show ip ospf neighbor`` eAPI JSON response.
 
-    Returns a list of OSPF neighbour dicts:
+    Returns
+    -------
+    list
+        List of OSPF neighbour dicts:
 
-    * ``neighbor_id``  – neighbour router ID (str)
-    * ``interface``    – local interface name (str)
-    * ``address``      – neighbour IP address (str)
-    * ``state``        – OSPF adjacency state (str)
-    * ``priority``     – DR priority (int)
-    * ``dead_time``    – dead-timer countdown string
-    * ``is_full``      – ``True`` when state starts with ``'Full'``
+        * ``neighbor_id``  – neighbour router ID (str)
+        * ``interface``    – local interface name (str)
+        * ``address``      – neighbour IP address (str)
+        * ``state``        – OSPF adjacency state (str)
+        * ``priority``     – DR priority (int)
+        * ``dead_time``    – dead-timer countdown string
+        * ``is_full``      – ``True`` when state starts with ``'Full'``
+
     """
     neighbors: list[dict] = []
     # instList → (instance) → neighbors → (neighbor_id) → adjacencies
@@ -415,19 +443,23 @@ def parse_ospf_neighbors_eos(data: dict) -> list[dict]:
 def parse_mlag_eos(data: dict) -> dict:
     """Parse ``show mlag`` eAPI JSON response.
 
-    Returns a dict with:
+    Returns
+    -------
+    dict
+        Dict with:
 
-    * ``state``               – MLAG state (``'active'`` / ``'inactive'`` / …)
-    * ``peer_state``          – MLAG peer state string
-    * ``peer_link``           – peer-link interface name
-    * ``peer_link_status``    – peer-link line-protocol status
-    * ``local_interface``     – MLAG local interface (VLAN SVI)
-    * ``local_ip``            – MLAG local IP address
-    * ``peer_ip``             – MLAG peer IP address
-    * ``config_sanity``       – config-sanity status string (``'consistent'`` / …)
-    * ``is_active``           – ``True`` when state is ``'active'``
-    * ``is_peer_active``      – ``True`` when peer_state is ``'active'``
-    * ``peer_link_ok``        – ``True`` when peer-link is ``'up'``
+        * ``state``               – MLAG state (``'active'`` / ``'inactive'`` / …)
+        * ``peer_state``          – MLAG peer state string
+        * ``peer_link``           – peer-link interface name
+        * ``peer_link_status``    – peer-link line-protocol status
+        * ``local_interface``     – MLAG local interface (VLAN SVI)
+        * ``local_ip``            – MLAG local IP address
+        * ``peer_ip``             – MLAG peer IP address
+        * ``config_sanity``       – config-sanity status string (``'consistent'`` / …)
+        * ``is_active``           – ``True`` when state is ``'active'``
+        * ``is_peer_active``      – ``True`` when peer_state is ``'active'``
+        * ``peer_link_ok``        – ``True`` when peer-link is ``'up'``
+
     """
     if not isinstance(data, dict):
         return _empty_mlag()
@@ -485,12 +517,16 @@ def _empty_mlag() -> dict:
 def parse_mlag_config_sanity_eos(data: dict) -> dict:
     """Parse ``show mlag config-sanity`` eAPI JSON response.
 
-    Returns a dict with:
+    Returns
+    -------
+    dict
+        Dict with:
 
-    * ``consistent``             – ``True`` when no inconsistencies are found
-    * ``global_inconsistencies`` – list of global inconsistency description strings
-    * ``interface_inconsistencies`` – list of per-interface inconsistency dicts
-      (each with ``interface``, ``description``, ``local_value``, ``peer_value``)
+        * ``consistent``             – ``True`` when no inconsistencies are found
+        * ``global_inconsistencies`` – list of global inconsistency description strings
+        * ``interface_inconsistencies`` – list of per-interface inconsistency dicts
+          (each with ``interface``, ``description``, ``local_value``, ``peer_value``)
+
     """
     if not isinstance(data, dict):
         return {"consistent": True, "global_inconsistencies": [], "interface_inconsistencies": []}
@@ -530,13 +566,17 @@ def parse_mlag_config_sanity_eos(data: dict) -> dict:
 def parse_environment_eos(data: dict) -> dict:
     """Parse ``show environment all`` eAPI JSON response.
 
-    Returns a dict with:
+    Returns
+    -------
+    dict
+        Dict with:
 
-    * ``power_supplies``  – list of PSU dicts (name, status, ok)
-    * ``fans``            – list of fan dicts (name, speed, status, ok)
-    * ``temperatures``    – list of temperature sensor dicts
-      (name, celsius, alert_raised, ok)
-    * ``overall_ok``      – ``True`` when no component has a fault
+        * ``power_supplies``  – list of PSU dicts (name, status, ok)
+        * ``fans``            – list of fan dicts (name, speed, status, ok)
+        * ``temperatures``    – list of temperature sensor dicts
+          (name, celsius, alert_raised, ok)
+        * ``overall_ok``      – ``True`` when no component has a fault
+
     """
     power_supplies: list[dict] = []
     fans: list[dict] = []
@@ -638,7 +678,11 @@ def parse_bgp_summary_eos_text(output: str) -> list[dict]:
           10.0.0.2                 4 65002         1000      1001    0    0 5d03h Estab   50     50
           10.0.0.3                 4 65003           50        51    0    0 00:05:23 Active
 
-    Returns same structure as :func:`parse_bgp_summary_eos`.
+    Returns
+    -------
+    list
+        Same structure as :func:`parse_bgp_summary_eos`.
+
     """
     peers: list[dict] = []
     # Look for lines with IP address + AS + state
@@ -682,7 +726,11 @@ def parse_ospf_neighbors_eos_text(output: str) -> list[dict]:
         10.0.0.3          1   Full/BDR        00:00:36    10.1.0.3        Ethernet2
         10.0.0.4          0   ExStart/-       00:00:39    10.1.0.4        Ethernet3
 
-    Returns same structure as :func:`parse_ospf_neighbors_eos`.
+    Returns
+    -------
+    list
+        Same structure as :func:`parse_ospf_neighbors_eos`.
+
     """
     neighbors: list[dict] = []
     # Skip header line(s)
@@ -744,7 +792,11 @@ def parse_mlag_eos_text(output: str) -> dict:
         Active-partial                     :                   0
         Active-full                        :                   2
 
-    Returns same structure as :func:`parse_mlag_eos`.
+    Returns
+    -------
+    dict
+        Same structure as :func:`parse_mlag_eos`.
+
     """
     result = _empty_mlag()
     kv_re = re.compile(r"^(.+?)\s*:\s+(.+)$")

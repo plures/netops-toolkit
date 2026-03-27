@@ -144,20 +144,23 @@ def audit_vlans(
         Additional VLAN IDs to exclude from the *extra VLANs* check
         (system VLANs 1002–1005 are always excluded regardless).
 
-    Returns a result dict with keys:
+    Returns
+    -------
+    dict
+        Result dict with keys:
 
-    * ``host``             – device IP/hostname
-    * ``timestamp``        – ISO-8601 UTC timestamp
-    * ``success``          – ``True`` when the device was reached
-    * ``actual_vlans``     – list of per-VLAN dicts from :func:`~netops.parsers.vlan.parse_vlan_brief`
-    * ``trunks``           – list of trunk-port dicts (empty when *check_trunks* is ``False``)
-    * ``missing_vlans``    – VLAN IDs in *expected_vlans* but absent from the switch
-    * ``extra_vlans``      – VLAN IDs on switch but not in *expected_vlans*
-    * ``name_mismatches``  – list of ``{vlan_id, expected_name, actual_name}``
-    * ``trunk_mismatches`` – list of ``{port, missing_vlans}`` (empty when *check_trunks* is ``False``)
-    * ``compliant``        – ``True`` when no discrepancies were found
-    * ``alerts``           – human-readable list of alert messages
-    * ``error``            – error message when the connection failed
+        * ``host``             – device IP/hostname
+        * ``timestamp``        – ISO-8601 UTC timestamp
+        * ``success``          – ``True`` when the device was reached
+        * ``actual_vlans``     – list of per-VLAN dicts from :func:`~netops.parsers.vlan.parse_vlan_brief`
+        * ``trunks``           – list of trunk-port dicts (empty when *check_trunks* is ``False``)
+        * ``missing_vlans``    – VLAN IDs in *expected_vlans* but absent from the switch
+        * ``extra_vlans``      – VLAN IDs on switch but not in *expected_vlans*
+        * ``name_mismatches``  – list of ``{vlan_id, expected_name, actual_name}``
+        * ``trunk_mismatches`` – list of ``{port, missing_vlans}`` (empty when *check_trunks* is ``False``)
+        * ``compliant``        – ``True`` when no discrepancies were found
+        * ``alerts``           – human-readable list of alert messages
+        * ``error``            – error message when the connection failed
 
     """
     if expected_names is None:
@@ -237,16 +240,19 @@ def build_vlan_report(results: list[dict]) -> dict:
     results:
         List of dicts returned by :func:`audit_vlans`.
 
-    Returns a summary dict with keys:
+    Returns
+    -------
+    dict
+        Summary dict with keys:
 
-    * ``switches``                – total switches polled
-    * ``switches_reachable``      – switches successfully reached
-    * ``switches_compliant``      – fully compliant switches
-    * ``overall_alert``           – ``True`` when any switch is non-compliant
-    * ``missing_vlan_switches``   – list of ``{host, missing_vlans}``
-    * ``extra_vlan_switches``     – list of ``{host, extra_vlans}``
-    * ``name_mismatch_switches``  – list of ``{host, name_mismatches}``
-    * ``trunk_mismatch_switches`` – list of ``{host, trunk_mismatches}``
+        * ``switches``                – total switches polled
+        * ``switches_reachable``      – switches successfully reached
+        * ``switches_compliant``      – fully compliant switches
+        * ``overall_alert``           – ``True`` when any switch is non-compliant
+        * ``missing_vlan_switches``   – list of ``{host, missing_vlans}``
+        * ``extra_vlan_switches``     – list of ``{host, extra_vlans}``
+        * ``name_mismatch_switches``  – list of ``{host, name_mismatches}``
+        * ``trunk_mismatch_switches`` – list of ``{host, trunk_mismatches}``
 
     """
     reachable = [r for r in results if r.get("success")]

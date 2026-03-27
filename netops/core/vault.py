@@ -222,17 +222,38 @@ class CredentialVault:
         self._data["defaults"] = entry
 
     def delete_device(self, hostname: str) -> bool:
-        """Remove the device entry for *hostname*.  Returns ``True`` if it existed."""
+        """Remove the device entry for *hostname*.
+
+        Returns
+        -------
+        bool
+            True if the entry existed and was removed.
+
+        """
         _require_unlocked(self._key)
         return self._data["devices"].pop(hostname, None) is not None
 
     def delete_group(self, group: str) -> bool:
-        """Remove the group entry for *group*.  Returns ``True`` if it existed."""
+        """Remove the group entry for *group*.
+
+        Returns
+        -------
+        bool
+            True if the entry existed and was removed.
+
+        """
         _require_unlocked(self._key)
         return self._data["groups"].pop(group, None) is not None
 
     def delete_default(self) -> bool:
-        """Clear the default credentials entry.  Returns ``True`` if it existed."""
+        """Clear the default credentials entry.
+
+        Returns
+        -------
+        bool
+            True if the entry existed and was removed.
+
+        """
         _require_unlocked(self._key)
         had = bool(self._data.get("defaults"))
         self._data["defaults"] = {}
@@ -257,8 +278,12 @@ class CredentialVault:
         3. First matching group vault entry
         4. Default vault entry
 
-        The returned dict always has ``username`` and ``password`` keys; it
-        optionally contains ``enable_password``.
+        Returns
+        -------
+        dict or None
+            Credentials dict with ``username`` and ``password`` keys (and
+            optionally ``enable_password``), or ``None`` if nothing matches.
+
         """
         env_creds = _env_credentials(hostname)
         if env_creds:

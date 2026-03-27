@@ -316,7 +316,14 @@ def append_audit_log(record: RollbackRecord, path: Path) -> None:
 
 
 def load_audit_log(path: Path) -> list[dict]:
-    """Return all audit records from *path* as a list of dicts."""
+    """Return all audit records from *path* as a list of dicts.
+
+    Returns
+    -------
+    list
+        All audit records from *path* as a list of dicts.
+
+    """
     if not path.exists():
         return []
     records = []
