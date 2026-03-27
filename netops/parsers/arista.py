@@ -74,6 +74,7 @@ def parse_cpu_memory_eos(data: dict) -> dict:
         * ``model``             – hardware model string or ``None``
 
         Returns a dict with all values ``None`` when parsing fails.
+
     """
     result: dict = {
         "cpu_utilization": None,
@@ -155,6 +156,7 @@ def parse_interfaces_eos(data: dict) -> list[dict]:
         * ``crc_errors``     – CRC align errors (int)
         * ``has_errors``     – ``True`` when any error counter > 0
         * ``is_up``          – ``True`` when both oper and line-protocol are up
+
     """
     interfaces: list[dict] = []
     ifaces = data.get("interfaces", {})
@@ -213,6 +215,7 @@ def parse_interface_counters_eos(data: dict) -> list[dict]:
         * ``in_errors``     – total input errors (int)
         * ``out_errors``    – total output errors (int)
         * ``has_errors``    – ``True`` when any counter > 0
+
     """
     result: list[dict] = []
     ifaces = data.get("interfaceErrorCounters", {})
@@ -264,6 +267,7 @@ def parse_transceivers_eos(data: dict) -> list[dict]:
         * ``temperature_c``   – module temperature in °C (float) or ``None``
         * ``supply_voltage``  – module supply voltage (float) or ``None``
         * ``alert``           – ``True`` when any DOM value is outside vendor limits
+
     """
     result: list[dict] = []
     ifaces = data.get("interfaces", {})
@@ -338,6 +342,7 @@ def parse_bgp_summary_eos(data: dict) -> list[dict]:
         * ``up_down``        – up/down time string
         * ``prefixes_rcvd``  – received prefix count (int)
         * ``is_established`` – ``True`` when state is ``'Established'``
+
     """
     peers: list[dict] = []
     # vrfs → default → peers
@@ -378,6 +383,7 @@ def parse_bgp_evpn_eos(data: dict) -> list[dict]:
     -------
     list
         Same per-peer structure as :func:`parse_bgp_summary_eos`.
+
     """
     return parse_bgp_summary_eos(data)
 
@@ -402,6 +408,7 @@ def parse_ospf_neighbors_eos(data: dict) -> list[dict]:
         * ``priority``     – DR priority (int)
         * ``dead_time``    – dead-timer countdown string
         * ``is_full``      – ``True`` when state starts with ``'Full'``
+
     """
     neighbors: list[dict] = []
     # instList → (instance) → neighbors → (neighbor_id) → adjacencies
@@ -452,6 +459,7 @@ def parse_mlag_eos(data: dict) -> dict:
         * ``is_active``           – ``True`` when state is ``'active'``
         * ``is_peer_active``      – ``True`` when peer_state is ``'active'``
         * ``peer_link_ok``        – ``True`` when peer-link is ``'up'``
+
     """
     if not isinstance(data, dict):
         return _empty_mlag()
@@ -518,6 +526,7 @@ def parse_mlag_config_sanity_eos(data: dict) -> dict:
         * ``global_inconsistencies`` – list of global inconsistency description strings
         * ``interface_inconsistencies`` – list of per-interface inconsistency dicts
           (each with ``interface``, ``description``, ``local_value``, ``peer_value``)
+
     """
     if not isinstance(data, dict):
         return {"consistent": True, "global_inconsistencies": [], "interface_inconsistencies": []}
@@ -567,6 +576,7 @@ def parse_environment_eos(data: dict) -> dict:
         * ``temperatures``    – list of temperature sensor dicts
           (name, celsius, alert_raised, ok)
         * ``overall_ok``      – ``True`` when no component has a fault
+
     """
     power_supplies: list[dict] = []
     fans: list[dict] = []
@@ -672,6 +682,7 @@ def parse_bgp_summary_eos_text(output: str) -> list[dict]:
     -------
     list
         Same structure as :func:`parse_bgp_summary_eos`.
+
     """
     peers: list[dict] = []
     # Look for lines with IP address + AS + state
@@ -719,6 +730,7 @@ def parse_ospf_neighbors_eos_text(output: str) -> list[dict]:
     -------
     list
         Same structure as :func:`parse_ospf_neighbors_eos`.
+
     """
     neighbors: list[dict] = []
     # Skip header line(s)
@@ -784,6 +796,7 @@ def parse_mlag_eos_text(output: str) -> dict:
     -------
     dict
         Same structure as :func:`parse_mlag_eos`.
+
     """
     result = _empty_mlag()
     kv_re = re.compile(r"^(.+?)\s*:\s+(.+)$")

@@ -211,6 +211,7 @@ def run_health_check(
         * ``checks``       – dict of individual check results
         * ``overall_alert``– ``True`` when any check triggered an alert
         * ``error``        – error message when connection failed
+
     """
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     result: dict = {
@@ -260,6 +261,7 @@ def build_health_report(results: list[dict]) -> dict:
         * ``log_alerts``               – count of devices with log alerts
         * ``overall_alert``            – ``True`` when any device triggered an alert
         * ``results``                  – original per-device result list
+
     """
     reachable = [r for r in results if r.get("success")]
 

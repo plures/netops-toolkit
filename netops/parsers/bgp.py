@@ -35,6 +35,7 @@ def parse_bgp_summary_cisco(output: str) -> list[dict]:
                               (e.g. ``'Active'``, ``'Idle'``, ``'Connect'``)
     * ``prefixes_received`` – prefixes received (``int``) when
                               ``state == 'Established'``, otherwise ``None``
+
     """
     peers: list[dict] = []
     in_data = False
@@ -101,6 +102,7 @@ def updown_to_seconds(updown: str) -> int | None:
     int or None
         Total seconds as an integer, or ``None`` when the string is
         ``'never'`` or cannot be parsed.
+
     """
     if not updown or updown.lower() == "never":
         return None

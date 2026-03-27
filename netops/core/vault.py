@@ -228,6 +228,7 @@ class CredentialVault:
         -------
         bool
             True if the entry existed and was removed.
+
         """
         _require_unlocked(self._key)
         return self._data["devices"].pop(hostname, None) is not None
@@ -239,6 +240,7 @@ class CredentialVault:
         -------
         bool
             True if the entry existed and was removed.
+
         """
         _require_unlocked(self._key)
         return self._data["groups"].pop(group, None) is not None
@@ -250,6 +252,7 @@ class CredentialVault:
         -------
         bool
             True if the entry existed and was removed.
+
         """
         _require_unlocked(self._key)
         had = bool(self._data.get("defaults"))
@@ -280,6 +283,7 @@ class CredentialVault:
         dict or None
             Credentials dict with ``username`` and ``password`` keys (and
             optionally ``enable_password``), or ``None`` if nothing matches.
+
         """
         env_creds = _env_credentials(hostname)
         if env_creds:

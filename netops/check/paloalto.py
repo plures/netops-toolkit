@@ -135,6 +135,7 @@ def run_policy_audit(conn: DeviceConnection) -> dict:
         * ``rule_count``     – total number of security rules
         * ``alert``          – ``True`` when unused or shadowed rules were found
         * ``error``          – error message on failure, else ``None``
+
     """
     result: dict = {
         "policy": [],
@@ -183,6 +184,7 @@ def check_ha(conn: DeviceConnection) -> dict:
         * ``alert``       – ``True`` when local state is not ``'active'`` or
                             ``'passive'`` in a known-good pair
         * ``error``       – error message on failure, else ``None``
+
     """
     try:
         output = conn.send("show high-availability state")
@@ -220,6 +222,7 @@ def check_sessions(conn: DeviceConnection, threshold: float) -> dict:
         * ``threshold``           – alert threshold percentage
         * ``alert``               – ``True`` when utilization >= threshold
         * ``error``               – error message on failure, else ``None``
+
     """
     try:
         output = conn.send("show session info")
@@ -256,6 +259,7 @@ def check_threat_status(conn: DeviceConnection) -> dict:
         * ``ha_mode``         – HA mode from ``show system info``
         * ``alert``           – always ``False`` (informational only)
         * ``error``           – error message on failure, else ``None``
+
     """
     try:
         output = conn.send("show system info")
@@ -301,6 +305,7 @@ def run_health_check(
         * ``checks``        – dict of individual check results
         * ``overall_alert`` – ``True`` when any check triggered an alert
         * ``error``         – error message when connection failed
+
     """
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     result: dict = {

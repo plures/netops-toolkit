@@ -172,6 +172,7 @@ def check_bgp_peers(
         * ``summary``       – aggregate counts across all peers on this device
         * ``overall_alert`` – ``True`` when any alert fired
         * ``error``         – error message when connection failed
+
     """
     if expected_prefixes is None:
         expected_prefixes = {}
@@ -252,6 +253,7 @@ def build_bgp_report(results: list[dict]) -> dict:
         * ``prefix_alerts``       – peers with prefix-count deviations
         * ``overall_alert``       – ``True`` when any alert fired
         * ``peers``               – flat list of all peer dicts with ``router`` key
+
     """
     all_peers: list[dict] = []
     for r in results:

@@ -75,6 +75,7 @@ def generate_diff(old_path: Path, new_config: str) -> str:
     -------
     str
         Unified diff string. Returns an empty string when the configs are identical.
+
     """
     old_lines = old_path.read_text().splitlines(keepends=True)
     new_lines = new_config.splitlines(keepends=True)
@@ -108,6 +109,7 @@ def save_backup(result: dict, output_dir: Path, timestamp: str) -> dict:
     -------
     dict
         Summary dict with keys: host, success, saved_path, diff, changed, error
+
     """
     summary: dict = {
         "host": result["host"],
@@ -179,6 +181,7 @@ def git_commit(output_dir: Path, message: str) -> bool:
     -------
     bool
         True on success (including the *nothing to commit* case).
+
     """
     try:
         subprocess.run(

@@ -35,6 +35,7 @@ def expand_vlan_range(ranges: str) -> set[int]:
     -------
     set
         Set of integer VLAN IDs.
+
     """
     vlans: set[int] = set()
     if not ranges or ranges.strip().lower() == "none":
@@ -73,6 +74,7 @@ def parse_vlan_brief(output: str) -> list[dict]:
     * ``name``    – VLAN name (``str``)
     * ``status``  – status string, e.g. ``'active'``, ``'act/unsup'``
     * ``ports``   – list of access-port names assigned to this VLAN
+
     """
     vlans: list[dict] = []
     in_data = False
@@ -138,6 +140,7 @@ def parse_interfaces_trunk(output: str) -> list[dict]:
     * ``allowed_vlans``    – raw allowed-VLAN string (e.g. ``'1-4094'``)
     * ``active_vlans``     – set of active VLAN IDs (``set[int]``)
     * ``forwarding_vlans`` – set of forwarding VLAN IDs (``set[int]``)
+
     """
     # section: 0=preamble, 1=mode/status, 2=allowed, 3=active, 4=forwarding
     section = 0

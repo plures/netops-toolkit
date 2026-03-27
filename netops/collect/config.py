@@ -27,6 +27,7 @@ def collect_config(params: ConnectionParams) -> dict:
     -------
     dict
         Structured result dict with keys: host, device_type, collected_at, success, config, error.
+
     """
     result = {
         "host": params.host,

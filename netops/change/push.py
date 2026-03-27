@@ -260,6 +260,7 @@ def load_changelog(path: Path) -> list[dict]:
     -------
     list
         All change records from *path* as a list of dicts.
+
     """
     if not path.exists():
         return []

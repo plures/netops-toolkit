@@ -322,6 +322,7 @@ def load_audit_log(path: Path) -> list[dict]:
     -------
     list
         All audit records from *path* as a list of dicts.
+
     """
     if not path.exists():
         return []

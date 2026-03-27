@@ -46,6 +46,7 @@ def parse_interfaces(output: str) -> list[dict]:
 
     Field names match the Cisco ``parse_cisco_interfaces`` convention so
     callers can treat output from both vendors uniformly.
+
     """
     interfaces = []
     for line in output.splitlines():
@@ -93,6 +94,7 @@ def parse_bgp_summary(output: str) -> list[dict]:
     * ``active``      – active (best-path) prefixes (``int``)
     * ``up_down``     – session uptime or time-since-reset (e.g. ``'1d02h'``)
     * ``state``       – session state (e.g. ``'Established'``, ``'Active'``)
+
     """
     peers: list[dict] = []
     current_ip: str | None = None
@@ -173,6 +175,7 @@ def parse_ospf_neighbors(output: str) -> list[dict]:
     * ``state``      – OSPF adjacency state (e.g. ``'Full'``, ``'Init'``)
     * ``priority``   – DR election priority (``int``)
     * ``retx_queue`` – retransmit queue length (``int``)
+
     """
     neighbors = []
     for line in output.splitlines():
@@ -233,6 +236,7 @@ def parse_system_info(output: str) -> dict:
         * ``chassis_type``  – chassis model identifier
         * ``cpu_type``      – processor info
         * ``oper_version``  – running TiMOS version (if shown)
+
     """
     kv = _extract_kv(output)
     result: dict = {}
@@ -293,6 +297,7 @@ def parse_chassis(output: str) -> dict:
         * ``num_ports``      – total number of ports
         * ``num_power``      – number of power supply modules
         * ``num_fan``        – number of fan trays
+
     """
     kv = _extract_kv(output)
     result: dict = {}
@@ -506,6 +511,7 @@ def parse_bof(output: str) -> dict:
         * ``wait_time``         – boot wait time
         * ``persist``           – persist on/off
         * ``console_speed``     – console baud rate
+
     """
     # BOF output uses two formats:
     # 1. "key : value" (show bof on some versions)
@@ -591,6 +597,7 @@ def parse_version(output: str) -> dict:
         * ``sros_version``    – SR OS version if shown separately
         * ``cpm_type``        – CPM module type
         * ``chassis_type``    – chassis/platform type
+
     """
     result: dict = {}
 
@@ -649,6 +656,7 @@ def parse_service_summary(output: str) -> list[dict]:
         * ``oper_state``   – ``'Up'`` or ``'Down'``
         * ``customer_id``  – customer ID (int)
         * ``name``         – service name
+
     """
     services: list[dict] = []
     in_table = False
@@ -707,6 +715,7 @@ def parse_lag(output: str) -> list[dict]:
         * ``description``  – LAG description
         * ``lacp_mode``    – LACP mode (``'active'``, ``'passive'``, or ``None``)
         * ``members``      – list of member port strings
+
     """
     lags: list[dict] = []
     in_table = False
@@ -788,6 +797,7 @@ def parse_router_interface(output: str) -> list[dict]:
         * ``oper_state``   – ``'Up'`` or ``'Down'`` (may include protocol state)
         * ``protocol``     – protocol state (``'Up'`` or ``'Down'``)
         * ``port``         – bound SAP or port (``None`` if system)
+
     """
     interfaces: list[dict] = []
     in_table = False

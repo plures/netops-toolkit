@@ -39,6 +39,7 @@ def parse_interfaces(output: str) -> list[dict]:
     and the brief tabular form::
 
         GigabitEthernet1/1/1    up         up        ...
+
     """
     interfaces: list[dict] = []
 
@@ -109,6 +110,7 @@ def parse_ip_routes(output: str) -> list[dict]:
         B    10.0.0.0/8         192.168.1.254    e1/1  1
         C    192.168.1.0/24     DIRECT           e1/2  1
         S    0.0.0.0/0          10.0.0.1         e1/1  1
+
     """
     routes: list[dict] = []
 
@@ -152,6 +154,7 @@ def parse_version(output: str) -> dict:
 
         HW: ICX7550-48
         SW: Version 09.0.10T215 Copyright (c) 1996-2023 Ruckus Networks, Inc.
+
     """
     result: dict = {"model": None, "version": None, "vendor": "Brocade"}
 
@@ -191,6 +194,7 @@ def parse_fabric(output: str) -> dict:
         Switch: fc-sw-01 (domain 1)
           Port 0/1: Online
           Port 0/2: Offline
+
     """
     result: dict = {
         "fabric_name": None,

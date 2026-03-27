@@ -45,6 +45,7 @@ def parse_ospf_neighbors(output: str) -> list[dict]:
         192.168.1.2       1   FULL/DR         00:00:37    10.0.0.2        GigabitEthernet0/0
         192.168.1.3       1   FULL/BDR        00:00:38    10.0.0.3        GigabitEthernet0/0
         192.168.1.4       0   INIT/DROTHER    00:00:35    10.0.0.4        GigabitEthernet0/1
+
     """
     neighbors: list[dict] = []
 
@@ -102,6 +103,7 @@ def parse_environment_cisco(output: str) -> dict:
         SYSTEM INLET       : 28 Celsius, Critical threshold is 60 Celsius
         Switch 1: POWER-SUPPLY 1 is PRESENT
         Switch 1: POWER-SUPPLY 2 is NOT PRESENT
+
     """
     fans: list[dict] = []
     temperatures: list[dict] = []
@@ -209,6 +211,7 @@ def parse_version_cisco(output: str) -> dict:
         Switch uptime is 2 weeks, 3 days, 4 hours, 5 minutes
         Last reload reason: Reload command
         System image file is "flash:c3750x-ipservicesk9-mz.152-4.E8.bin"
+
     """
     result: dict = {
         "version": None,
@@ -276,6 +279,7 @@ def parse_inventory_cisco(output: str) -> list[dict]:
 
         NAME: "Chassis", DESCR: "Nexus 9000 Series Chassis"
         PID: N9K-C93180YC-FX3, VID: V01, SN: FDO23456789
+
     """
     entries: list[dict] = []
     current_name = None
@@ -318,6 +322,7 @@ def parse_serial_cisco(output: str) -> str | None:
         The serial number string for the first entry whose name contains
         "chassis" (case-insensitive), or the first entry if no chassis
         is found. Returns ``None`` if parsing fails.
+
     """
     entries = parse_inventory_cisco(output)
     if not entries:

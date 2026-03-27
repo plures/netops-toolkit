@@ -70,6 +70,7 @@ def check_cisco_cpu(conn: DeviceConnection, threshold: float) -> dict:
         * ``threshold``    – configured alert threshold
         * ``alert``        – ``True`` when ``utilization >= threshold``
         * ``raw``          – full parsed data from the ``show processes cpu`` output
+
     """
     try:
         output = conn.send("show processes cpu")
@@ -98,6 +99,7 @@ def check_cisco_memory(conn: DeviceConnection, threshold: float) -> dict:
         * ``threshold``    – configured alert threshold
         * ``alert``        – ``True`` when ``utilization >= threshold``
         * ``raw``          – full parsed data from the ``show processes memory`` output
+
     """
     try:
         output = conn.send("show processes memory")
@@ -126,6 +128,7 @@ def check_cisco_interfaces(conn: DeviceConnection) -> dict:
         * ``total``        – total number of interfaces parsed
         * ``with_errors``  – count of interfaces that have at least one error counter > 0
         * ``alert``        – ``True`` when any interface has errors
+
     """
     try:
         output = conn.send("show interfaces")
@@ -154,6 +157,7 @@ def check_cisco_logs(conn: DeviceConnection) -> dict:
         * ``major_count``    – count of severity 3 events
         * ``events``         – list of parsed event dicts
         * ``alert``          – ``True`` when any critical or major events are present
+
     """
     try:
         output = conn.send("show logging")
@@ -190,6 +194,7 @@ def check_cisco_bgp(conn: DeviceConnection, device_type: str = "cisco_ios") -> d
         * ``established``        – count of peers in Established state
         * ``not_established``    – count of peers not in Established state
         * ``alert``              – ``True`` when any peer is not Established
+
     """
     try:
         if device_type == "cisco_xr":
@@ -231,6 +236,7 @@ def check_cisco_ospf(conn: DeviceConnection) -> dict:
         * ``full``           – count of neighbours in FULL state
         * ``not_full``       – count of neighbours not in FULL state
         * ``alert``          – ``True`` when any neighbour is not in FULL state
+
     """
     try:
         output = conn.send("show ip ospf neighbor")
@@ -269,6 +275,7 @@ def check_cisco_environment(conn: DeviceConnection) -> dict:
         * ``power_supplies`` – list of power-supply status dicts
         * ``overall_ok``     – ``True`` when all reported components are OK
         * ``alert``          – ``True`` when ``overall_ok`` is ``False``
+
     """
     try:
         output = conn.send("show environment all")
@@ -306,6 +313,7 @@ def check_cisco_uptime(conn: DeviceConnection) -> dict:
         * ``reload_reason`` – last reload or restart reason
         * ``image``         – system image file path
         * ``alert``         – always ``False`` (informational only)
+
     """
     try:
         output = conn.send("show version")
@@ -383,6 +391,7 @@ def run_cisco_health_check(
                 "overall_alert": <bool>,
                 "error":         <str | None>,
             }
+
     """
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     result: dict = {

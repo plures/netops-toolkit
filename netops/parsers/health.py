@@ -48,6 +48,7 @@ def parse_cpu_cisco(output: str) -> dict:
     Example input line::
 
         CPU utilization for five seconds: 12%/3%; one minute: 8%; five minutes: 6%
+
     """
     match = re.search(
         r"five seconds:\s+(\d+(?:\.\d+)?)%[^;]*;"
@@ -80,6 +81,7 @@ def parse_cpu_nokia(output: str) -> dict:
     Example input lines::
 
         CPU Usage             :  5%  12%
+
     """
     match = re.search(r"CPU Usage\s*:\s+(\d+(?:\.\d+)?)%\s+(\d+(?:\.\d+)?)%", output)
     if match:
@@ -113,6 +115,7 @@ def parse_memory_cisco(output: str) -> dict:
     Example input line::
 
         Processor  7F2B3C18  402702336   141058576   261643760   ...
+
     """
     match = re.search(
         r"Processor\s+\S+\s+(\d+)\s+(\d+)\s+(\d+)",
@@ -146,6 +149,7 @@ def parse_memory_nokia(output: str) -> dict:
 
         Total In Use          :      141058576
         Total Available       :      261643760
+
     """
     used_match = re.search(r"Total In Use\s*:\s+(\d+)", output)
     avail_match = re.search(r"Total Available\s*:\s+(\d+)", output)
@@ -180,6 +184,7 @@ def parse_interface_errors_cisco(output: str) -> list[dict]:
     * ``crc``           – CRC errors (``int``)
     * ``drops``         – total input/output drops (``int``)
     * ``has_errors``    – ``True`` when any counter is non-zero
+
     """
     interfaces: list[dict] = []
     current: dict | None = None
@@ -255,6 +260,7 @@ def parse_interface_errors_nokia(output: str) -> list[dict]:
     * ``crc``           – CRC/alignment errors (``int``)
     * ``drops``         – ingress/egress drops (``int``)
     * ``has_errors``    – ``True`` when any counter is non-zero
+
     """
     interfaces: list[dict] = []
     current: dict | None = None
@@ -328,6 +334,7 @@ def parse_logs_cisco(output: str) -> list[dict]:
     * ``severity``  – numeric severity 0–3 (``int``)
     * ``mnemonic``  – syslog mnemonic (e.g. ``'MALLOCFAIL'``)
     * ``message``   – event description
+
     """
     events: list[dict] = []
     for line in output.splitlines():
@@ -367,6 +374,7 @@ def parse_logs_nokia(output: str) -> list[dict]:
     * ``severity``  – ``'CRITICAL'`` or ``'MAJOR'``
     * ``subject``   – log subject/application
     * ``message``   – event description
+
     """
     events: list[dict] = []
     for line in output.splitlines():
@@ -408,6 +416,7 @@ def parse_cpu_brocade(output: str) -> dict:
           1-second average:  12 percent
           5-second average:  10 percent
          60-second average:   8 percent
+
     """
     result: dict = {}
 
@@ -446,6 +455,7 @@ def parse_memory_brocade(output: str) -> dict:
           Total DRAM: 1048576 KBytes
           Used DRAM:   512000 KBytes
           Free DRAM:   536576 KBytes
+
     """
     total_match = re.search(r"Total DRAM[:\s]+(\d+)\s+KBytes", output, re.IGNORECASE)
     used_match = re.search(r"Used DRAM[:\s]+(\d+)\s+KBytes", output, re.IGNORECASE)
@@ -484,6 +494,7 @@ def parse_interface_errors_brocade(output: str) -> list[dict]:
         GigabitEthernet1/1/1 is up, line protocol is up
           0 input errors, 0 CRC, 0 alignment errors, 0 runts, 0 giants
           0 output errors, 0 output discards
+
     """
     interfaces: list[dict] = []
     current: dict | None = None
@@ -564,6 +575,7 @@ def parse_logs_brocade(output: str) -> list[dict]:
     * ``severity``  – normalised severity: ``'CRITICAL'``, ``'ERROR'``, or
                       ``'WARNING'``
     * ``message``   – event description
+
     """
     events: list[dict] = []
     for line in output.splitlines():
@@ -608,6 +620,7 @@ def parse_cpu_paloalto(output: str) -> dict:
     Example input line::
 
         %Cpu(s):  5.0 us,  1.5 sy,  0.0 ni, 92.5 id,  0.5 wa,  0.0 hi,  0.5 si
+
     """
     m = re.search(
         r"%Cpu\(s\):\s+(\d+(?:\.\d+)?)\s+us,\s+(\d+(?:\.\d+)?)\s+sy,"
@@ -647,6 +660,7 @@ def parse_memory_paloalto(output: str) -> dict:
     Example input line::
 
         MiB Mem : 16384.0 total,  8192.0 free,  6144.0 used,  2048.0 buff/cache
+
     """
     # MiB Mem line (modern kernels / PAN-OS 10+)
     m = re.search(

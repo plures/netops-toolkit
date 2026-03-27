@@ -52,6 +52,7 @@ def parse_system_info(output: str) -> dict:
         URL filtering version: 20231201.20079
         HA mode: Active-Passive
         HA state: active
+
     """
     result: dict = {
         "hostname": None,
@@ -115,6 +116,7 @@ def parse_interfaces(output: str) -> list[dict]:
         ethernet1/2     up      203.0.113.1/30       vsys1  untrust
         ethernet1/3     down    unassigned           vsys1
         loopback.1      up      1.1.1.1/32           vsys1
+
     """
     interfaces: list[dict] = []
 
@@ -176,6 +178,7 @@ def parse_routes(output: str) -> list[dict]:
         0.0.0.0/0           10.0.0.1        10      A S    1d    ethernet1/2
         10.0.1.0/24         0.0.0.0         0       A C    -     ethernet1/1
         10.0.0.0/8          192.168.1.1     10      A B    1d    ethernet1/2
+
     """
     routes: list[dict] = []
     _route_types = {"C": "C", "S": "S", "B": "B", "R": "R", "O": "O", "H": "H"}
@@ -240,6 +243,7 @@ def parse_session_info(output: str) -> dict:
         Number of active UDP sessions:     200
         Number of active ICMP sessions:    34
         Session utilization:               1%
+
     """
     result: dict = {
         "max_sessions": None,
@@ -307,6 +311,7 @@ def parse_security_policy(output: str) -> list[dict]:
           application [ any ]
           service [ any ]
           action deny
+
     """
     rules: list[dict] = []
     current: dict | None = None
@@ -402,6 +407,7 @@ def parse_security_policy_stats(output: str) -> list[dict]:
         block-malware    45          2024-03-23 12:00:00
         allow-dns        0           never
         unused-rule      0           never
+
     """
     stats: list[dict] = []
 
@@ -465,6 +471,7 @@ def parse_ha_state(output: str) -> dict:
           Peer state: passive
           Peer IP: 192.168.1.2
           Preemptive: no
+
     """
     result: dict = {
         "enabled": False,
