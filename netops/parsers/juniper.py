@@ -40,6 +40,11 @@ __all__ = [
 def parse_re_status(output: str) -> list[dict]:
     """Parse ``show chassis routing-engine`` output.
 
+    Returns
+    -------
+    list
+        List of routing-engine dicts. Returns an empty list when the output cannot be parsed.
+
     Each returned dict represents one Routing Engine slot and contains:
 
     * ``slot``          – RE slot index (``int``, 0 or 1)
@@ -52,8 +57,6 @@ def parse_re_status(output: str) -> list[dict]:
     * ``uptime``        – uptime string (e.g. ``'10 days, 3 hours, 22 minutes'``)
                          or ``None``
     * ``temperature``   – temperature in Celsius (``int``) or ``None``
-
-    Returns an empty list when the output cannot be parsed.
 
     Example input::
 
@@ -154,6 +157,11 @@ def parse_re_status(output: str) -> list[dict]:
 def parse_fpc_status(output: str) -> list[dict]:
     """Parse ``show chassis fpc`` output.
 
+    Returns
+    -------
+    list
+        List of FPC slot dicts. Returns an empty list when the output cannot be parsed.
+
     Each returned dict represents one FPC slot:
 
     * ``slot``          – FPC slot index (``int``)
@@ -164,8 +172,6 @@ def parse_fpc_status(output: str) -> list[dict]:
     * ``memory_total``  – total DRAM in MB (``int``) or ``None``
     * ``temperature``   – temperature in Celsius (``int``) or ``None``
     * ``ok``            – ``True`` when state is ``'Online'`` or ``'Empty'``
-
-    Returns an empty list when the output cannot be parsed.
 
     Example input::
 
@@ -214,7 +220,15 @@ def parse_fpc_status(output: str) -> list[dict]:
 def parse_interface_errors_junos(output: str) -> list[dict]:
     """Parse ``show interfaces extensive`` (or ``show interfaces detail``) output.
 
-    Extracts per-interface error counters.  Each returned dict contains:
+    Extracts per-interface error counters.
+
+    Returns
+    -------
+    list
+        List of per-interface error-counter dicts. Returns an empty list when
+        the output cannot be parsed.
+
+    Each returned dict contains:
 
     * ``name``           – interface name (e.g. ``'ge-0/0/0'``, ``'xe-0/1/0'``)
     * ``input_errors``   – total input errors (``int``)
@@ -223,8 +237,6 @@ def parse_interface_errors_junos(output: str) -> list[dict]:
     * ``output_drops``   – output drops/discards (``int``)
     * ``crc_errors``     – CRC/frame-check errors (``int``)
     * ``has_errors``     – ``True`` when any counter is > 0
-
-    Returns an empty list when the output cannot be parsed.
 
     Example excerpt::
 
@@ -320,6 +332,11 @@ def _finalise_iface(iface: dict) -> None:
 def parse_bgp_summary_junos(output: str) -> list[dict]:
     """Parse ``show bgp summary`` output from JunOS.
 
+    Returns
+    -------
+    list
+        List of BGP peer dicts. Returns an empty list when the output cannot be parsed.
+
     Each returned dict contains:
 
     * ``neighbor``          – peer IPv4/IPv6 address (``str``)
@@ -330,8 +347,6 @@ def parse_bgp_summary_junos(output: str) -> list[dict]:
     * ``prefixes_received`` – prefixes received (``int``) when Established,
                              otherwise ``None``
     * ``active_prefixes``   – active prefixes (``int``) or ``None``
-
-    Returns an empty list when the output cannot be parsed.
 
     Example input::
 
@@ -408,6 +423,11 @@ def parse_bgp_summary_junos(output: str) -> list[dict]:
 def parse_ospf_neighbors_junos(output: str) -> list[dict]:
     """Parse ``show ospf neighbor`` output from JunOS.
 
+    Returns
+    -------
+    list
+        List of OSPF neighbor dicts. Returns an empty list when the output cannot be parsed.
+
     Each returned dict contains:
 
     * ``neighbor_id`` – OSPF Router-ID of the neighbour (``str``)
@@ -417,8 +437,6 @@ def parse_ospf_neighbors_junos(output: str) -> list[dict]:
     * ``dead_time``   – dead-timer countdown in ``HH:MM:SS`` format (``str``)
     * ``priority``    – interface priority (``int``)
     * ``is_full``     – ``True`` when ``state == 'Full'``
-
-    Returns an empty list when the output cannot be parsed.
 
     Example input::
 
@@ -458,15 +476,18 @@ def parse_ospf_neighbors_junos(output: str) -> list[dict]:
 def parse_chassis_alarms(output: str) -> list[dict]:
     """Parse ``show chassis alarms`` output.
 
+    Returns
+    -------
+    list
+        List of alarm dicts. Returns an empty list when no alarms are present or
+        the output cannot be parsed.
+
     Each returned dict represents one active alarm:
 
     * ``time``      – timestamp string (e.g. ``'2024-01-15 10:23:01 UTC'``)
     * ``class_``    – alarm class (``'Major'`` or ``'Minor'``)
     * ``description`` – alarm description string
     * ``is_major``  – ``True`` when class is ``'Major'``
-
-    Returns an empty list when no alarms are present or the output cannot
-    be parsed.
 
     Example input::
 
@@ -506,15 +527,18 @@ def parse_chassis_alarms(output: str) -> list[dict]:
 def parse_chassis_environment(output: str) -> dict:
     """Parse ``show chassis environment`` output.
 
-    Returns a dict with keys:
+    Returns
+    -------
+    dict
+        Dict with keys:
 
-    * ``power_supplies`` – list of PSU dicts (``name``, ``status``, ``ok``)
-    * ``fans``           – list of fan dicts (``name``, ``status``, ``ok``)
-    * ``temperatures``   – list of temperature dicts
-                          (``name``, ``celsius``, ``status``, ``ok``)
-    * ``overall_ok``     – ``True`` when every parsed component is OK
+        * ``power_supplies`` – list of PSU dicts (``name``, ``status``, ``ok``)
+        * ``fans``           – list of fan dicts (``name``, ``status``, ``ok``)
+        * ``temperatures``   – list of temperature dicts
+                               (``name``, ``celsius``, ``status``, ``ok``)
+        * ``overall_ok``     – ``True`` when every parsed component is OK
 
-    Returns a dict with empty lists when the output cannot be parsed.
+        Returns a dict with empty lists when the output cannot be parsed.
 
     Example input::
 
@@ -581,6 +605,11 @@ def parse_chassis_environment(output: str) -> dict:
 def parse_route_summary(output: str) -> list[dict]:
     """Parse ``show route summary`` output.
 
+    Returns
+    -------
+    list
+        List of routing-table summary dicts. Returns an empty list when the output cannot be parsed.
+
     Each returned dict represents one routing table:
 
     * ``table``          – routing table name (e.g. ``'inet.0'``, ``'inet6.0'``)
@@ -588,8 +617,6 @@ def parse_route_summary(output: str) -> list[dict]:
     * ``holddown_routes``– routes in holddown state (``int``)
     * ``hidden_routes``  – hidden routes (``int``)
     * ``total_routes``   – total routes in the table (``int``)
-
-    Returns an empty list when the output cannot be parsed.
 
     Example input::
 

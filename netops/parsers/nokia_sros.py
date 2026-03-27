@@ -32,6 +32,11 @@ __all__ = [
 def parse_interfaces(output: str) -> list[dict]:
     """Parse ``show port`` output into a list of interface dicts.
 
+    Returns
+    -------
+    list
+        List of interface dicts.
+
     Each dict contains:
 
     * ``name``     – port identifier (e.g. ``'1/1/1'``, ``'1/1/c3/1'``)
@@ -72,6 +77,11 @@ def parse_interfaces(output: str) -> list[dict]:
 
 def parse_bgp_summary(output: str) -> list[dict]:
     """Parse ``show router bgp summary`` output into a BGP peer list.
+
+    Returns
+    -------
+    list
+        List of BGP peer dicts.
 
     Each dict contains:
 
@@ -151,6 +161,11 @@ def parse_bgp_summary(output: str) -> list[dict]:
 def parse_ospf_neighbors(output: str) -> list[dict]:
     """Parse ``show router ospf neighbor`` output into an adjacency list.
 
+    Returns
+    -------
+    list
+        List of OSPF neighbor dicts.
+
     Each dict contains:
 
     * ``interface``  – interface or link name (e.g. ``'to-core-1'``)
@@ -201,20 +216,23 @@ def _extract_kv(output: str) -> dict[str, str]:
 def parse_system_info(output: str) -> dict:
     """Parse ``show system information`` output.
 
-    Returns a dict with normalised keys:
+    Returns
+    -------
+    dict
+        Dict with normalised keys:
 
-    * ``system_name``   – configured system name
-    * ``hostname``      – alias for system_name (for compatibility)
-    * ``contact``       – admin contact string
-    * ``location``      – system location
-    * ``description``   – system description
-    * ``object_id``     – SNMP sysObjectID
-    * ``uptime``        – system uptime string
-    * ``last_booted``   – last boot time
-    * ``current_time``  – current time on the node
-    * ``chassis_type``  – chassis model identifier
-    * ``cpu_type``      – processor info
-    * ``oper_version``  – running TiMOS version (if shown)
+        * ``system_name``   – configured system name
+        * ``hostname``      – alias for system_name (for compatibility)
+        * ``contact``       – admin contact string
+        * ``location``      – system location
+        * ``description``   – system description
+        * ``object_id``     – SNMP sysObjectID
+        * ``uptime``        – system uptime string
+        * ``last_booted``   – last boot time
+        * ``current_time``  – current time on the node
+        * ``chassis_type``  – chassis model identifier
+        * ``cpu_type``      – processor info
+        * ``oper_version``  – running TiMOS version (if shown)
     """
     kv = _extract_kv(output)
     result: dict = {}
@@ -256,22 +274,25 @@ def parse_system_info(output: str) -> dict:
 def parse_chassis(output: str) -> dict:
     """Parse ``show chassis`` or ``show chassis detail`` output.
 
-    Returns a dict with:
+    Returns
+    -------
+    dict
+        Dict with:
 
-    * ``chassis_type``   – e.g. ``'7750 SR-12'``, ``'7210 SAS-Sx 10/100GE'``
-    * ``part_number``    – Nokia part number (e.g. ``'3HE04820AAAB01'``)
-    * ``serial_number``  – chassis serial
-    * ``clei_code``      – CLEI code
-    * ``mac_address``    – base MAC address
-    * ``firmware``       – firmware / FPGA version
-    * ``hardware_data``  – hardware coding
-    * ``oper_state``     – operational state (Up/Down)
-    * ``admin_state``    – administrative state
-    * ``temperature``    – temperature reading (if present)
-    * ``num_slots``      – number of card slots
-    * ``num_ports``      – total number of ports
-    * ``num_power``      – number of power supply modules
-    * ``num_fan``        – number of fan trays
+        * ``chassis_type``   – e.g. ``'7750 SR-12'``, ``'7210 SAS-Sx 10/100GE'``
+        * ``part_number``    – Nokia part number (e.g. ``'3HE04820AAAB01'``)
+        * ``serial_number``  – chassis serial
+        * ``clei_code``      – CLEI code
+        * ``mac_address``    – base MAC address
+        * ``firmware``       – firmware / FPGA version
+        * ``hardware_data``  – hardware coding
+        * ``oper_state``     – operational state (Up/Down)
+        * ``admin_state``    – administrative state
+        * ``temperature``    – temperature reading (if present)
+        * ``num_slots``      – number of card slots
+        * ``num_ports``      – total number of ports
+        * ``num_power``      – number of power supply modules
+        * ``num_fan``        – number of fan trays
     """
     kv = _extract_kv(output)
     result: dict = {}
@@ -464,24 +485,27 @@ def parse_mda(output: str) -> list[dict]:
 def parse_bof(output: str) -> dict:
     """Parse ``show bof`` (Boot Options File) output.
 
-    Returns a dict with:
+    Returns
+    -------
+    dict
+        Dict with:
 
-    * ``primary_image``     – primary boot image path
-    * ``secondary_image``   – secondary boot image path
-    * ``tertiary_image``    – tertiary boot image path
-    * ``primary_config``    – primary config file path
-    * ``secondary_config``  – secondary config file path
-    * ``address``           – management IP address
-    * ``prefix_length``     – management prefix length
-    * ``static_route``      – static route entries (list of str)
-    * ``dns_domain``        – DNS domain name
-    * ``dns_server``        – DNS server IP
-    * ``autonegotiate``     – auto-negotiate setting
-    * ``duplex``            – duplex setting
-    * ``speed``             – speed setting
-    * ``wait_time``         – boot wait time
-    * ``persist``           – persist on/off
-    * ``console_speed``     – console baud rate
+        * ``primary_image``     – primary boot image path
+        * ``secondary_image``   – secondary boot image path
+        * ``tertiary_image``    – tertiary boot image path
+        * ``primary_config``    – primary config file path
+        * ``secondary_config``  – secondary config file path
+        * ``address``           – management IP address
+        * ``prefix_length``     – management prefix length
+        * ``static_route``      – static route entries (list of str)
+        * ``dns_domain``        – DNS domain name
+        * ``dns_server``        – DNS server IP
+        * ``autonegotiate``     – auto-negotiate setting
+        * ``duplex``            – duplex setting
+        * ``speed``             – speed setting
+        * ``wait_time``         – boot wait time
+        * ``persist``           – persist on/off
+        * ``console_speed``     – console baud rate
     """
     # BOF output uses two formats:
     # 1. "key : value" (show bof on some versions)
@@ -556,14 +580,17 @@ def parse_bof(output: str) -> dict:
 def parse_version(output: str) -> dict:
     """Parse ``show version`` output.
 
-    Returns a dict with:
+    Returns
+    -------
+    dict
+        Dict with:
 
-    * ``timos_version``   – full TiMOS version string
-    * ``version``         – short version number (e.g. ``'23.10.R1'``)
-    * ``build_date``      – build date/time if present
-    * ``sros_version``    – SR OS version if shown separately
-    * ``cpm_type``        – CPM module type
-    * ``chassis_type``    – chassis/platform type
+        * ``timos_version``   – full TiMOS version string
+        * ``version``         – short version number (e.g. ``'23.10.R1'``)
+        * ``build_date``      – build date/time if present
+        * ``sros_version``    – SR OS version if shown separately
+        * ``cpm_type``        – CPM module type
+        * ``chassis_type``    – chassis/platform type
     """
     result: dict = {}
 
@@ -611,14 +638,17 @@ def parse_version(output: str) -> dict:
 def parse_service_summary(output: str) -> list[dict]:
     """Parse ``show service service-using`` output.
 
-    Returns a list of dicts with:
+    Returns
+    -------
+    list
+        List of dicts with:
 
-    * ``service_id``   – service ID (int)
-    * ``service_type`` – type string (e.g. ``'VPLS'``, ``'VPRN'``, ``'Epipe'``)
-    * ``admin_state``  – ``'Up'`` or ``'Down'``
-    * ``oper_state``   – ``'Up'`` or ``'Down'``
-    * ``customer_id``  – customer ID (int)
-    * ``name``         – service name
+        * ``service_id``   – service ID (int)
+        * ``service_type`` – type string (e.g. ``'VPLS'``, ``'VPRN'``, ``'Epipe'``)
+        * ``admin_state``  – ``'Up'`` or ``'Down'``
+        * ``oper_state``   – ``'Up'`` or ``'Down'``
+        * ``customer_id``  – customer ID (int)
+        * ``name``         – service name
     """
     services: list[dict] = []
     in_table = False
@@ -664,16 +694,19 @@ def parse_service_summary(output: str) -> list[dict]:
 def parse_lag(output: str) -> list[dict]:
     """Parse ``show lag`` output.
 
-    Returns a list of dicts with:
+    Returns
+    -------
+    list
+        List of dicts with:
 
-    * ``lag_id``       – LAG identifier (int)
-    * ``admin_state``  – ``'up'`` or ``'down'``
-    * ``oper_state``   – ``'up'`` or ``'down'``
-    * ``port_count``   – number of member ports (int)
-    * ``active_ports`` – number of active ports (int)
-    * ``description``  – LAG description
-    * ``lacp_mode``    – LACP mode (``'active'``, ``'passive'``, or ``None``)
-    * ``members``      – list of member port strings
+        * ``lag_id``       – LAG identifier (int)
+        * ``admin_state``  – ``'up'`` or ``'down'``
+        * ``oper_state``   – ``'up'`` or ``'down'``
+        * ``port_count``   – number of member ports (int)
+        * ``active_ports`` – number of active ports (int)
+        * ``description``  – LAG description
+        * ``lacp_mode``    – LACP mode (``'active'``, ``'passive'``, or ``None``)
+        * ``members``      – list of member port strings
     """
     lags: list[dict] = []
     in_table = False
@@ -744,14 +777,17 @@ def parse_lag(output: str) -> list[dict]:
 def parse_router_interface(output: str) -> list[dict]:
     """Parse ``show router interface`` output.
 
-    Returns a list of dicts with:
+    Returns
+    -------
+    list
+        List of dicts with:
 
-    * ``name``         – interface name
-    * ``ip_address``   – IPv4 address (or ``None``)
-    * ``admin_state``  – ``'Up'`` or ``'Down'``
-    * ``oper_state``   – ``'Up'`` or ``'Down'`` (may include protocol state)
-    * ``protocol``     – protocol state (``'Up'`` or ``'Down'``)
-    * ``port``         – bound SAP or port (``None`` if system)
+        * ``name``         – interface name
+        * ``ip_address``   – IPv4 address (or ``None``)
+        * ``admin_state``  – ``'Up'`` or ``'Down'``
+        * ``oper_state``   – ``'Up'`` or ``'Down'`` (may include protocol state)
+        * ``protocol``     – protocol state (``'Up'`` or ``'Down'``)
+        * ``port``         – bound SAP or port (``None`` if system)
     """
     interfaces: list[dict] = []
     in_table = False

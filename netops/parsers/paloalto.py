@@ -22,20 +22,23 @@ __all__ = [
 def parse_system_info(output: str) -> dict:
     """Parse ``show system info`` output from a PAN-OS device.
 
-    Returns a dict with keys:
+    Returns
+    -------
+    dict
+        Dict with keys:
 
-    * ``hostname``         – device hostname (e.g. ``'pa-fw-01'``)
-    * ``ip_address``       – management IP address
-    * ``model``            – hardware model (e.g. ``'PA-3220'``)
-    * ``serial``           – chassis serial number
-    * ``panos_version``    – PAN-OS software version (e.g. ``'10.2.3'``)
-    * ``app_version``      – application content version
-    * ``threat_version``   – threat content version
-    * ``url_version``      – URL filtering database version
-    * ``ha_mode``          – HA operating mode (e.g. ``'Active-Passive'``), or ``None``
-    * ``ha_state``         – local HA state (e.g. ``'active'``), or ``None``
+        * ``hostname``         – device hostname (e.g. ``'pa-fw-01'``)
+        * ``ip_address``       – management IP address
+        * ``model``            – hardware model (e.g. ``'PA-3220'``)
+        * ``serial``           – chassis serial number
+        * ``panos_version``    – PAN-OS software version (e.g. ``'10.2.3'``)
+        * ``app_version``      – application content version
+        * ``threat_version``   – threat content version
+        * ``url_version``      – URL filtering database version
+        * ``ha_mode``          – HA operating mode (e.g. ``'Active-Passive'``), or ``None``
+        * ``ha_state``         – local HA state (e.g. ``'active'``), or ``None``
 
-    Returns a dict with ``None`` values for any field that cannot be parsed.
+        Returns a dict with ``None`` values for any field that cannot be parsed.
 
     Example input lines::
 
@@ -90,6 +93,11 @@ def parse_system_info(output: str) -> dict:
 def parse_interfaces(output: str) -> list[dict]:
     """Parse ``show interface all`` output from a PAN-OS device.
 
+    Returns
+    -------
+    list
+        List of per-interface dicts. Returns an empty list when the output cannot be parsed.
+
     Each returned dict contains:
 
     * ``name``      – interface name (e.g. ``'ethernet1/1'``)
@@ -99,8 +107,6 @@ def parse_interfaces(output: str) -> list[dict]:
     * ``vsys``      – virtual system the interface belongs to
     * ``zone``      – security zone, or ``None`` when not displayed
     * ``up``        – ``True`` when state is ``'up'``
-
-    Returns an empty list when the output cannot be parsed.
 
     Example input lines::
 
@@ -147,6 +153,11 @@ def parse_interfaces(output: str) -> list[dict]:
 def parse_routes(output: str) -> list[dict]:
     """Parse ``show routing route`` output from a PAN-OS device.
 
+    Returns
+    -------
+    list
+        List of per-route dicts. Returns an empty list when the output cannot be parsed.
+
     Each returned dict contains:
 
     * ``destination`` – destination prefix in CIDR notation
@@ -158,8 +169,6 @@ def parse_routes(output: str) -> list[dict]:
                         (``'C'`` connected, ``'S'`` static, ``'B'`` BGP, etc.)
     * ``age``         – route age string (e.g. ``'1d'``), or ``None``
     * ``interface``   – egress interface name
-
-    Returns an empty list when the output cannot be parsed.
 
     Example input lines::
 
@@ -209,16 +218,19 @@ def parse_routes(output: str) -> list[dict]:
 def parse_session_info(output: str) -> dict:
     """Parse ``show session info`` output from a PAN-OS device.
 
-    Returns a dict with keys:
+    Returns
+    -------
+    dict
+        Dict with keys:
 
-    * ``max_sessions``        – maximum supported sessions (``int``)
-    * ``active_sessions``     – current active sessions (``int``)
-    * ``active_tcp``          – active TCP sessions (``int``)
-    * ``active_udp``          – active UDP sessions (``int``)
-    * ``active_icmp``         – active ICMP sessions (``int``)
-    * ``session_utilization`` – session table utilization percentage (``float``)
+        * ``max_sessions``        – maximum supported sessions (``int``)
+        * ``active_sessions``     – current active sessions (``int``)
+        * ``active_tcp``          – active TCP sessions (``int``)
+        * ``active_udp``          – active UDP sessions (``int``)
+        * ``active_icmp``         – active ICMP sessions (``int``)
+        * ``session_utilization`` – session table utilization percentage (``float``)
 
-    Any field that cannot be parsed will be ``None``.
+        Any field that cannot be parsed will be ``None``.
 
     Example input lines::
 
@@ -261,6 +273,11 @@ def parse_session_info(output: str) -> dict:
 def parse_security_policy(output: str) -> list[dict]:
     """Parse ``show running security-policy`` output from a PAN-OS device.
 
+    Returns
+    -------
+    list
+        List of per-policy dicts. Returns an empty list when the output cannot be parsed.
+
     Each returned dict represents one security rule and contains:
 
     * ``name``          – rule name
@@ -271,8 +288,6 @@ def parse_security_policy(output: str) -> list[dict]:
     * ``applications``  – list of application names
     * ``services``      – list of service objects
     * ``action``        – rule action: ``'allow'``, ``'deny'``, or ``'drop'``
-
-    Returns an empty list when the output cannot be parsed.
 
     Example input::
 
@@ -369,13 +384,16 @@ def parse_security_policy(output: str) -> list[dict]:
 def parse_security_policy_stats(output: str) -> list[dict]:
     """Parse ``show security policy statistics`` output from a PAN-OS device.
 
+    Returns
+    -------
+    list
+        List of per-policy stats dicts. Returns an empty list when the output cannot be parsed.
+
     Each returned dict contains:
 
     * ``name``          – rule name
     * ``hit_count``     – number of times the rule has been matched (``int``)
     * ``last_hit``      – last hit timestamp string, or ``None``
-
-    Returns an empty list when the output cannot be parsed.
 
     Example input::
 
@@ -424,17 +442,20 @@ def parse_security_policy_stats(output: str) -> list[dict]:
 def parse_ha_state(output: str) -> dict:
     """Parse ``show high-availability state`` output from a PAN-OS device.
 
-    Returns a dict with keys:
+    Returns
+    -------
+    dict
+        Dict with keys:
 
-    * ``enabled``        – ``True`` when HA is configured
-    * ``mode``           – HA mode string (e.g. ``'Active-Passive'``), or ``None``
-    * ``local_state``    – local HA state (e.g. ``'active'``), or ``None``
-    * ``peer_state``     – peer HA state (e.g. ``'passive'``), or ``None``
-    * ``peer_ip``        – peer management IP address, or ``None``
-    * ``preemptive``     – ``True`` when preemptive failover is enabled
+        * ``enabled``        – ``True`` when HA is configured
+        * ``mode``           – HA mode string (e.g. ``'Active-Passive'``), or ``None``
+        * ``local_state``    – local HA state (e.g. ``'active'``), or ``None``
+        * ``peer_state``     – peer HA state (e.g. ``'passive'``), or ``None``
+        * ``peer_ip``        – peer management IP address, or ``None``
+        * ``preemptive``     – ``True`` when preemptive failover is enabled
 
-    Returns defaults (``enabled=False``, all other fields ``None`` / ``False``)
-    when the output cannot be parsed or HA is not configured.
+        Returns defaults (``enabled=False``, all other fields ``None`` / ``False``)
+        when the output cannot be parsed or HA is not configured.
 
     Example input lines::
 

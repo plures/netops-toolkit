@@ -34,12 +34,16 @@ __all__ = [
 def parse_cpu_cisco(output: str) -> dict:
     """Parse ``show processes cpu`` output from Cisco IOS/XE/XR.
 
-    Returns a dict with keys:
-    * ``five_seconds``  – CPU % over the last 5 seconds (``float``)
-    * ``one_minute``    – CPU % over the last 1 minute (``float``)
-    * ``five_minutes``  – CPU % over the last 5 minutes (``float``)
+    Returns
+    -------
+    dict
+        Dict with keys:
 
-    Returns an empty dict when the output cannot be parsed.
+        * ``five_seconds``  – CPU % over the last 5 seconds (``float``)
+        * ``one_minute``    – CPU % over the last 1 minute (``float``)
+        * ``five_minutes``  – CPU % over the last 5 minutes (``float``)
+
+        Returns an empty dict when the output cannot be parsed.
 
     Example input line::
 
@@ -63,11 +67,15 @@ def parse_cpu_cisco(output: str) -> dict:
 def parse_cpu_nokia(output: str) -> dict:
     """Parse ``show system cpu`` output from Nokia SR-OS.
 
-    Returns a dict with keys:
-    * ``avg``  – average CPU utilization % (``float``)
-    * ``peak`` – peak CPU utilization % (``float``)
+    Returns
+    -------
+    dict
+        Dict with keys:
 
-    Returns an empty dict when the output cannot be parsed.
+        * ``avg``  – average CPU utilization % (``float``)
+        * ``peak`` – peak CPU utilization % (``float``)
+
+        Returns an empty dict when the output cannot be parsed.
 
     Example input lines::
 
@@ -90,13 +98,17 @@ def parse_cpu_nokia(output: str) -> dict:
 def parse_memory_cisco(output: str) -> dict:
     """Parse ``show processes memory`` output from Cisco IOS/XE.
 
-    Returns a dict with keys:
-    * ``total``       – total bytes (``int``)
-    * ``used``        – used bytes (``int``)
-    * ``free``        – free bytes (``int``)
-    * ``utilization`` – percentage used (``float``, 0–100)
+    Returns
+    -------
+    dict
+        Dict with keys:
 
-    Returns an empty dict when the output cannot be parsed.
+        * ``total``       – total bytes (``int``)
+        * ``used``        – used bytes (``int``)
+        * ``free``        – free bytes (``int``)
+        * ``utilization`` – percentage used (``float``, 0–100)
+
+        Returns an empty dict when the output cannot be parsed.
 
     Example input line::
 
@@ -118,13 +130,17 @@ def parse_memory_cisco(output: str) -> dict:
 def parse_memory_nokia(output: str) -> dict:
     """Parse ``show system memory-pools`` output from Nokia SR-OS.
 
-    Returns a dict with keys:
-    * ``total``       – total bytes (``int``)
-    * ``used``        – used bytes (``int``)
-    * ``free``        – free bytes (``int``)
-    * ``utilization`` – percentage used (``float``, 0–100)
+    Returns
+    -------
+    dict
+        Dict with keys:
 
-    Returns an empty dict when the output cannot be parsed.
+        * ``total``       – total bytes (``int``)
+        * ``used``        – used bytes (``int``)
+        * ``free``        – free bytes (``int``)
+        * ``utilization`` – percentage used (``float``, 0–100)
+
+        Returns an empty dict when the output cannot be parsed.
 
     Example input lines::
 
@@ -150,15 +166,20 @@ def parse_memory_nokia(output: str) -> dict:
 def parse_interface_errors_cisco(output: str) -> list[dict]:
     """Parse ``show interfaces`` output for error counters on Cisco IOS/XE/XR.
 
+    Returns
+    -------
+    list
+        List of per-interface error-counter dicts. Returns an empty list when
+        no interfaces are parsed.
+
     Each returned dict contains:
+
     * ``name``          – interface name (e.g. ``'GigabitEthernet0/0'``)
     * ``input_errors``  – total input errors (``int``)
     * ``output_errors`` – total output errors (``int``)
     * ``crc``           – CRC errors (``int``)
     * ``drops``         – total input/output drops (``int``)
     * ``has_errors``    – ``True`` when any counter is non-zero
-
-    Returns an empty list when no interfaces are parsed.
     """
     interfaces: list[dict] = []
     current: dict | None = None
@@ -220,15 +241,20 @@ def _has_errors(iface: dict) -> bool:
 def parse_interface_errors_nokia(output: str) -> list[dict]:
     """Parse ``show port detail`` output for error counters on Nokia SR-OS.
 
+    Returns
+    -------
+    list
+        List of per-interface error-counter dicts. Returns an empty list when
+        no ports are parsed.
+
     Each returned dict contains:
+
     * ``name``          – port identifier (e.g. ``'1/1/1'``)
     * ``input_errors``  – total input errors (``int``)
     * ``output_errors`` – total output errors (``int``)
     * ``crc``           – CRC/alignment errors (``int``)
     * ``drops``         – ingress/egress drops (``int``)
     * ``has_errors``    – ``True`` when any counter is non-zero
-
-    Returns an empty list when no ports are parsed.
     """
     interfaces: list[dict] = []
     current: dict | None = None
@@ -290,13 +316,18 @@ _CISCO_LOG_PATTERN = re.compile(
 def parse_logs_cisco(output: str) -> list[dict]:
     """Scan ``show logging`` output for severity 0–3 (critical/major) events.
 
+    Returns
+    -------
+    list
+        List of per-log-entry dicts. Returns an empty list when no matching
+        events are found.
+
     Each returned dict contains:
+
     * ``facility``  – syslog facility (e.g. ``'SYS'``)
     * ``severity``  – numeric severity 0–3 (``int``)
     * ``mnemonic``  – syslog mnemonic (e.g. ``'MALLOCFAIL'``)
     * ``message``   – event description
-
-    Returns an empty list when no matching events are found.
     """
     events: list[dict] = []
     for line in output.splitlines():
@@ -324,13 +355,18 @@ _NOKIA_LOG_SEVERITY = re.compile(
 def parse_logs_nokia(output: str) -> list[dict]:
     """Scan Nokia SR-OS log output for CRITICAL and MAJOR severity events.
 
+    Returns
+    -------
+    list
+        List of per-log-entry dicts. Returns an empty list when no matching
+        events are found.
+
     Each returned dict contains:
+
     * ``timestamp`` – event timestamp string
     * ``severity``  – ``'CRITICAL'`` or ``'MAJOR'``
     * ``subject``   – log subject/application
     * ``message``   – event description
-
-    Returns an empty list when no matching events are found.
     """
     events: list[dict] = []
     for line in output.splitlines():
@@ -355,12 +391,16 @@ def parse_logs_nokia(output: str) -> list[dict]:
 def parse_cpu_brocade(output: str) -> dict:
     """Parse ``show cpu`` output from Brocade FastIron/ICX.
 
-    Returns a dict with keys:
-    * ``one_second``  – CPU % over the last 1 second (``float``)
-    * ``five_seconds`` – CPU % over the last 5 seconds (``float``)
-    * ``one_minute``  – CPU % over the last 60 seconds (``float``)
+    Returns
+    -------
+    dict
+        Dict with keys:
 
-    Returns an empty dict when the output cannot be parsed.
+        * ``one_second``  – CPU % over the last 1 second (``float``)
+        * ``five_seconds`` – CPU % over the last 5 seconds (``float``)
+        * ``one_minute``  – CPU % over the last 60 seconds (``float``)
+
+        Returns an empty dict when the output cannot be parsed.
 
     Example input lines::
 
@@ -388,13 +428,17 @@ def parse_cpu_brocade(output: str) -> dict:
 def parse_memory_brocade(output: str) -> dict:
     """Parse ``show memory`` output from Brocade FastIron/ICX.
 
-    Returns a dict with keys:
-    * ``total``       – total bytes (``int``)
-    * ``used``        – used bytes (``int``)
-    * ``free``        – free bytes (``int``)
-    * ``utilization`` – percentage used (``float``, 0–100)
+    Returns
+    -------
+    dict
+        Dict with keys:
 
-    Returns an empty dict when the output cannot be parsed.
+        * ``total``       – total bytes (``int``)
+        * ``used``        – used bytes (``int``)
+        * ``free``        – free bytes (``int``)
+        * ``utilization`` – percentage used (``float``, 0–100)
+
+        Returns an empty dict when the output cannot be parsed.
 
     Example input lines::
 
@@ -420,15 +464,20 @@ def parse_memory_brocade(output: str) -> dict:
 def parse_interface_errors_brocade(output: str) -> list[dict]:
     """Parse ``show interfaces`` output for error counters on Brocade FastIron/ICX.
 
+    Returns
+    -------
+    list
+        List of per-interface error-counter dicts. Returns an empty list when
+        no interfaces are parsed.
+
     Each returned dict contains:
+
     * ``name``          – interface name (e.g. ``'GigabitEthernet1/1/1'``)
     * ``input_errors``  – total input errors (``int``)
     * ``output_errors`` – total output errors (``int``)
     * ``crc``           – CRC/alignment errors (``int``)
     * ``drops``         – input/output discards (``int``)
     * ``has_errors``    – ``True`` when any counter is non-zero
-
-    Returns an empty list when no interfaces are parsed.
 
     Example input lines::
 
@@ -503,13 +552,18 @@ _BROCADE_SEVERITY_MAP = {
 def parse_logs_brocade(output: str) -> list[dict]:
     """Scan ``show logging`` output for critical/error severity events on Brocade.
 
+    Returns
+    -------
+    list
+        List of per-log-entry dicts. Returns an empty list when no matching
+        events are found.
+
     Each returned dict contains:
+
     * ``timestamp`` – event timestamp string (e.g. ``'Mar 15 12:34:56'``)
     * ``severity``  – normalised severity: ``'CRITICAL'``, ``'ERROR'``, or
                       ``'WARNING'``
     * ``message``   – event description
-
-    Returns an empty list when no matching events are found.
     """
     events: list[dict] = []
     for line in output.splitlines():
@@ -539,14 +593,17 @@ def parse_cpu_paloalto(output: str) -> dict:
     snapshot.  This parser extracts the CPU idle percentage and derives
     utilization.
 
-    Returns a dict with keys:
+    Returns
+    -------
+    dict
+        Dict with keys:
 
-    * ``user``        – user-space CPU % (``float``)
-    * ``system``      – kernel CPU % (``float``)
-    * ``idle``        – idle CPU % (``float``)
-    * ``utilization`` – used CPU % = 100 - idle (``float``)
+        * ``user``        – user-space CPU % (``float``)
+        * ``system``      – kernel CPU % (``float``)
+        * ``idle``        – idle CPU % (``float``)
+        * ``utilization`` – used CPU % = 100 - idle (``float``)
 
-    Returns an empty dict when the output cannot be parsed.
+        Returns an empty dict when the output cannot be parsed.
 
     Example input line::
 
@@ -575,14 +632,17 @@ def parse_memory_paloalto(output: str) -> dict:
 
     Extracts the memory summary line from the ``top``-style output.
 
-    Returns a dict with keys:
+    Returns
+    -------
+    dict
+        Dict with keys:
 
-    * ``total``       – total bytes (``int``)
-    * ``used``        – used bytes (``int``)
-    * ``free``        – free bytes (``int``)
-    * ``utilization`` – percentage used (``float``, 0–100)
+        * ``total``       – total bytes (``int``)
+        * ``used``        – used bytes (``int``)
+        * ``free``        – free bytes (``int``)
+        * ``utilization`` – percentage used (``float``, 0–100)
 
-    Returns an empty dict when the output cannot be parsed.
+        Returns an empty dict when the output cannot be parsed.
 
     Example input line::
 

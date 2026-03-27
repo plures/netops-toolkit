@@ -19,6 +19,11 @@ def parse_bgp_summary_cisco(output: str) -> list[dict]:
 
     Handles Cisco IOS, IOS-XE, and IOS-XR formats.
 
+    Returns
+    -------
+    list
+        List of per-peer dicts. Returns an empty list when the output cannot be parsed.
+
     Each returned dict contains:
 
     * ``neighbor``          – peer IPv4/IPv6 address
@@ -30,8 +35,6 @@ def parse_bgp_summary_cisco(output: str) -> list[dict]:
                               (e.g. ``'Active'``, ``'Idle'``, ``'Connect'``)
     * ``prefixes_received`` – prefixes received (``int``) when
                               ``state == 'Established'``, otherwise ``None``
-
-    Returns an empty list when the output cannot be parsed.
     """
     peers: list[dict] = []
     in_data = False
@@ -93,7 +96,11 @@ def updown_to_seconds(updown: str) -> int | None:
     * ``XhYm``      — Nokia SR-OS, e.g. ``'00h15m'``
     * ``never``     — session was never established → ``None``
 
-    Returns ``None`` when the string is ``'never'`` or cannot be parsed.
+    Returns
+    -------
+    int or None
+        Total seconds as an integer, or ``None`` when the string is
+        ``'never'`` or cannot be parsed.
     """
     if not updown or updown.lower() == "never":
         return None
