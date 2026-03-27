@@ -444,14 +444,17 @@ def run_health_check(
     * **mlag** – MLAG health and config-sanity (when *check_mlag* is ``True``)
     * **environment** – PSUs, fans and temperatures
 
-    Returns a result dict with keys:
+    Returns
+    -------
+    dict
+        Result dict with keys:
 
-    * ``host``          – device IP/hostname
-    * ``timestamp``     – ISO-8601 UTC timestamp
-    * ``success``       – ``True`` when connection succeeded
-    * ``checks``        – dict of individual check results
-    * ``overall_alert`` – ``True`` when any check triggered an alert
-    * ``error``         – error message when connection failed
+        * ``host``          – device IP/hostname
+        * ``timestamp``     – ISO-8601 UTC timestamp
+        * ``success``       – ``True`` when connection succeeded
+        * ``checks``        – dict of individual check results
+        * ``overall_alert`` – ``True`` when any check triggered an alert
+        * ``error``         – error message when connection failed
     """
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     result: dict = {
@@ -497,19 +500,22 @@ def build_eos_health_report(results: list[dict]) -> dict:
     results:
         List of dicts returned by :func:`run_health_check`.
 
-    Returns a summary dict with keys:
+    Returns
+    -------
+    dict
+        Summary dict with keys:
 
-    * ``devices``                – total devices polled
-    * ``devices_reachable``      – devices successfully reached
-    * ``devices_with_alerts``    – count of devices with at least one alert
-    * ``cpu_memory_alerts``      – count of devices with CPU/memory alerts
-    * ``interface_alerts``       – count of devices with interface error alerts
-    * ``bgp_alerts``             – count of devices with BGP peer alerts
-    * ``ospf_alerts``            – count of devices with OSPF adjacency alerts
-    * ``mlag_alerts``            – count of devices with MLAG health alerts
-    * ``environment_alerts``     – count of devices with environment alerts
-    * ``overall_alert``          – ``True`` when any device triggered an alert
-    * ``results``                – original per-device result list
+        * ``devices``                – total devices polled
+        * ``devices_reachable``      – devices successfully reached
+        * ``devices_with_alerts``    – count of devices with at least one alert
+        * ``cpu_memory_alerts``      – count of devices with CPU/memory alerts
+        * ``interface_alerts``       – count of devices with interface error alerts
+        * ``bgp_alerts``             – count of devices with BGP peer alerts
+        * ``ospf_alerts``            – count of devices with OSPF adjacency alerts
+        * ``mlag_alerts``            – count of devices with MLAG health alerts
+        * ``environment_alerts``     – count of devices with environment alerts
+        * ``overall_alert``          – ``True`` when any device triggered an alert
+        * ``results``                – original per-device result list
 
     """
     reachable = [r for r in results if r.get("success")]
