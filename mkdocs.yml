@@ -71,3 +71,20 @@ nav:
     - Inventory: api/inventory.md
 
 docs_dir: docs
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: numpy
+            show_source: false
+            show_root_heading: true
+            show_root_full_path: false
+            show_category_heading: true
+            members_order: source
+            heading_level: 4
+            merge_init_into_class: true
+            show_signature_annotations: true
+            separate_signature: true
