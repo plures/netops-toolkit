@@ -453,7 +453,7 @@ Full guides are in [docs/guides/](docs/guides/):
 | [Palo Alto Support](docs/guides/paloalto.md) | PAN-OS security policy audit guide |
 | [Juniper Support](docs/guides/juniper.md) | JunOS health checks guide |
 
-The full **[API Reference](docs/api/README.md)** covers every public class, function, and parameter:
+The full **[API Reference](docs/api/README.md)** covers every public class, function, and parameter. A quick summary lives in [`docs/API.md`](docs/API.md).
 
 | Module | Description |
 |--------|-------------|
