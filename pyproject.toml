@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "netops-toolkit"
-version = "0.35.10"
+version = "0.35.11"
 description = "Modular network automation utilities for telco operations"
 requires-python = ">=3.10"
 license = {text = "MIT"}
