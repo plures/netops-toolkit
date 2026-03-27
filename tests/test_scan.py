@@ -585,6 +585,7 @@ class TestFragmentToCsv:
 
     def test_stdout_csv(self):
         import io
+
         from netops.inventory.scan import _fragment_to_csv
         fragment = {"devices": {"r1": {"host": "10.0.0.1", "vendor": "nokia_sros"}}}
         buf = io.StringIO()
