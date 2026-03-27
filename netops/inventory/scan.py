@@ -537,7 +537,9 @@ def scan_subnet(
         skip_ping: Skip ping sweep and probe all addresses in the subnet.
         skip_snmp: Skip SNMP — perform a ping-sweep only.
 
-    Returns:
+    Returns
+    -------
+    list
         Sorted list of :class:`ScanResult` objects (one per reachable host).
 
     Requires:
@@ -619,7 +621,9 @@ def merge_inventory(existing_path: str, fragment: dict) -> dict:
             If the file does not exist, an empty inventory is used as the base.
         fragment: Inventory fragment produced by :func:`results_to_inventory_fragment`.
 
-    Returns:
+    Returns
+    -------
+    dict
         Merged inventory dict.
 
     """
@@ -1232,7 +1236,9 @@ def deep_enrich(
         concurrency: Max parallel SSH sessions.
         timeout: Per-device connection timeout in seconds.
 
-    Returns:
+    Returns
+    -------
+    dict
         The enriched fragment (modified in-place and returned).
 
     """

@@ -276,8 +276,11 @@ def normalize_device_result(
     site:
         Optional site/location label.
 
-    Returns a list of row dicts.  Unreachable devices produce a single
-    ``status="crit"`` row with category ``"reachability"``.
+    Returns
+    -------
+    list
+        List of row dicts. Unreachable devices produce a single
+        ``status="crit"`` row with category ``"reachability"``.
 
     """
     device = result.get("host", "unknown")
@@ -353,13 +356,16 @@ def aggregate_dashboard(
         When set to ``"warn"`` or ``"crit"``, exclude ``"ok"`` rows.
         When set to ``"crit"``, also exclude ``"warn"`` rows.
 
-    Returns a dashboard dict with keys:
+    Returns
+    -------
+    dict
+        Dashboard dict with keys:
 
-    * ``generated_at``   – ISO-8601 UTC generation timestamp
-    * ``filters``        – dict of active filter values
-    * ``entries``        – list of normalised row dicts
-    * ``summary``        – aggregated statistics
-    * ``overall_status`` – worst status across all entries
+        * ``generated_at``   – ISO-8601 UTC generation timestamp
+        * ``filters``        – dict of active filter values
+        * ``entries``        – list of normalised row dicts
+        * ``summary``        – aggregated statistics
+        * ``overall_status`` – worst status across all entries
 
     """
     all_entries: list[dict] = []
@@ -463,7 +469,10 @@ def format_table(dashboard: dict, color: bool = True) -> str:
     color:
         When *True* (default), status values are prefixed with emoji icons.
 
-    Returns the formatted string (no trailing newline).
+    Returns
+    -------
+    str
+        Formatted string (no trailing newline).
 
     """
     entries = dashboard.get("entries", [])
@@ -544,7 +553,10 @@ def render_html(dashboard: dict, output_path: str | None = None) -> str:
     output_path:
         When given, the HTML is also written to this path.
 
-    Returns the rendered HTML string.
+    Returns
+    -------
+    str
+        Rendered HTML string.
 
     Raises
     ------

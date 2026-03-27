@@ -254,7 +254,13 @@ def append_changelog(record: ChangeRecord, path: Path) -> None:
 
 
 def load_changelog(path: Path) -> list[dict]:
-    """Return all change records from *path* as a list of dicts."""
+    """Return all change records from *path* as a list of dicts.
+
+    Returns
+    -------
+    list
+        All change records from *path* as a list of dicts.
+    """
     if not path.exists():
         return []
     records = []
