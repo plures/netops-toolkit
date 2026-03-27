@@ -23,7 +23,7 @@ import subprocess
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import IO, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from pysnmp.hlapi.v3arch.asyncio import SnmpEngine
@@ -1307,7 +1307,7 @@ def _parse_hosts_file(path: str) -> list[str]:
     return hosts
 
 
-def _fragment_to_csv(fragment: dict, dest: Any) -> int:
+def _fragment_to_csv(fragment: dict, dest: IO[str] | str | Path) -> int:
     """Write an inventory fragment as CSV.
 
     Args:
@@ -1316,13 +1316,19 @@ def _fragment_to_csv(fragment: dict, dest: Any) -> int:
 
     Returns:
         Number of rows written.
+
     """
     import csv
 
     devices = fragment.get("devices", {})
 
-    # Collect all possible field names across devices
-    fieldnames_set: set[str] = {"name"}
+    # Stable column order: name, host, vendor, model, version, serial first
+    priority = ["name", "host", "vendor", "model", "version", "serial",
+                "hostname", "mac_address", "site", "uptime", "image"]
+
+    # Collect all possible field names across devices; seed with priority columns
+    # so that empty fragments still produce a useful default header.
+    fieldnames_set: set[str] = set(priority)
     for entry in devices.values():
         fieldnames_set.update(entry.keys())
         # Flatten tags dict into tag_* columns
@@ -1331,11 +1337,8 @@ def _fragment_to_csv(fragment: dict, dest: Any) -> int:
                 fieldnames_set.add(f"tag_{tk}")
             fieldnames_set.discard("tags")
 
-    # Stable column order: name, host, vendor, model, version, serial first
-    priority = ["name", "host", "vendor", "model", "version", "serial",
-                "hostname", "mac_address", "site", "uptime", "image"]
     ordered = [f for f in priority if f in fieldnames_set]
-    ordered += sorted(fieldnames_set - set(ordered))
+    ordered += sorted(fieldnames_set - set(priority))
 
     close_after = False
     if isinstance(dest, (str, Path)):
