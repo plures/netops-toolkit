@@ -1,0 +1,2559 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Modular network automation utilities for telco operations">
+      
+      
+      
+        <link rel="canonical" href="https://plures.github.io/netops-toolkit/guides/scan/">
+      
+      
+        <link rel="prev" href="../auto-inventory/">
+      
+      
+        <link rel="next" href="../config-diff/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Network Scanner - netops-toolkit</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#network-scanner-guide" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="netops-toolkit" class="md-header__button md-logo" aria-label="netops-toolkit" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            netops-toolkit
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Network Scanner
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/plures/netops-toolkit" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    plures/netops-toolkit
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../getting-started/" class="md-tabs__link">
+          
+  
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="netops-toolkit" class="md-nav__button md-logo" aria-label="netops-toolkit" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    netops-toolkit
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/plures/netops-toolkit" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    plures/netops-toolkit
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config-collector/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Config Collector
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interface-checker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interface Checker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../inventory-management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventory Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../auto-inventory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Auto-Inventory Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Network Scanner
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Network Scanner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-it-does" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What It Does
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prerequisites
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Prerequisites">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-snmp-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install SNMP support
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#network-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Network requirements
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Start
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Quick Start">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#discover-a-24-subnet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Discover a /24 subnet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#save-to-a-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Save to a file
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#merge-into-an-existing-inventory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Merge into an existing inventory
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-by-step-first-scan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step-by-Step: First Scan
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step-by-Step: First Scan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-decide-your-scan-range" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1: Decide your scan range
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-run-a-quick-ping-only-scan-first" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2: Run a quick ping-only scan first
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-run-a-full-scan-with-your-snmp-community" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3: Run a full scan with your SNMP community
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-review-the-fragment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 4: Review the fragment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-5-merge-into-your-inventory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 5: Merge into your inventory
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-all-cli-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration: All CLI Options
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration: All CLI Options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tuning-for-large-subnets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tuning for large subnets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scanning-without-ping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scanning without ping
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-the-python-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using the Python API
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Using the Python API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ping_sweepsubnet-max_workers50-timeout1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ping_sweep(subnet, max_workers=50, timeout=1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scan_subnetsubnet-communitypublic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        scan_subnet(subnet, community="public", ...)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="scan_subnet(subnet, community=&#34;public&#34;, ...)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scanresult-attributes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ScanResult attributes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scanresultto_inventory_entry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ScanResult.to_inventory_entry()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#identify_vendorsys_descr-sys_obj_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        identify_vendor(sys_descr, sys_obj_id="")
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#results_to_inventory_fragmentresults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        results_to_inventory_fragment(results)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#merge_inventoryexisting_path-fragment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        merge_inventory(existing_path, fragment)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#output-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output Format
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#supported-vendors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Supported Vendors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#verify-snmp-manually" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verify SNMP manually
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#enable-verbose-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enable verbose logging
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integration-with-inventory-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integration with Inventory Management
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config-diff/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Config Diff Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cisco-health/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cisco Health Checks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../brocade/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Brocade Support
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../paloalto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Palo Alto Support
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../juniper/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Juniper Support
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/core/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/check/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Check
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/change/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Change
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/collect/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collect
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/parsers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parsers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/playbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Playbooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/ansible/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ansible
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/inventory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-it-does" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What It Does
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prerequisites
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Prerequisites">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-snmp-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install SNMP support
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#network-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Network requirements
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Start
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Quick Start">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#discover-a-24-subnet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Discover a /24 subnet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#save-to-a-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Save to a file
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#merge-into-an-existing-inventory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Merge into an existing inventory
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-by-step-first-scan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step-by-Step: First Scan
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step-by-Step: First Scan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-decide-your-scan-range" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1: Decide your scan range
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-run-a-quick-ping-only-scan-first" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2: Run a quick ping-only scan first
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-run-a-full-scan-with-your-snmp-community" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3: Run a full scan with your SNMP community
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-review-the-fragment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 4: Review the fragment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-5-merge-into-your-inventory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 5: Merge into your inventory
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-all-cli-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration: All CLI Options
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration: All CLI Options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tuning-for-large-subnets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tuning for large subnets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scanning-without-ping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scanning without ping
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-the-python-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using the Python API
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Using the Python API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ping_sweepsubnet-max_workers50-timeout1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ping_sweep(subnet, max_workers=50, timeout=1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scan_subnetsubnet-communitypublic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        scan_subnet(subnet, community="public", ...)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="scan_subnet(subnet, community=&#34;public&#34;, ...)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scanresult-attributes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ScanResult attributes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scanresultto_inventory_entry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ScanResult.to_inventory_entry()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#identify_vendorsys_descr-sys_obj_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        identify_vendor(sys_descr, sys_obj_id="")
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#results_to_inventory_fragmentresults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        results_to_inventory_fragment(results)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#merge_inventoryexisting_path-fragment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        merge_inventory(existing_path, fragment)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#output-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output Format
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#supported-vendors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Supported Vendors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#verify-snmp-manually" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verify SNMP manually
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#enable-verbose-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enable verbose logging
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integration-with-inventory-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integration with Inventory Management
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="network-scanner-guide">Network Scanner Guide<a class="headerlink" href="#network-scanner-guide" title="Permanent link">&para;</a></h1>
+<p>Discover devices on your network automatically — no manual inventory required to get started.</p>
+<h2 id="what-it-does">What It Does<a class="headerlink" href="#what-it-does" title="Permanent link">&para;</a></h2>
+<p>The scanner (<code>netops.inventory.scan</code>) discovers devices in a subnet by:</p>
+<ol>
+<li><strong>Ping sweep</strong> — sends ICMP pings to every address in a CIDR range; only reachable hosts are probed further.</li>
+<li><strong>SNMP identification</strong> — queries the MIB-II system group (RFC 1213) on each live host to read hostname, description, sysObjectID, and location.</li>
+<li><strong>Vendor detection</strong> — maps <code>sysDescr</code> / <code>sysObjectID</code> to a Netmiko-compatible vendor string automatically.</li>
+<li><strong>CDP discovery</strong> (Cisco) — walks the Cisco CDP MIB to find directly connected neighbors.</li>
+<li><strong>LLDP discovery</strong> (IEEE 802.1AB) — walks the LLDP-MIB to find neighbors on any 802.1AB-capable device.</li>
+</ol>
+<p>The result is an inventory fragment you can write to a new file or merge into an existing one.</p>
+<h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h2>
+<h3 id="install-snmp-support">Install SNMP support<a class="headerlink" href="#install-snmp-support" title="Permanent link">&para;</a></h3>
+<p>The scanner requires <code>pysnmp &gt;= 7.0</code>. Install the optional dependency group:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;netops-toolkit[snmp]&#39;</span>
+</code></pre></div>
+<p>The ping sweep works without any extra packages. Use <code>--skip-snmp</code> if you only want to find live hosts.</p>
+<h3 id="network-requirements">Network requirements<a class="headerlink" href="#network-requirements" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Port</th>
+<th>Protocol</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ping sweep</td>
+<td>—</td>
+<td>ICMP</td>
+</tr>
+<tr>
+<td>SNMP identification</td>
+<td>161 (UDP)</td>
+<td>SNMPv2c</td>
+</tr>
+<tr>
+<td>CDP / LLDP discovery</td>
+<td>161 (UDP)</td>
+<td>SNMPv2c</td>
+</tr>
+</tbody>
+</table>
+<p>The scanner only reads — it never writes to devices.</p>
+<h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
+<h3 id="discover-a-24-subnet">Discover a /24 subnet<a class="headerlink" href="#discover-a-24-subnet" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.inventory.scan<span class="w"> </span>--subnet<span class="w"> </span><span class="m">10</span>.0.0.0/24
+</code></pre></div>
+<p>This prints a JSON inventory fragment to stdout:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">{</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">&quot;devices&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="nt">&quot;core-rtr-01&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">      </span><span class="nt">&quot;host&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;10.0.0.1&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">      </span><span class="nt">&quot;vendor&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cisco_ios&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">      </span><span class="nt">&quot;site&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Main DC, Row 3&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">      </span><span class="nt">&quot;tags&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">        </span><span class="nt">&quot;sys_descr&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Cisco IOS Software, Version 15.7(3)M...&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">        </span><span class="nt">&quot;neighbors&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cdp:dist-sw-01,cdp:dist-sw-02&quot;</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">      </span><span class="p">}</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">    </span><span class="nt">&quot;dist-sw-01&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">      </span><span class="nt">&quot;host&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;10.0.0.2&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">      </span><span class="nt">&quot;vendor&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cisco_xe&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">      </span><span class="nt">&quot;tags&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">        </span><span class="nt">&quot;sys_descr&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Cisco IOS Software [Everest], Catalyst L3...&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">        </span><span class="nt">&quot;neighbors&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cdp:core-rtr-01,lldp:access-sw-03&quot;</span>
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="w">      </span><span class="p">}</span>
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="p">}</span>
+</code></pre></div>
+<h3 id="save-to-a-file">Save to a file<a class="headerlink" href="#save-to-a-file" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.inventory.scan<span class="w"> </span>--subnet<span class="w"> </span><span class="m">10</span>.0.0.0/24<span class="w"> </span>--output<span class="w"> </span>fragment.json
+</code></pre></div>
+<h3 id="merge-into-an-existing-inventory">Merge into an existing inventory<a class="headerlink" href="#merge-into-an-existing-inventory" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.inventory.scan<span class="w"> </span>--subnet<span class="w"> </span><span class="m">10</span>.0.0.0/24<span class="w"> </span>--merge<span class="w"> </span>my-inventory.yaml
+</code></pre></div>
+<p>New devices are added. Existing entries are only updated where the current value is empty or <code>"unknown"</code> — your manually-set values are never overwritten.</p>
+<h2 id="step-by-step-first-scan">Step-by-Step: First Scan<a class="headerlink" href="#step-by-step-first-scan" title="Permanent link">&para;</a></h2>
+<h3 id="step-1-decide-your-scan-range">Step 1: Decide your scan range<a class="headerlink" href="#step-1-decide-your-scan-range" title="Permanent link">&para;</a></h3>
+<p>Pick a CIDR range that covers your management network. Common examples:</p>
+<table>
+<thead>
+<tr>
+<th>Scope</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Small office (/24, up to 254 hosts)</td>
+<td><code>10.0.0.0/24</code></td>
+</tr>
+<tr>
+<td>Campus block (/22, up to 1,022 hosts)</td>
+<td><code>172.16.0.0/22</code></td>
+</tr>
+<tr>
+<td>Single device (/32)</td>
+<td><code>192.168.1.1/32</code></td>
+</tr>
+<tr>
+<td>Specific range</td>
+<td>Use one CIDR per run</td>
+</tr>
+</tbody>
+</table>
+<h3 id="step-2-run-a-quick-ping-only-scan-first">Step 2: Run a quick ping-only scan first<a class="headerlink" href="#step-2-run-a-quick-ping-only-scan-first" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.inventory.scan<span class="w"> </span>--subnet<span class="w"> </span><span class="m">10</span>.0.0.0/24<span class="w"> </span>--skip-snmp
+</code></pre></div>
+<p>Output summary (stderr):
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>🔍 Scan complete: 14 reachable, 0 identified via SNMP, 0 CDP neighbors, 0 LLDP neighbors
+</code></pre></div></p>
+<p>This tells you how many devices are pingable before attempting SNMP.</p>
+<h3 id="step-3-run-a-full-scan-with-your-snmp-community">Step 3: Run a full scan with your SNMP community<a class="headerlink" href="#step-3-run-a-full-scan-with-your-snmp-community" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.inventory.scan<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span>--subnet<span class="w"> </span><span class="m">10</span>.0.0.0/24<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span>--community<span class="w"> </span>mysecretcommunity<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span>--output<span class="w"> </span>scan-fragment.json
+</code></pre></div>
+<h3 id="step-4-review-the-fragment">Step 4: Review the fragment<a class="headerlink" href="#step-4-review-the-fragment" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>cat<span class="w"> </span>scan-fragment.json<span class="w"> </span><span class="p">|</span><span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>json.tool
+</code></pre></div>
+<p>Check that vendors were detected correctly. Devices that couldn't be identified show <code>"vendor": "unknown"</code>.</p>
+<h3 id="step-5-merge-into-your-inventory">Step 5: Merge into your inventory<a class="headerlink" href="#step-5-merge-into-your-inventory" title="Permanent link">&para;</a></h3>
+<p>If you already have an inventory:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.inventory.scan<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span>--subnet<span class="w"> </span><span class="m">10</span>.0.0.0/24<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span>--community<span class="w"> </span>mysecretcommunity<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span>--merge<span class="w"> </span>my-inventory.yaml
+</code></pre></div>
+<p>Or start a fresh one from the fragment:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>cp<span class="w"> </span>scan-fragment.json<span class="w"> </span>my-inventory.json
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="c1"># Then add credentials, groups, etc. by hand</span>
+</code></pre></div>
+<h2 id="configuration-all-cli-options">Configuration: All CLI Options<a class="headerlink" href="#configuration-all-cli-options" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.inventory.scan<span class="w"> </span>--help
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Default</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--subnet</code></td>
+<td><em>(required)</em></td>
+<td>Subnet in CIDR notation, e.g. <code>10.0.0.0/24</code></td>
+</tr>
+<tr>
+<td><code>--community</code></td>
+<td><code>public</code></td>
+<td>SNMPv2c community string</td>
+</tr>
+<tr>
+<td><code>--snmp-port</code></td>
+<td><code>161</code></td>
+<td>SNMP UDP port</td>
+</tr>
+<tr>
+<td><code>--snmp-timeout</code></td>
+<td><code>2</code></td>
+<td>Per-host SNMP timeout in seconds</td>
+</tr>
+<tr>
+<td><code>--ping-workers</code></td>
+<td><code>50</code></td>
+<td>Thread pool size for concurrent pings</td>
+</tr>
+<tr>
+<td><code>--snmp-concurrency</code></td>
+<td><code>10</code></td>
+<td>Max simultaneous SNMP sessions</td>
+</tr>
+<tr>
+<td><code>--output</code> / <code>-o</code></td>
+<td>stdout</td>
+<td>Write JSON inventory fragment to this file</td>
+</tr>
+<tr>
+<td><code>--merge</code> / <code>-m</code></td>
+<td>—</td>
+<td>Merge scan results into an existing inventory file</td>
+</tr>
+<tr>
+<td><code>--skip-ping</code></td>
+<td>false</td>
+<td>Skip ping sweep — probe every address in the subnet</td>
+</tr>
+<tr>
+<td><code>--skip-snmp</code></td>
+<td>false</td>
+<td>Skip SNMP — perform a ping sweep only</td>
+</tr>
+<tr>
+<td><code>--verbose</code> / <code>-v</code></td>
+<td>false</td>
+<td>Enable debug logging</td>
+</tr>
+</tbody>
+</table>
+<h3 id="tuning-for-large-subnets">Tuning for large subnets<a class="headerlink" href="#tuning-for-large-subnets" title="Permanent link">&para;</a></h3>
+<p>For a /16 (up to 65,534 hosts), increase concurrency:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.inventory.scan<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span>--subnet<span class="w"> </span><span class="m">10</span>.0.0.0/16<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">  </span>--ping-workers<span class="w"> </span><span class="m">200</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">  </span>--snmp-concurrency<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">  </span>--community<span class="w"> </span>public
+</code></pre></div>
+<blockquote>
+<p><strong>Note:</strong> Higher concurrency puts more load on your network and management plane. Start with defaults and increase gradually.</p>
+</blockquote>
+<h3 id="scanning-without-ping">Scanning without ping<a class="headerlink" href="#scanning-without-ping" title="Permanent link">&para;</a></h3>
+<p>Some firewalls block ICMP but allow SNMP. Use <code>--skip-ping</code> to probe all addresses directly:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.inventory.scan<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span>--subnet<span class="w"> </span><span class="m">10</span>.0.0.0/24<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span>--skip-ping<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">  </span>--community<span class="w"> </span>mysecretcommunity
+</code></pre></div>
+<blockquote>
+<p><strong>Warning:</strong> Scanning all addresses in a /16 without ping takes significantly longer.</p>
+</blockquote>
+<h2 id="using-the-python-api">Using the Python API<a class="headerlink" href="#using-the-python-api" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">netops.inventory.scan</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>    <span class="n">scan_subnet</span><span class="p">,</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>    <span class="n">results_to_inventory_fragment</span><span class="p">,</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>    <span class="n">merge_inventory</span><span class="p">,</span>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>    <span class="n">identify_vendor</span><span class="p">,</span>
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>    <span class="n">ping_sweep</span><span class="p">,</span>
+<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="p">)</span>
+</code></pre></div>
+<h3 id="ping_sweepsubnet-max_workers50-timeout1"><code>ping_sweep(subnet, max_workers=50, timeout=1)</code><a class="headerlink" href="#ping_sweepsubnet-max_workers50-timeout1" title="Permanent link">&para;</a></h3>
+<p>Returns a sorted list of reachable IP address strings for the given CIDR subnet.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">netops.inventory.scan</span><span class="w"> </span><span class="kn">import</span> <span class="n">ping_sweep</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="n">live_hosts</span> <span class="o">=</span> <span class="n">ping_sweep</span><span class="p">(</span><span class="s2">&quot;10.0.0.0/24&quot;</span><span class="p">,</span> <span class="n">max_workers</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="nb">print</span><span class="p">(</span><span class="n">live_hosts</span><span class="p">)</span>
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="c1"># [&#39;10.0.0.1&#39;, &#39;10.0.0.2&#39;, &#39;10.0.0.5&#39;]</span>
+</code></pre></div>
+<h3 id="scan_subnetsubnet-communitypublic"><code>scan_subnet(subnet, community="public", ...)</code><a class="headerlink" href="#scan_subnetsubnet-communitypublic" title="Permanent link">&para;</a></h3>
+<p>Full scan: ping sweep → SNMP identification → CDP/LLDP topology. Returns a list of <code>ScanResult</code> objects.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">netops.inventory.scan</span><span class="w"> </span><span class="kn">import</span> <span class="n">scan_subnet</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="n">results</span> <span class="o">=</span> <span class="n">scan_subnet</span><span class="p">(</span>
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>    <span class="n">subnet</span><span class="o">=</span><span class="s2">&quot;10.0.0.0/24&quot;</span><span class="p">,</span>
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>    <span class="n">community</span><span class="o">=</span><span class="s2">&quot;mysecretcommunity&quot;</span><span class="p">,</span>
+<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>    <span class="n">snmp_timeout</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>    <span class="n">ping_workers</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+<a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>    <span class="n">snmp_concurrency</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+<a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="p">)</span>
+<a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a>
+<a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a><span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+<a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">vendor</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">hostname</span><span class="p">)</span>
+</code></pre></div>
+<h4 id="scanresult-attributes"><code>ScanResult</code> attributes<a class="headerlink" href="#scanresult-attributes" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>host</code></td>
+<td><code>str</code></td>
+<td>IP address</td>
+</tr>
+<tr>
+<td><code>reachable</code></td>
+<td><code>bool</code></td>
+<td>Responded to ping (or <code>skip_ping</code> was set)</td>
+</tr>
+<tr>
+<td><code>hostname</code></td>
+<td><code>Optional[str]</code></td>
+<td><code>sysName</code> from SNMP (domain stripped)</td>
+</tr>
+<tr>
+<td><code>sys_descr</code></td>
+<td><code>Optional[str]</code></td>
+<td><code>sysDescr</code> — full platform description</td>
+</tr>
+<tr>
+<td><code>sys_obj_id</code></td>
+<td><code>Optional[str]</code></td>
+<td><code>sysObjectID</code> — enterprise OID</td>
+</tr>
+<tr>
+<td><code>vendor</code></td>
+<td><code>Optional[str]</code></td>
+<td>Netmiko vendor string, e.g. <code>cisco_ios</code></td>
+</tr>
+<tr>
+<td><code>location</code></td>
+<td><code>Optional[str]</code></td>
+<td><code>sysLocation</code> from SNMP</td>
+</tr>
+<tr>
+<td><code>cdp_neighbors</code></td>
+<td><code>list[dict]</code></td>
+<td>List of CDP neighbor dicts (keys: <code>device_id</code>, <code>platform</code>, <code>address</code>, <code>protocol</code>)</td>
+</tr>
+<tr>
+<td><code>lldp_neighbors</code></td>
+<td><code>list[dict]</code></td>
+<td>List of LLDP neighbor dicts (keys: <code>sys_name</code>, <code>sys_desc</code>, <code>chassis_id</code>, <code>protocol</code>)</td>
+</tr>
+<tr>
+<td><code>error</code></td>
+<td><code>Optional[str]</code></td>
+<td>Error message if SNMP failed</td>
+</tr>
+</tbody>
+</table>
+<h4 id="scanresultto_inventory_entry"><code>ScanResult.to_inventory_entry()</code><a class="headerlink" href="#scanresultto_inventory_entry" title="Permanent link">&para;</a></h4>
+<p>Converts a single result to an inventory device dict compatible with <code>netops.core.Inventory</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="n">entry</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">to_inventory_entry</span><span class="p">()</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="c1"># {&#39;host&#39;: &#39;10.0.0.1&#39;, &#39;vendor&#39;: &#39;cisco_ios&#39;, &#39;site&#39;: &#39;Main DC&#39;, &#39;tags&#39;: {&#39;sys_descr&#39;: &#39;...&#39;}}</span>
+</code></pre></div>
+<h3 id="identify_vendorsys_descr-sys_obj_id"><code>identify_vendor(sys_descr, sys_obj_id="")</code><a class="headerlink" href="#identify_vendorsys_descr-sys_obj_id" title="Permanent link">&para;</a></h3>
+<p>Map a raw <code>sysDescr</code> string (and optionally <code>sysObjectID</code>) to a Netmiko vendor string. Useful when you already have SNMP data and just need the vendor mapping.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">netops.inventory.scan</span><span class="w"> </span><span class="kn">import</span> <span class="n">identify_vendor</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="n">vendor</span> <span class="o">=</span> <span class="n">identify_vendor</span><span class="p">(</span><span class="s2">&quot;Cisco IOS Software, Version 15.7(3)M&quot;</span><span class="p">)</span>
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="c1"># &#39;cisco_ios&#39;</span>
+<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>
+<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="n">vendor</span> <span class="o">=</span> <span class="n">identify_vendor</span><span class="p">(</span><span class="s2">&quot;IOS XE Software, Catalyst, Version 17.06.01&quot;</span><span class="p">)</span>
+<a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="c1"># &#39;cisco_xe&#39;</span>
+<a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a>
+<a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a><span class="n">vendor</span> <span class="o">=</span> <span class="n">identify_vendor</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;.1.3.6.1.4.1.6527.1.3.2&quot;</span><span class="p">)</span>
+<a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="c1"># &#39;nokia_sros&#39;</span>
+</code></pre></div>
+<h3 id="results_to_inventory_fragmentresults"><code>results_to_inventory_fragment(results)</code><a class="headerlink" href="#results_to_inventory_fragmentresults" title="Permanent link">&para;</a></h3>
+<p>Convert a list of <code>ScanResult</code> objects to an inventory fragment dict:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">netops.inventory.scan</span><span class="w"> </span><span class="kn">import</span> <span class="n">scan_subnet</span><span class="p">,</span> <span class="n">results_to_inventory_fragment</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="n">results</span> <span class="o">=</span> <span class="n">scan_subnet</span><span class="p">(</span><span class="s2">&quot;10.0.0.0/24&quot;</span><span class="p">)</span>
+<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="n">fragment</span> <span class="o">=</span> <span class="n">results_to_inventory_fragment</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="c1"># {&#39;devices&#39;: {&#39;core-rtr-01&#39;: {...}, &#39;dist-sw-01&#39;: {...}}}</span>
+</code></pre></div>
+<p>Neighbor information is encoded in the <code>neighbors</code> tag as a comma-separated string of <code>cdp:&lt;device_id&gt;</code> and <code>lldp:&lt;sys_name&gt;</code> entries.</p>
+<h3 id="merge_inventoryexisting_path-fragment"><code>merge_inventory(existing_path, fragment)</code><a class="headerlink" href="#merge_inventoryexisting_path-fragment" title="Permanent link">&para;</a></h3>
+<p>Merge a fragment into an existing YAML or JSON inventory. Returns the merged dict. Supports <code>.yaml</code>, <code>.yml</code>, and <code>.json</code> files.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">netops.inventory.scan</span><span class="w"> </span><span class="kn">import</span> <span class="n">scan_subnet</span><span class="p">,</span> <span class="n">results_to_inventory_fragment</span><span class="p">,</span> <span class="n">merge_inventory</span>
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>
+<a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="n">results</span> <span class="o">=</span> <span class="n">scan_subnet</span><span class="p">(</span><span class="s2">&quot;10.0.0.0/24&quot;</span><span class="p">,</span> <span class="n">community</span><span class="o">=</span><span class="s2">&quot;mycommunity&quot;</span><span class="p">)</span>
+<a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a><span class="n">fragment</span> <span class="o">=</span> <span class="n">results_to_inventory_fragment</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+<a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a><span class="n">merged</span> <span class="o">=</span> <span class="n">merge_inventory</span><span class="p">(</span><span class="s2">&quot;my-inventory.yaml&quot;</span><span class="p">,</span> <span class="n">fragment</span><span class="p">)</span>
+<a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a>
+<a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a><span class="c1"># Save the merged result</span>
+<a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a><span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
+<a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;my-inventory.yaml&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">merged</span><span class="p">,</span> <span class="n">default_flow_style</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+</code></pre></div>
+<p><strong>Merge semantics:</strong>
+- New devices are added as-is.
+- For existing devices, a field is only updated if its current value is <code>None</code>, <code>""</code>, or <code>"unknown"</code>.
+- Tag dicts are merged at the sub-key level with the same rules.
+- Manually set values are never overwritten.</p>
+<h2 id="output-format">Output Format<a class="headerlink" href="#output-format" title="Permanent link">&para;</a></h2>
+<p>The scanner produces an inventory fragment — a JSON/YAML dict with a <code>"devices"</code> key:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="p">{</span>
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="w">  </span><span class="nt">&quot;devices&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="w">    </span><span class="nt">&quot;core-rtr-01&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="w">      </span><span class="nt">&quot;host&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;10.0.0.1&quot;</span><span class="p">,</span>
+<a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="w">      </span><span class="nt">&quot;vendor&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cisco_ios&quot;</span><span class="p">,</span>
+<a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a><span class="w">      </span><span class="nt">&quot;site&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Main DC, Rack 3&quot;</span><span class="p">,</span>
+<a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a><span class="w">      </span><span class="nt">&quot;tags&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a><span class="w">        </span><span class="nt">&quot;sys_descr&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Cisco IOS Software, Version 15.7(3)M, RELEASE SOFTWARE&quot;</span><span class="p">,</span>
+<a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a><span class="w">        </span><span class="nt">&quot;neighbors&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cdp:dist-sw-01,cdp:dist-sw-02,lldp:fw-01&quot;</span>
+<a id="__codelineno-21-10" name="__codelineno-21-10" href="#__codelineno-21-10"></a><span class="w">      </span><span class="p">}</span>
+<a id="__codelineno-21-11" name="__codelineno-21-11" href="#__codelineno-21-11"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-21-12" name="__codelineno-21-12" href="#__codelineno-21-12"></a><span class="w">    </span><span class="nt">&quot;10.0.0.7&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-21-13" name="__codelineno-21-13" href="#__codelineno-21-13"></a><span class="w">      </span><span class="nt">&quot;host&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;10.0.0.7&quot;</span><span class="p">,</span>
+<a id="__codelineno-21-14" name="__codelineno-21-14" href="#__codelineno-21-14"></a><span class="w">      </span><span class="nt">&quot;vendor&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;unknown&quot;</span><span class="p">,</span>
+<a id="__codelineno-21-15" name="__codelineno-21-15" href="#__codelineno-21-15"></a><span class="w">      </span><span class="nt">&quot;tags&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span>
+<a id="__codelineno-21-16" name="__codelineno-21-16" href="#__codelineno-21-16"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-21-17" name="__codelineno-21-17" href="#__codelineno-21-17"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-21-18" name="__codelineno-21-18" href="#__codelineno-21-18"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>Notes:</strong>
+- The device key is <code>sysName</code> (with domain stripped) when SNMP is successful, otherwise the IP address.
+- <code>site</code> comes from <code>sysLocation</code> and is omitted when empty.
+- <code>vendor: "unknown"</code> means the host was reachable but SNMP failed or <code>sysDescr</code> didn't match any known pattern.</p>
+<h2 id="supported-vendors">Supported Vendors<a class="headerlink" href="#supported-vendors" title="Permanent link">&para;</a></h2>
+<p>The scanner detects the following platforms automatically via <code>sysDescr</code> pattern matching and <code>sysObjectID</code> enterprise prefix fallback:</p>
+<table>
+<thead>
+<tr>
+<th>Vendor</th>
+<th>Detected String</th>
+<th>Vendor Code</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cisco IOS</td>
+<td><code>"Cisco IOS Software"</code> or OID <code>.1.3.6.1.4.1.9.</code></td>
+<td><code>cisco_ios</code></td>
+</tr>
+<tr>
+<td>Cisco IOS-XE</td>
+<td><code>"IOS XE"</code> or <code>"IOS-XE"</code></td>
+<td><code>cisco_xe</code></td>
+</tr>
+<tr>
+<td>Cisco IOS-XR</td>
+<td><code>"IOS XR"</code></td>
+<td><code>cisco_xr</code></td>
+</tr>
+<tr>
+<td>Cisco NX-OS</td>
+<td><code>"NX-OS"</code> or <code>"NXOS"</code></td>
+<td><code>cisco_nxos</code></td>
+</tr>
+<tr>
+<td>Nokia SR OS</td>
+<td><code>"Nokia"</code> or <code>"TiMOS"</code>, OID <code>.1.3.6.1.4.1.6527.</code></td>
+<td><code>nokia_sros</code></td>
+</tr>
+<tr>
+<td>Nokia SR Linux</td>
+<td><code>"Nokia"</code> + <code>"SRL"</code></td>
+<td><code>nokia_srl</code></td>
+</tr>
+<tr>
+<td>Juniper JunOS</td>
+<td><code>"Juniper"</code> or <code>"Junos"</code>, OID <code>.1.3.6.1.4.1.2636.</code></td>
+<td><code>juniper_junos</code></td>
+</tr>
+<tr>
+<td>Arista EOS</td>
+<td><code>"Arista"</code>, OID <code>.1.3.6.1.4.1.30065.</code></td>
+<td><code>arista_eos</code></td>
+</tr>
+<tr>
+<td>Brocade FastIron</td>
+<td><code>"Brocade"</code> / <code>"Foundry"</code> / <code>"FastIron"</code>, OID <code>.1.3.6.1.4.1.1991.</code></td>
+<td><code>brocade_fastiron</code></td>
+</tr>
+<tr>
+<td>Brocade NOS</td>
+<td><code>"Brocade Network OS"</code>, OID <code>.1.3.6.1.4.1.1588.</code></td>
+<td><code>brocade_nos</code></td>
+</tr>
+<tr>
+<td>Unknown</td>
+<td>No match</td>
+<td><code>unknown</code></td>
+</tr>
+</tbody>
+</table>
+<p>Devices detected as <code>unknown</code> are still included in the fragment — add them to your inventory manually and set the vendor.</p>
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Problem</th>
+<th>Likely Cause</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ImportError: pysnmp is required</code></td>
+<td>SNMP extra not installed</td>
+<td><code>pip install 'netops-toolkit[snmp]'</code></td>
+</tr>
+<tr>
+<td><code>0 reachable</code> from ping sweep</td>
+<td>ICMP blocked</td>
+<td>Use <code>--skip-ping</code> to probe all addresses directly</td>
+</tr>
+<tr>
+<td>All vendors show <code>"unknown"</code></td>
+<td>Wrong community string</td>
+<td>Check with <code>snmpwalk -c &lt;community&gt; -v2c &lt;host&gt; sysDescr.0</code></td>
+</tr>
+<tr>
+<td><code>0 identified via SNMP</code></td>
+<td>SNMP not enabled on devices</td>
+<td>Enable SNMPv2c on your devices; check ACLs</td>
+</tr>
+<tr>
+<td>Scanner hangs on large /16</td>
+<td>Too many concurrent sessions</td>
+<td>Reduce <code>--snmp-concurrency</code> and <code>--ping-workers</code></td>
+</tr>
+<tr>
+<td>CDP/LLDP neighbors empty</td>
+<td>Protocol disabled or community read-only restriction</td>
+<td>Check that CDP/LLDP is enabled and the community allows table reads</td>
+</tr>
+<tr>
+<td><code>ImportError: PyYAML required</code></td>
+<td>YAML output requested without pyyaml</td>
+<td><code>pip install pyyaml</code></td>
+</tr>
+<tr>
+<td>Device shows IP instead of hostname</td>
+<td><code>sysName</code> not set or SNMP failed</td>
+<td>Set a hostname on the device, or rename in inventory manually</td>
+</tr>
+</tbody>
+</table>
+<h3 id="verify-snmp-manually">Verify SNMP manually<a class="headerlink" href="#verify-snmp-manually" title="Permanent link">&para;</a></h3>
+<p>Before scanning, confirm SNMP is reachable with the system <code>snmpwalk</code> command:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>snmpwalk<span class="w"> </span>-c<span class="w"> </span>public<span class="w"> </span>-v2c<span class="w"> </span><span class="m">10</span>.0.0.1<span class="w"> </span>system
+</code></pre></div>
+<p>If this works, the scanner will find the device. If it times out, check firewall rules on UDP port 161.</p>
+<h3 id="enable-verbose-logging">Enable verbose logging<a class="headerlink" href="#enable-verbose-logging" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.inventory.scan<span class="w"> </span>--subnet<span class="w"> </span><span class="m">10</span>.0.0.0/24<span class="w"> </span>--verbose<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-50
+</code></pre></div>
+<p>This shows per-host ping results and SNMP errors.</p>
+<h2 id="integration-with-inventory-management">Integration with Inventory Management<a class="headerlink" href="#integration-with-inventory-management" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p><strong>Full pipeline walkthrough:</strong> <a href="../auto-inventory/">Auto-Inventory Generation Pipeline</a> explains every stage from scan to Ansible — vendor detection, deduplication, vault integration, and more.</p>
+</blockquote>
+<p>After scanning, the fragment slots directly into your inventory workflow:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="c1"># 1. Scan and create an initial inventory</span>
+<a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.inventory.scan<span class="w"> </span>--subnet<span class="w"> </span><span class="m">10</span>.0.0.0/24<span class="w"> </span>--output<span class="w"> </span>my-inventory.json
+<a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>
+<a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="c1"># 2. Add credentials and groups by hand (or use the vault)</span>
+<a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="c1"># See: docs/guides/inventory-management.md</span>
+<a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a>
+<a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a><span class="c1"># 3. Rescan a new subnet and merge additions</span>
+<a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.inventory.scan<span class="w"> </span>--subnet<span class="w"> </span><span class="m">10</span>.0.1.0/24<span class="w"> </span>--merge<span class="w"> </span>my-inventory.yaml
+<a id="__codelineno-24-9" name="__codelineno-24-9" href="#__codelineno-24-9"></a>
+<a id="__codelineno-24-10" name="__codelineno-24-10" href="#__codelineno-24-10"></a><span class="c1"># 4. Use the inventory with other tools</span>
+<a id="__codelineno-24-11" name="__codelineno-24-11" href="#__codelineno-24-11"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.collect.config<span class="w"> </span>--inventory<span class="w"> </span>my-inventory.yaml
+</code></pre></div>
+<p>See <a href="../inventory-management/">Inventory Management</a> for full details on the inventory format, groups, tags, and Ansible export.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

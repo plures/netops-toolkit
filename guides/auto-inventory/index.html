@@ -1,0 +1,2546 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Modular network automation utilities for telco operations">
+      
+      
+      
+        <link rel="canonical" href="https://plures.github.io/netops-toolkit/guides/auto-inventory/">
+      
+      
+        <link rel="prev" href="../inventory-management/">
+      
+      
+        <link rel="next" href="../scan/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Auto-Inventory Pipeline - netops-toolkit</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#auto-inventory-generation-pipeline" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="netops-toolkit" class="md-header__button md-logo" aria-label="netops-toolkit" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            netops-toolkit
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Auto-Inventory Pipeline
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/plures/netops-toolkit" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    plures/netops-toolkit
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../getting-started/" class="md-tabs__link">
+          
+  
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="netops-toolkit" class="md-nav__button md-logo" aria-label="netops-toolkit" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    netops-toolkit
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/plures/netops-toolkit" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    plures/netops-toolkit
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config-collector/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Config Collector
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interface-checker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interface Checker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../inventory-management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventory Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Auto-Inventory Pipeline
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Auto-Inventory Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#architecture-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture Overview
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Architecture Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mermaid-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mermaid diagram
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stage-1-discovery-netopsinventoryscan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 1: Discovery (netops.inventory.scan)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Stage 1: Discovery (netops.inventory.scan)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ping-sweep" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ping sweep
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#snmp-identification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SNMP identification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vendor-detection-identify_vendor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vendor detection (identify_vendor)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cdp-and-lldp-neighbor-discovery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CDP and LLDP neighbor discovery
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scan-result-to-inventory-fragment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scan result to inventory fragment
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stage-2-inventory-store-netopscoreinventory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 2: Inventory Store (netops.core.inventory)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Stage 2: Inventory Store (netops.core.inventory)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#file-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File format
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#device-dataclass" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Device dataclass
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inventory-class" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inventory class
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#export-via-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Export via CLI
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stage-3-dynamic-inventory-netopsansibledynamic_inventory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 3: Dynamic Inventory (netops.ansible.dynamic_inventory)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Stage 3: Dynamic Inventory (netops.ansible.dynamic_inventory)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How it works
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ansible-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ansible configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-5-feed-ansible" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 5: Feed Ansible
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 5: Feed Ansible">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#option-a-static-export-simpler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option A: Static export (simpler)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-b-dynamic-inventory-always-current" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option B: Dynamic inventory (always current)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deduplication-and-conflict-resolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deduplication and Conflict Resolution
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#incremental-vs-full-scan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Incremental vs Full Scan
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Incremental vs Full Scan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#recommended-workflow-for-ongoing-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommended workflow for ongoing operations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integration-with-the-credential-vault" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integration with the Credential Vault
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Integration with the Credential Vault">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#lookup-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lookup order
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setting-up-vault-credentials-after-a-scan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setting up vault credentials after a scan
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#keeping-credentials-out-of-the-inventory-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keeping credentials out of the inventory file
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#end-to-end-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        End-to-End Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See Also
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Network Scanner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config-diff/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Config Diff Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cisco-health/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cisco Health Checks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../brocade/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Brocade Support
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../paloalto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Palo Alto Support
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../juniper/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Juniper Support
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/core/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/check/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Check
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/change/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Change
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/collect/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collect
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/parsers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parsers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/playbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Playbooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/ansible/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ansible
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/inventory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#architecture-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture Overview
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Architecture Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mermaid-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mermaid diagram
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stage-1-discovery-netopsinventoryscan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 1: Discovery (netops.inventory.scan)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Stage 1: Discovery (netops.inventory.scan)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ping-sweep" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ping sweep
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#snmp-identification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SNMP identification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vendor-detection-identify_vendor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vendor detection (identify_vendor)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cdp-and-lldp-neighbor-discovery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CDP and LLDP neighbor discovery
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scan-result-to-inventory-fragment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scan result to inventory fragment
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stage-2-inventory-store-netopscoreinventory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 2: Inventory Store (netops.core.inventory)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Stage 2: Inventory Store (netops.core.inventory)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#file-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File format
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#device-dataclass" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Device dataclass
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inventory-class" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inventory class
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#export-via-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Export via CLI
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stage-3-dynamic-inventory-netopsansibledynamic_inventory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 3: Dynamic Inventory (netops.ansible.dynamic_inventory)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Stage 3: Dynamic Inventory (netops.ansible.dynamic_inventory)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How it works
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ansible-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ansible configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-5-feed-ansible" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 5: Feed Ansible
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 5: Feed Ansible">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#option-a-static-export-simpler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option A: Static export (simpler)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-b-dynamic-inventory-always-current" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option B: Dynamic inventory (always current)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deduplication-and-conflict-resolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deduplication and Conflict Resolution
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#incremental-vs-full-scan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Incremental vs Full Scan
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Incremental vs Full Scan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#recommended-workflow-for-ongoing-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommended workflow for ongoing operations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integration-with-the-credential-vault" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integration with the Credential Vault
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Integration with the Credential Vault">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#lookup-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lookup order
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setting-up-vault-credentials-after-a-scan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setting up vault credentials after a scan
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#keeping-credentials-out-of-the-inventory-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keeping credentials out of the inventory file
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#end-to-end-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        End-to-End Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See Also
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="auto-inventory-generation-pipeline">Auto-Inventory Generation Pipeline<a class="headerlink" href="#auto-inventory-generation-pipeline" title="Permanent link">&para;</a></h1>
+<p>This guide explains the complete journey from an unknown subnet to a fully managed Ansible inventory — scan, classify, store, deduplicate, and serve to Ansible.</p>
+<blockquote>
+<p><strong>New here?</strong> Run <code>python -m netops.inventory.scan --subnet 10.0.0.0/24 --merge my-inventory.yaml</code> and then jump straight to <a href="#step-5-feed-ansible">Step 5: Feed Ansible</a>. Come back to this guide when you want to understand <em>why</em> it works.</p>
+</blockquote>
+<h2 id="architecture-overview">Architecture Overview<a class="headerlink" href="#architecture-overview" title="Permanent link">&para;</a></h2>
+<p>Three modules form the pipeline:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>┌─────────────────────────────────────────────────────────────────────┐
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>│                  Auto-Inventory Generation Pipeline                  │
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>├─────────────────────────────────────────────────────────────────────┤
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│                                                                     │
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│  1. DISCOVERY          2. INVENTORY STORE      3. ANSIBLE BRIDGE   │
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│  ─────────────         ─────────────────────   ──────────────────  │
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│  netops.inventory  →   netops.core.inventory →  netops.ansible      │
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>│        .scan               (YAML/JSON file)     .dynamic_inventory  │
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>│                                                         │           │
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>│  ping sweep                Device dataclass             │ --list    │
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>│  SNMP MIB-II          →    Inventory class      →  Ansible hosts   │
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>│  vendor detection          group/tag/site            + groups       │
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>│  CDP/LLDP topology         Ansible export            + hostvars     │
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>│                                                                     │
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>│  ─────────────────────────────────────────────────────────────────  │
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>│  Credentials: netops.core.vault  (env vars → device → group → default)
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>└─────────────────────────────────────────────────────────────────────┘
+</code></pre></div>
+<h3 id="mermaid-diagram">Mermaid diagram<a class="headerlink" href="#mermaid-diagram" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>flowchart TD
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    A[Subnet CIDR] --&gt; B[ping_sweep\nThreadPoolExecutor]
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    B --&gt;|reachable IPs| C[SNMP GET\nsysDescr / sysName\nsysObjectID / sysLocation]
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    C --&gt; D[identify_vendor\nsysDescr patterns\nsysObjectID OID prefix]
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    C --&gt; E[SNMP WALK\nCDP neighbors\nLLDP neighbors]
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    D --&gt; F[ScanResult objects]
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    E --&gt; F
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    F --&gt; G[results_to_inventory_fragment\ndevices dict]
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    G --&gt;|new file| H[inventory.yaml / .json]
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    G --&gt;|merge| I[merge_inventory\ndeduplication rules]
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    I --&gt; H
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>    H --&gt; J[Inventory.from_file\nDevice dataclass]
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>    J --&gt; K[Inventory.to_ansible\nAnsible dict]
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>    K --&gt;|--list| L[dynamic_inventory.py\n_meta.hostvars + groups]
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>    K --&gt;|export| M[ansible_inventory.yaml]
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>    L --&gt; N[ansible-playbook -i ...]
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>    M --&gt; N
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    O[CredentialVault\nget_credentials] -.-&gt;|lookup at connect time| N
+</code></pre></div>
+<h2 id="stage-1-discovery-netopsinventoryscan">Stage 1: Discovery (<code>netops.inventory.scan</code>)<a class="headerlink" href="#stage-1-discovery-netopsinventoryscan" title="Permanent link">&para;</a></h2>
+<h3 id="ping-sweep">Ping sweep<a class="headerlink" href="#ping-sweep" title="Permanent link">&para;</a></h3>
+<p><code>ping_sweep()</code> uses a <code>ThreadPoolExecutor</code> to fire concurrent <code>ping</code> subprocesses (ICMP) against every address in the CIDR range. Only reachable hosts proceed to the SNMP stage. Use <code>--skip-ping</code> to bypass this step when ICMP is blocked but SNMP is accessible.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>10.0.0.0/24  →  ping 10.0.0.1 … 10.0.0.254
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>                 (50 parallel workers, 1 s timeout each)
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>             →  [10.0.0.1, 10.0.0.2, 10.0.0.5, …]
+</code></pre></div>
+<h3 id="snmp-identification">SNMP identification<a class="headerlink" href="#snmp-identification" title="Permanent link">&para;</a></h3>
+<p>For each live host, <code>_scan_host_async()</code> issues SNMP GETs (SNMPv2c, pysnmp 7.x asyncio API) against the RFC 1213 MIB-II system group:</p>
+<table>
+<thead>
+<tr>
+<th>OID</th>
+<th>Name</th>
+<th>Used for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>1.3.6.1.2.1.1.1.0</code></td>
+<td><code>sysDescr</code></td>
+<td>Vendor detection, OS fingerprinting</td>
+</tr>
+<tr>
+<td><code>1.3.6.1.2.1.1.5.0</code></td>
+<td><code>sysName</code></td>
+<td>Device hostname (key in inventory)</td>
+</tr>
+<tr>
+<td><code>1.3.6.1.2.1.1.2.0</code></td>
+<td><code>sysObjectID</code></td>
+<td>Vendor detection fallback (OID prefix)</td>
+</tr>
+<tr>
+<td><code>1.3.6.1.2.1.1.6.0</code></td>
+<td><code>sysLocation</code></td>
+<td>Stored as <code>site</code> in inventory</td>
+</tr>
+</tbody>
+</table>
+<p>If SNMP fails or times out the host is still included as <code>vendor: unknown</code>.</p>
+<h3 id="vendor-detection-identify_vendor">Vendor detection (<code>identify_vendor</code>)<a class="headerlink" href="#vendor-detection-identify_vendor" title="Permanent link">&para;</a></h3>
+<p><code>identify_vendor(sys_descr, sys_obj_id)</code> maps what SNMP returns to a Netmiko-compatible vendor string in two passes:</p>
+<p><strong>Pass 1 — <code>sysDescr</code> substring matching (case-insensitive):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Pattern matched</th>
+<th>Vendor string</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>"ios xe"</code> or <code>"ios-xe"</code></td>
+<td><code>cisco_xe</code></td>
+</tr>
+<tr>
+<td><code>"ios xr"</code></td>
+<td><code>cisco_xr</code></td>
+</tr>
+<tr>
+<td><code>"nx-os"</code> or <code>"nxos"</code></td>
+<td><code>cisco_nxos</code></td>
+</tr>
+<tr>
+<td><code>"cisco ios"</code></td>
+<td><code>cisco_ios</code></td>
+</tr>
+<tr>
+<td><code>"nokia"</code> + <code>"srl"</code></td>
+<td><code>nokia_srl</code></td>
+</tr>
+<tr>
+<td><code>"nokia"</code> or <code>"timos"</code></td>
+<td><code>nokia_sros</code></td>
+</tr>
+<tr>
+<td><code>"juniper"</code> or <code>"junos"</code></td>
+<td><code>juniper_junos</code></td>
+</tr>
+<tr>
+<td><code>"arista"</code></td>
+<td><code>arista_eos</code></td>
+</tr>
+<tr>
+<td><code>"brocade network os"</code></td>
+<td><code>brocade_nos</code></td>
+</tr>
+<tr>
+<td><code>"brocade"</code>, <code>"foundry"</code>, or <code>"fastiron"</code></td>
+<td><code>brocade_fastiron</code></td>
+</tr>
+<tr>
+<td><code>"cisco"</code> (generic)</td>
+<td><code>cisco_ios</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Pass 2 — <code>sysObjectID</code> enterprise OID prefix (fallback when <code>sysDescr</code> has no match):</strong></p>
+<table>
+<thead>
+<tr>
+<th>OID prefix</th>
+<th>Vendor string</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.1.3.6.1.4.1.9.</code></td>
+<td><code>cisco_ios</code></td>
+</tr>
+<tr>
+<td><code>.1.3.6.1.4.1.6527.</code></td>
+<td><code>nokia_sros</code></td>
+</tr>
+<tr>
+<td><code>.1.3.6.1.4.1.2636.</code></td>
+<td><code>juniper_junos</code></td>
+</tr>
+<tr>
+<td><code>.1.3.6.1.4.1.30065.</code></td>
+<td><code>arista_eos</code></td>
+</tr>
+<tr>
+<td><code>.1.3.6.1.4.1.1991.</code></td>
+<td><code>brocade_fastiron</code></td>
+</tr>
+<tr>
+<td><code>.1.3.6.1.4.1.1588.</code></td>
+<td><code>brocade_nos</code></td>
+</tr>
+</tbody>
+</table>
+<p>If neither pass matches, the device gets <code>vendor: "unknown"</code>. It is still added to the inventory so you can set the vendor manually.</p>
+<h3 id="cdp-and-lldp-neighbor-discovery">CDP and LLDP neighbor discovery<a class="headerlink" href="#cdp-and-lldp-neighbor-discovery" title="Permanent link">&para;</a></h3>
+<p>After the system MIB, <code>_scan_host_async()</code> walks two topology tables:</p>
+<ul>
+<li><strong>CDP</strong> (Cisco-proprietary, CISCO-CDP-MIB): <code>1.3.6.1.4.1.9.9.23.1.2.1.1.*</code> — device ID, platform, address</li>
+<li><strong>LLDP</strong> (IEEE 802.1AB, LLDP-MIB): <code>1.3.6.1.2.1.127.1.4.1.*</code> — system name, description, chassis ID</li>
+</ul>
+<p>Neighbor information is not stored as separate devices; it is encoded in the <code>tags.neighbors</code> field of the source device as a comma-separated list:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>neighbors: &quot;cdp:dist-sw-01,cdp:dist-sw-02,lldp:fw-01&quot;
+</code></pre></div>
+<h3 id="scan-result-to-inventory-fragment">Scan result to inventory fragment<a class="headerlink" href="#scan-result-to-inventory-fragment" title="Permanent link">&para;</a></h3>
+<p><code>results_to_inventory_fragment(results)</code> converts <code>list[ScanResult]</code> to the inventory fragment format:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">{</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">&quot;devices&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="nt">&quot;core-rtr-01&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">      </span><span class="nt">&quot;host&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;10.0.0.1&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">      </span><span class="nt">&quot;vendor&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cisco_ios&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">      </span><span class="nt">&quot;site&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Main DC, Rack 3&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">      </span><span class="nt">&quot;tags&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">        </span><span class="nt">&quot;sys_descr&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Cisco IOS Software, Version 15.7(3)M...&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">        </span><span class="nt">&quot;neighbors&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cdp:dist-sw-01,cdp:dist-sw-02&quot;</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">      </span><span class="p">}</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="p">}</span>
+</code></pre></div>
+<p>The device key is <code>sysName</code> with the domain part stripped (e.g. <code>core-rtr-01.corp.example.com</code> → <code>core-rtr-01</code>). If SNMP failed, the IP address is used as the key.</p>
+<h2 id="stage-2-inventory-store-netopscoreinventory">Stage 2: Inventory Store (<code>netops.core.inventory</code>)<a class="headerlink" href="#stage-2-inventory-store-netopscoreinventory" title="Permanent link">&para;</a></h2>
+<h3 id="file-format">File format<a class="headerlink" href="#file-format" title="Permanent link">&para;</a></h3>
+<p>The native netops inventory format is a YAML or JSON file with two top-level keys:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">defaults</span><span class="p">:</span><span class="w">                 </span><span class="c1"># Applied to every device unless overridden</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">admin</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nt">transport</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ssh</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="nt">devices</span><span class="p">:</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">  </span><span class="nt">core-rtr-01</span><span class="p">:</span><span class="w">            </span><span class="c1"># Unique hostname key (used by all tools)</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">    </span><span class="nt">host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.0.0.1</span><span class="w">        </span><span class="c1"># IP address or FQDN used for connecting</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">    </span><span class="nt">vendor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cisco_ios</span><span class="w">     </span><span class="c1"># Netmiko vendor string</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">    </span><span class="nt">transport</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ssh</span><span class="w">        </span><span class="c1"># ssh or telnet</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">    </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">22</span><span class="w">              </span><span class="c1"># Optional; defaults to 22 (ssh) or 23 (telnet)</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">    </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">admin</span><span class="w">       </span><span class="c1"># Optional; falls back to defaults.username</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="w">    </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">~</span><span class="w">           </span><span class="c1"># Leave blank — use vault instead (see below)</span>
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="w">    </span><span class="nt">enable_password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">~</span><span class="w">    </span><span class="c1"># Cisco enable secret (optional)</span>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="w">    </span><span class="nt">key_file</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">~</span><span class="w">           </span><span class="c1"># SSH private key path (optional)</span>
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="w">    </span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">core</span><span class="w">            </span><span class="c1"># core | distribution | access | edge (optional)</span>
+<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="w">    </span><span class="nt">site</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">main-dc</span><span class="w">         </span><span class="c1"># Free-form location string (optional)</span>
+<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="w">    </span><span class="nt">groups</span><span class="p">:</span><span class="w">               </span><span class="c1"># Any number of group memberships</span>
+<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">routers</span>
+<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">core</span>
+<a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">main-dc</span>
+<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a><span class="w">    </span><span class="nt">tags</span><span class="p">:</span><span class="w">                 </span><span class="c1"># Arbitrary key-value metadata</span>
+<a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a><span class="w">      </span><span class="nt">sys_descr</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Cisco</span><span class="nv"> </span><span class="s">IOS</span><span class="nv"> </span><span class="s">Software,</span><span class="nv"> </span><span class="s">Version</span><span class="nv"> </span><span class="s">15.7(3)M...&quot;</span>
+<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a><span class="w">      </span><span class="nt">neighbors</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cdp:dist-sw-01,cdp:dist-sw-02&quot;</span>
+<a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a><span class="w">      </span><span class="nt">environment</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">production</span>
+</code></pre></div>
+<p>Both <code>.yaml</code>/<code>.yml</code> and <code>.json</code> are supported everywhere.</p>
+<h3 id="device-dataclass"><code>Device</code> dataclass<a class="headerlink" href="#device-dataclass" title="Permanent link">&para;</a></h3>
+<p><code>netops.core.inventory.Device</code> is the in-memory representation of one row. Fields map directly to the YAML keys above. <code>Device.to_dict()</code> serialises it back (omitting <code>None</code> values).</p>
+<h3 id="inventory-class"><code>Inventory</code> class<a class="headerlink" href="#inventory-class" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Inventory.from_file(path)</code></td>
+<td>Load from YAML or JSON</td>
+</tr>
+<tr>
+<td><code>inv.add(device)</code></td>
+<td>Add a Device and register its groups</td>
+</tr>
+<tr>
+<td><code>inv.get(hostname)</code></td>
+<td>Look up by hostname</td>
+</tr>
+<tr>
+<td><code>inv.filter(group=, vendor=, role=, site=, tag=)</code></td>
+<td>Filter devices</td>
+</tr>
+<tr>
+<td><code>inv.to_ansible()</code></td>
+<td>Export as Ansible dict (see Stage 3)</td>
+</tr>
+<tr>
+<td><code>inv.to_ansible_yaml()</code></td>
+<td>Export as Ansible YAML string</td>
+</tr>
+<tr>
+<td><code>inv.to_ansible_json()</code></td>
+<td>Export as Ansible JSON string</td>
+</tr>
+<tr>
+<td><code>inv.to_file(path, format)</code></td>
+<td>Save back to YAML or JSON</td>
+</tr>
+</tbody>
+</table>
+<h3 id="export-via-cli">Export via CLI<a class="headerlink" href="#export-via-cli" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Ansible YAML (default)</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.core.inventory<span class="w"> </span><span class="nb">export</span><span class="w"> </span>-i<span class="w"> </span>my-inventory.yaml<span class="w"> </span>-f<span class="w"> </span>ansible<span class="w"> </span>-o<span class="w"> </span>ansible_inventory.yaml
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># Ansible JSON</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.core.inventory<span class="w"> </span><span class="nb">export</span><span class="w"> </span>-i<span class="w"> </span>my-inventory.yaml<span class="w"> </span>-f<span class="w"> </span>ansible-json<span class="w"> </span>-o<span class="w"> </span>ansible_inventory.json
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="c1"># Dump native format</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.core.inventory<span class="w"> </span><span class="nb">export</span><span class="w"> </span>-i<span class="w"> </span>my-inventory.yaml<span class="w"> </span>-f<span class="w"> </span>yaml
+</code></pre></div>
+<h2 id="stage-3-dynamic-inventory-netopsansibledynamic_inventory">Stage 3: Dynamic Inventory (<code>netops.ansible.dynamic_inventory</code>)<a class="headerlink" href="#stage-3-dynamic-inventory-netopsansibledynamic_inventory" title="Permanent link">&para;</a></h2>
+<p>Ansible can query the inventory directly at playbook run time — no static export required.</p>
+<h3 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h3>
+<p><code>build_inventory(inventory_path)</code>:
+1. Calls <code>Inventory.from_file(inventory_path)</code> → <code>Device</code> objects
+2. Calls <code>inv.to_ansible()</code> → nested Ansible dict
+3. Restructures into the Ansible <code>--list</code> wire format:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="p">{</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nt">&quot;_meta&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="nt">&quot;hostvars&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">      </span><span class="nt">&quot;core-rtr-01&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">        </span><span class="nt">&quot;ansible_host&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;10.0.0.1&quot;</span><span class="p">,</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">        </span><span class="nt">&quot;ansible_network_os&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cisco_ios&quot;</span><span class="p">,</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">        </span><span class="nt">&quot;ansible_connection&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ansible.netcommon.network_cli&quot;</span><span class="p">,</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">        </span><span class="nt">&quot;ansible_port&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">22</span><span class="p">,</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">        </span><span class="nt">&quot;netops_vendor&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cisco_ios&quot;</span><span class="p">,</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">        </span><span class="nt">&quot;netops_transport&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ssh&quot;</span><span class="p">,</span>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">        </span><span class="nt">&quot;netops_site&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;main-dc&quot;</span><span class="p">,</span>
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="w">        </span><span class="nt">&quot;netops_role&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;core&quot;</span><span class="p">,</span>
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="w">        </span><span class="nt">&quot;netops_tags&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;environment&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;production&quot;</span><span class="p">}</span>
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="w">      </span><span class="p">}</span>
+<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="w">  </span><span class="nt">&quot;all&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a><span class="w">    </span><span class="nt">&quot;hosts&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;core-rtr-01&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;dist-sw-01&quot;</span><span class="p">],</span>
+<a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="w">    </span><span class="nt">&quot;children&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;routers&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;core&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;main-dc&quot;</span><span class="p">]</span>
+<a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a><span class="w">  </span><span class="nt">&quot;routers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;hosts&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;core-rtr-01&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a><span class="w">  </span><span class="nt">&quot;core&quot;</span><span class="p">:</span><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;hosts&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;core-rtr-01&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a><span class="p">}</span>
+</code></pre></div>
+<p>The <code>_meta.hostvars</code> block is always populated, so Ansible never needs to make separate <code>--host</code> calls.</p>
+<h3 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># List all inventory (used by Ansible internally)</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.ansible.dynamic_inventory<span class="w"> </span>--list<span class="w"> </span>--inventory<span class="w"> </span>my-inventory.yaml
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="c1"># Get variables for a single host</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.ansible.dynamic_inventory<span class="w"> </span>--host<span class="w"> </span>core-rtr-01<span class="w"> </span>--inventory<span class="w"> </span>my-inventory.yaml
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="c1"># Set default inventory via environment variable</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NETOPS_INVENTORY</span><span class="o">=</span>/etc/netops/inventory.yaml
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.ansible.dynamic_inventory<span class="w"> </span>--list
+</code></pre></div>
+<h3 id="ansible-configuration">Ansible configuration<a class="headerlink" href="#ansible-configuration" title="Permanent link">&para;</a></h3>
+<p>Pass the script directly with <code>-i</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>ansible-playbook<span class="w"> </span>-i<span class="w"> </span>path/to/dynamic_inventory.py<span class="w"> </span>site.yml
+</code></pre></div>
+<p>Or configure it in <code>ansible.cfg</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="k">[defaults]</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="na">inventory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">/path/to/netops/netops/ansible/dynamic_inventory.py</span>
+</code></pre></div>
+<h2 id="step-5-feed-ansible">Step 5: Feed Ansible<a class="headerlink" href="#step-5-feed-ansible" title="Permanent link">&para;</a></h2>
+<p>After scanning and populating your inventory, you have two options:</p>
+<h3 id="option-a-static-export-simpler">Option A: Static export (simpler)<a class="headerlink" href="#option-a-static-export-simpler" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Export once</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.core.inventory<span class="w"> </span><span class="nb">export</span><span class="w"> </span>-i<span class="w"> </span>my-inventory.yaml<span class="w"> </span>-f<span class="w"> </span>ansible<span class="w"> </span>-o<span class="w"> </span>ansible_hosts.yaml
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="c1"># Use with Ansible</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>ansible-playbook<span class="w"> </span>-i<span class="w"> </span>ansible_hosts.yaml<span class="w"> </span>site.yml
+</code></pre></div>
+<p>Re-run the export after each scan/merge cycle.</p>
+<h3 id="option-b-dynamic-inventory-always-current">Option B: Dynamic inventory (always current)<a class="headerlink" href="#option-b-dynamic-inventory-always-current" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>ansible-playbook<span class="w"> </span>-i<span class="w"> </span>netops/ansible/dynamic_inventory.py<span class="w"> </span>site.yml
+</code></pre></div>
+<p>Ansible calls <code>--list</code> at startup; the script reads your inventory file live. Changes made by <code>--merge</code> appear at the next playbook run automatically.</p>
+<h2 id="deduplication-and-conflict-resolution">Deduplication and Conflict Resolution<a class="headerlink" href="#deduplication-and-conflict-resolution" title="Permanent link">&para;</a></h2>
+<p><code>merge_inventory(existing_path, fragment)</code> applies these rules when a hostname already exists:</p>
+<table>
+<thead>
+<tr>
+<th>Field type</th>
+<th>Rule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scalar field (host, vendor, site, …)</td>
+<td>Updated <strong>only</strong> if current value is <code>None</code>, <code>""</code>, or <code>"unknown"</code></td>
+</tr>
+<tr>
+<td><code>tags</code> dict</td>
+<td>Deep-merged at sub-key level with the same rule</td>
+</tr>
+<tr>
+<td>Any field with a real value</td>
+<td><strong>Never overwritten</strong></td>
+</tr>
+</tbody>
+</table>
+<p>This means:
+- Running a second scan on the same subnet will not overwrite anything you set manually.
+- A device that was upgraded (new <code>sysDescr</code>) will <strong>not</strong> have its vendor auto-updated. Edit the inventory by hand and re-run tools.
+- Devices scanned in a previous run but absent in the current run are <strong>kept</strong> — scan results are additive.</p>
+<h2 id="incremental-vs-full-scan">Incremental vs Full Scan<a class="headerlink" href="#incremental-vs-full-scan" title="Permanent link">&para;</a></h2>
+<p>There is no explicit <code>--incremental</code> flag. Incremental behaviour is achieved by passing <code>--merge</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Command</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Full scan</strong> (new file)</td>
+<td><code>--output fragment.json</code></td>
+<td>Creates a fresh fragment; no deduplication</td>
+</tr>
+<tr>
+<td><strong>Incremental</strong> (merge into existing)</td>
+<td><code>--merge my-inventory.yaml</code></td>
+<td>Adds new devices; preserves existing values</td>
+</tr>
+<tr>
+<td><strong>Ping-only sweep</strong></td>
+<td><code>--skip-snmp</code></td>
+<td>Fast; finds live hosts without SNMP</td>
+</tr>
+<tr>
+<td><strong>SNMP-only</strong> (no ping)</td>
+<td><code>--skip-ping</code></td>
+<td>Probes all addresses; useful when ICMP is blocked</td>
+</tr>
+</tbody>
+</table>
+<h3 id="recommended-workflow-for-ongoing-operations">Recommended workflow for ongoing operations<a class="headerlink" href="#recommended-workflow-for-ongoing-operations" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1"># 1. First run — create the inventory</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.inventory.scan<span class="w"> </span>--subnet<span class="w"> </span><span class="m">10</span>.0.0.0/24<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span>--community<span class="w"> </span>mysecret<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">  </span>--output<span class="w"> </span>my-inventory.json
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="c1"># 2. Enrich manually — add credentials (via vault), groups, roles, sites</span>
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="c1"># (see: vault integration below and inventory-management.md)</span>
+<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>
+<a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="c1"># 3. Regular rescans — merge new devices, leave existing entries untouched</span>
+<a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.inventory.scan<span class="w"> </span>--subnet<span class="w"> </span><span class="m">10</span>.0.0.0/24<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="w">  </span>--community<span class="w"> </span>mysecret<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a><span class="w">  </span>--merge<span class="w"> </span>my-inventory.yaml
+<a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a>
+<a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a><span class="c1"># 4. Add a new subnet incrementally</span>
+<a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.inventory.scan<span class="w"> </span>--subnet<span class="w"> </span><span class="m">10</span>.0.1.0/24<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-13-16" name="__codelineno-13-16" href="#__codelineno-13-16"></a><span class="w">  </span>--community<span class="w"> </span>mysecret<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-13-17" name="__codelineno-13-17" href="#__codelineno-13-17"></a><span class="w">  </span>--merge<span class="w"> </span>my-inventory.yaml
+</code></pre></div>
+<h2 id="integration-with-the-credential-vault">Integration with the Credential Vault<a class="headerlink" href="#integration-with-the-credential-vault" title="Permanent link">&para;</a></h2>
+<p>The scanner and inventory file never store or look up credentials. Credentials are resolved at <strong>connection time</strong> by <code>CredentialVault.get_credentials()</code> in <code>netops.core.vault</code>.</p>
+<h3 id="lookup-order">Lookup order<a class="headerlink" href="#lookup-order" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>1. Environment variables   NETOPS_CRED_&lt;HOSTNAME&gt;_USER / _PASS / _ENABLE
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>2. Device-specific entry   vault set --device core-rtr-01 --user admin
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>3. Group entry             vault set --group  routers     --user admin
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>4. Default entry           vault set --default            --user admin
+</code></pre></div>
+<p>Hostname normalisation for env vars: <code>core-rtr-01</code> → <code>NETOPS_CRED_CORE_RTR_01_USER</code>.</p>
+<h3 id="setting-up-vault-credentials-after-a-scan">Setting up vault credentials after a scan<a class="headerlink" href="#setting-up-vault-credentials-after-a-scan" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1"># Initialise the vault (one time)</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.core.vault<span class="w"> </span>init
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="c1"># Store per-device credentials</span>
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.core.vault<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--device<span class="w"> </span>core-rtr-01<span class="w"> </span>--user<span class="w"> </span>admin
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>
+<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="c1"># Or store a default that applies to every device</span>
+<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.core.vault<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--default<span class="w"> </span>--user<span class="w"> </span>admin
+<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>
+<a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="c1"># Store group credentials (e.g. all routers share one account)</span>
+<a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.core.vault<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--group<span class="w"> </span>routers<span class="w"> </span>--user<span class="w"> </span>noc-readonly
+<a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a>
+<a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a><span class="c1"># Verify</span>
+<a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.core.vault<span class="w"> </span>get<span class="w"> </span>--device<span class="w"> </span>core-rtr-01
+</code></pre></div>
+<p>The vault is stored at <code>~/.netops/vault.yaml</code> by default (override with <code>--vault</code> or <code>NETOPS_VAULT_PASSWORD</code> for the master password in non-interactive pipelines).</p>
+<h3 id="keeping-credentials-out-of-the-inventory-file">Keeping credentials out of the inventory file<a class="headerlink" href="#keeping-credentials-out-of-the-inventory-file" title="Permanent link">&para;</a></h3>
+<p>Leave <code>password</code> and <code>enable_password</code> blank (or absent) in the inventory YAML/JSON. When a netops tool connects to a device it calls <code>CredentialVault.get_credentials(hostname, groups)</code> first; the inventory file fields are only used if the vault returns nothing.</p>
+<p>For CI pipelines, skip the vault entirely and use environment variables:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NETOPS_CRED_CORE_RTR_01_USER</span><span class="o">=</span>admin
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NETOPS_CRED_CORE_RTR_01_PASS</span><span class="o">=</span>s3cr3t
+</code></pre></div>
+<h2 id="end-to-end-example">End-to-End Example<a class="headerlink" href="#end-to-end-example" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># 1. Install SNMP support</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;netops-toolkit[snmp]&#39;</span>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="c1"># 2. Scan the management subnet</span>
+<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.inventory.scan<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="w">  </span>--subnet<span class="w"> </span><span class="m">10</span>.0.0.0/24<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="w">  </span>--community<span class="w"> </span>readonly_community<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="w">  </span>--output<span class="w"> </span>inventory.json
+<a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a>
+<a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a><span class="c1"># Output on stderr:</span>
+<a id="__codelineno-17-11" name="__codelineno-17-11" href="#__codelineno-17-11"></a><span class="c1"># 🔍 Scan complete: 12 reachable, 10 identified via SNMP, 8 CDP neighbors, 3 LLDP neighbors</span>
+<a id="__codelineno-17-12" name="__codelineno-17-12" href="#__codelineno-17-12"></a>
+<a id="__codelineno-17-13" name="__codelineno-17-13" href="#__codelineno-17-13"></a><span class="c1"># 3. Inspect the fragment</span>
+<a id="__codelineno-17-14" name="__codelineno-17-14" href="#__codelineno-17-14"></a>cat<span class="w"> </span>inventory.json<span class="w"> </span><span class="p">|</span><span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>json.tool<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-30
+<a id="__codelineno-17-15" name="__codelineno-17-15" href="#__codelineno-17-15"></a>
+<a id="__codelineno-17-16" name="__codelineno-17-16" href="#__codelineno-17-16"></a><span class="c1"># 4. Initialise the credential vault and add a shared password</span>
+<a id="__codelineno-17-17" name="__codelineno-17-17" href="#__codelineno-17-17"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.core.vault<span class="w"> </span>init
+<a id="__codelineno-17-18" name="__codelineno-17-18" href="#__codelineno-17-18"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.core.vault<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--default<span class="w"> </span>--user<span class="w"> </span>admin
+<a id="__codelineno-17-19" name="__codelineno-17-19" href="#__codelineno-17-19"></a><span class="c1"># (prompted for passwords)</span>
+<a id="__codelineno-17-20" name="__codelineno-17-20" href="#__codelineno-17-20"></a>
+<a id="__codelineno-17-21" name="__codelineno-17-21" href="#__codelineno-17-21"></a><span class="c1"># 5. Export Ansible inventory and run a playbook</span>
+<a id="__codelineno-17-22" name="__codelineno-17-22" href="#__codelineno-17-22"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.core.inventory<span class="w"> </span><span class="nb">export</span><span class="w"> </span>-i<span class="w"> </span>inventory.json<span class="w"> </span>-f<span class="w"> </span>ansible-json<span class="w"> </span>-o<span class="w"> </span>ansible_hosts.json
+<a id="__codelineno-17-23" name="__codelineno-17-23" href="#__codelineno-17-23"></a>ansible-playbook<span class="w"> </span>-i<span class="w"> </span>ansible_hosts.json<span class="w"> </span>gather_facts.yml
+<a id="__codelineno-17-24" name="__codelineno-17-24" href="#__codelineno-17-24"></a>
+<a id="__codelineno-17-25" name="__codelineno-17-25" href="#__codelineno-17-25"></a><span class="c1"># 6. Later — rescan and add new devices without disturbing existing config</span>
+<a id="__codelineno-17-26" name="__codelineno-17-26" href="#__codelineno-17-26"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.inventory.scan<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-17-27" name="__codelineno-17-27" href="#__codelineno-17-27"></a><span class="w">  </span>--subnet<span class="w"> </span><span class="m">10</span>.0.0.0/24<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-17-28" name="__codelineno-17-28" href="#__codelineno-17-28"></a><span class="w">  </span>--community<span class="w"> </span>readonly_community<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-17-29" name="__codelineno-17-29" href="#__codelineno-17-29"></a><span class="w">  </span>--merge<span class="w"> </span>inventory.json
+<a id="__codelineno-17-30" name="__codelineno-17-30" href="#__codelineno-17-30"></a>
+<a id="__codelineno-17-31" name="__codelineno-17-31" href="#__codelineno-17-31"></a><span class="c1"># 7. Use dynamic inventory so Ansible always reads the latest</span>
+<a id="__codelineno-17-32" name="__codelineno-17-32" href="#__codelineno-17-32"></a>ansible-playbook<span class="w"> </span>-i<span class="w"> </span>netops/ansible/dynamic_inventory.py<span class="w"> </span>gather_facts.yml
+</code></pre></div>
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely cause</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>All devices have <code>vendor: unknown</code></td>
+<td>Wrong SNMP community</td>
+<td>Verify with <code>snmpwalk -c &lt;community&gt; -v2c &lt;host&gt; sysDescr.0</code></td>
+</tr>
+<tr>
+<td>Device appears with IP as key instead of hostname</td>
+<td>SNMP not reachable or <code>sysName</code> unset</td>
+<td>Set a hostname on the device; check community and UDP 161</td>
+</tr>
+<tr>
+<td>Existing vendor overwritten after rescan</td>
+<td>Value was <code>"unknown"</code> before</td>
+<td>That is expected — set it manually after the first scan</td>
+</tr>
+<tr>
+<td><code>--merge</code> keeps adding duplicate devices</td>
+<td>Different <code>sysName</code> returned across scans</td>
+<td>Pin the hostname in the inventory file (<code>hostname:</code> key) or fix <code>sysName</code> on the device</td>
+</tr>
+<tr>
+<td><code>ansible-playbook</code> fails to find hosts</td>
+<td><code>NETOPS_INVENTORY</code> not set</td>
+<td>Export with <code>--output</code> or set <code>NETOPS_INVENTORY=/path/to/inventory.yaml</code></td>
+</tr>
+<tr>
+<td>Vault <code>RuntimeError: Vault is locked</code></td>
+<td><code>unlock()</code> not called</td>
+<td>Ensure <code>NETOPS_VAULT_PASSWORD</code> is set or call <code>vault.unlock(password)</code> before <code>get_credentials()</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../scan/">Network Scanner Guide</a> — full scanner CLI reference, SNMP prerequisites, and tuning</li>
+<li><a href="../inventory-management/">Inventory Management Guide</a> — inventory file format, groups, tags, and Ansible export</li>
+<li><a href="../getting-started/">Getting Started</a> — installation and first connection</li>
+<li><a href="../../api/core/#netopscorevault">Credential Vault</a> — vault CLI and Python API reference</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
