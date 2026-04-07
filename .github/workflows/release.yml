@@ -1,125 +1,21 @@
-name: Auto Release
-
+name: Release
 on:
   push:
     branches: [main]
   workflow_dispatch:
     inputs:
       bump:
-        description: 'Version bump type'
-        required: true
-        default: 'patch'
+        description: "Force version bump (patch/minor/major)"
         type: choice
         options: [patch, minor, major]
-
 permissions:
   contents: write
   packages: write
   id-token: write
-
 jobs:
   release:
-    runs-on: ubuntu-latest
-    # Skip if commit is from this workflow (prevent loops)
-    if: "!contains(github.event.head_commit.message, '[skip-release]') && !contains(github.event.head_commit.message, 'chore(release):')"
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+    uses: plures/.github/.github/workflows/release-reusable.yml@main
+    with:
+      bump: ${{ inputs.bump || '' }}
+    secrets: inherit
 
-      - name: Determine bump type
-        id: bump
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "type=${{ github.event.inputs.bump }}" >> "$GITHUB_OUTPUT"
-          else
-            MSG="${{ github.event.head_commit.message }}"
-            if echo "$MSG" | grep -qiE '^feat!:|BREAKING CHANGE'; then
-              echo "type=major" >> "$GITHUB_OUTPUT"
-            elif echo "$MSG" | grep -qiE '^feat'; then
-              echo "type=minor" >> "$GITHUB_OUTPUT"
-            else
-              echo "type=patch" >> "$GITHUB_OUTPUT"
-            fi
-          fi
-
-      - name: Bump version
-        id: version
-        run: |
-          CURRENT=$(grep '^version' pyproject.toml | head -1 | sed 's/.*"\(.*\)"/\1/')
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
-          
-          case "${{ steps.bump.outputs.type }}" in
-            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
-            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
-            patch) PATCH=$((PATCH + 1)) ;;
-          esac
-          
-          NEW="${MAJOR}.${MINOR}.${PATCH}"
-          echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
-          echo "new=$NEW" >> "$GITHUB_OUTPUT"
-          echo "tag=v${NEW}" >> "$GITHUB_OUTPUT"
-          echo "Bumping $CURRENT → $NEW (${{ steps.bump.outputs.type }})"
-
-      - name: Update pyproject.toml
-        run: |
-          sed -i "s/^version = \".*\"/version = \"${{ steps.version.outputs.new }}\"/" pyproject.toml
-
-      - name: Commit version bump
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add pyproject.toml
-          git commit -m "chore(release): v${{ steps.version.outputs.new }} [skip-release]"
-          git tag -a "v${{ steps.version.outputs.new }}" -m "Release v${{ steps.version.outputs.new }}"
-          git push origin main --follow-tags
-
-      - name: Build archives
-        run: |
-          VERSION="${{ steps.version.outputs.new }}"
-          NAME="netops-toolkit-${VERSION}"
-          mkdir -p "/tmp/${NAME}"
-          cp -r netops/ "/tmp/${NAME}/" 2>/dev/null || true
-          cp -r src/ "/tmp/${NAME}/" 2>/dev/null || true
-          cp -r docs/ "/tmp/${NAME}/" 2>/dev/null || true
-          cp -r examples/ "/tmp/${NAME}/" 2>/dev/null || true
-          cp README.md pyproject.toml "/tmp/${NAME}/" 2>/dev/null || true
-          cd /tmp
-          zip -r "${GITHUB_WORKSPACE}/${NAME}.zip" "${NAME}/"
-          tar czf "${GITHUB_WORKSPACE}/${NAME}.tar.gz" "${NAME}/"
-
-      - name: Generate changelog
-        id: changelog
-        run: |
-          PREV_TAG=$(git tag --sort=-v:refname | head -2 | tail -1)
-          if [ -n "$PREV_TAG" ]; then
-            CHANGES=$(git log "${PREV_TAG}..HEAD" --pretty=format:"- %s" --no-merges | grep -v "chore(release)" | head -30)
-          else
-            CHANGES="- Initial release"
-          fi
-          
-          cat > /tmp/release-notes.md << EOF
-          ## netops-toolkit v${{ steps.version.outputs.new }}
-
-          ### Changes
-          ${CHANGES}
-
-          ### 📥 Install
-          \`\`\`bash
-          pip install -e .
-          \`\`\`
-
-          📖 See \`docs/guides/getting-started.md\` for the full walkthrough.
-          EOF
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ steps.version.outputs.new }}
-          name: netops-toolkit v${{ steps.version.outputs.new }}
-          body_path: /tmp/release-notes.md
-          files: |
-            netops-toolkit-${{ steps.version.outputs.new }}.zip
-            netops-toolkit-${{ steps.version.outputs.new }}.tar.gz
-          make_latest: true
