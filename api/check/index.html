@@ -1,0 +1,6639 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Modular network automation utilities for telco operations">
+      
+      
+      
+        <link rel="canonical" href="https://plures.github.io/netops-toolkit/api/check/">
+      
+      
+        <link rel="prev" href="../core/">
+      
+      
+        <link rel="next" href="../change/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Check - netops-toolkit</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#netopscheck-health-compliance-checks" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="netops-toolkit" class="md-header__button md-logo" aria-label="netops-toolkit" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            netops-toolkit
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Check
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/plures/netops-toolkit" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    plures/netops-toolkit
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../guides/getting-started/" class="md-tabs__link">
+          
+  
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="netops-toolkit" class="md-nav__button md-logo" aria-label="netops-toolkit" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    netops-toolkit
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/plures/netops-toolkit" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    plures/netops-toolkit
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/cli-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/config-collector/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Config Collector
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/interface-checker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interface Checker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/inventory-management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventory Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/auto-inventory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Auto-Inventory Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/scan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Network Scanner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/config-diff/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Config Diff Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/cisco-health/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cisco Health Checks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/brocade/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Brocade Support
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/paloalto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Palo Alto Support
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/juniper/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Juniper Support
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Check
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Check
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#netopscheckhealth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.check.health
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="netops.check.health">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.health" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        health
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="health">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.health-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Classes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.health-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.health.check_cpu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_cpu
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.health.check_memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_memory
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.health.check_interface_errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_interface_errors
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.health.check_logs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_logs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.health.run_health_check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        run_health_check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.health.build_health_report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        build_health_report
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.health.main" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        main
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#netopscheckbgp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.check.bgp
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="netops.check.bgp">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.bgp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        bgp
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="bgp">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.bgp-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Classes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.bgp-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.bgp.check_bgp_peers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_bgp_peers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.bgp.build_bgp_report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        build_bgp_report
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.bgp.main" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        main
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#netopscheckinterfaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.check.interfaces
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="netops.check.interfaces">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.interfaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        interfaces
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="interfaces">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.interfaces-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Classes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.interfaces-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.interfaces.parse_cisco_interfaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        parse_cisco_interfaces
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.interfaces.check_interfaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_interfaces
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.interfaces.main" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        main
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#netopscheckvlan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.check.vlan
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="netops.check.vlan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.vlan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vlan
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="vlan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.vlan-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Classes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.vlan-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.vlan.audit_vlans" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        audit_vlans
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.vlan.build_vlan_report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        build_vlan_report
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.vlan.main" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        main
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#netopscheckarista" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.check.arista
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="netops.check.arista">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.arista" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        arista
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="arista">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.arista-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Classes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.arista-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.arista.check_eos_cpu_memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_eos_cpu_memory
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.arista.check_eos_interfaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_eos_interfaces
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.arista.check_eos_transceivers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_eos_transceivers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.arista.check_eos_bgp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_eos_bgp
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.arista.check_eos_bgp_evpn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_eos_bgp_evpn
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.arista.check_eos_ospf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_eos_ospf
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.arista.check_eos_mlag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_eos_mlag
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.arista.check_eos_environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_eos_environment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.arista.run_health_check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        run_health_check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.arista.build_eos_health_report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        build_eos_health_report
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.arista.main" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        main
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#netopscheckcisco" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.check.cisco
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="netops.check.cisco">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.cisco" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cisco
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="cisco">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.cisco-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Classes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.cisco-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.cisco.check_cisco_cpu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_cisco_cpu
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.cisco.check_cisco_memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_cisco_memory
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.cisco.check_cisco_interfaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_cisco_interfaces
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.cisco.check_cisco_logs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_cisco_logs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.cisco.check_cisco_bgp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_cisco_bgp
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.cisco.check_cisco_ospf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_cisco_ospf
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.cisco.check_cisco_environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_cisco_environment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.cisco.check_cisco_uptime" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_cisco_uptime
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.cisco.run_cisco_health_check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        run_cisco_health_check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.cisco.build_cisco_health_report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        build_cisco_health_report
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.cisco.main" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        main
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#netopscheckjuniper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.check.juniper
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="netops.check.juniper">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.juniper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        juniper
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="juniper">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.juniper-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Classes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.juniper-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.juniper.check_junos_re" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_junos_re
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.juniper.check_junos_fpc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_junos_fpc
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.juniper.check_junos_interfaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_junos_interfaces
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.juniper.check_junos_bgp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_junos_bgp
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.juniper.check_junos_ospf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_junos_ospf
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.juniper.check_junos_alarms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_junos_alarms
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.juniper.check_junos_environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_junos_environment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.juniper.check_junos_routes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_junos_routes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.juniper.run_health_check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        run_health_check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.juniper.build_junos_health_report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        build_junos_health_report
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.juniper.main" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        main
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#netopscheckpaloalto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.check.paloalto
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="netops.check.paloalto">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.paloalto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        paloalto
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="paloalto">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.paloalto-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Classes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.paloalto-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.paloalto.check_unused_rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_unused_rules
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.paloalto.check_shadowed_rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_shadowed_rules
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.paloalto.run_policy_audit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        run_policy_audit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.paloalto.check_ha" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_ha
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.paloalto.check_sessions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_sessions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.paloalto.check_threat_status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_threat_status
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.paloalto.run_health_check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        run_health_check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.paloalto.main" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        main
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../change/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Change
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../collect/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collect
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../parsers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parsers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../playbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Playbooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ansible/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ansible
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../inventory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#netopscheckhealth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.check.health
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="netops.check.health">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.health" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        health
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="health">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.health-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Classes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.health-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.health.check_cpu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_cpu
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.health.check_memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_memory
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.health.check_interface_errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_interface_errors
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.health.check_logs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_logs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.health.run_health_check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        run_health_check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.health.build_health_report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        build_health_report
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.health.main" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        main
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#netopscheckbgp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.check.bgp
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="netops.check.bgp">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.bgp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        bgp
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="bgp">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.bgp-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Classes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.bgp-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.bgp.check_bgp_peers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_bgp_peers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.bgp.build_bgp_report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        build_bgp_report
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.bgp.main" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        main
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#netopscheckinterfaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.check.interfaces
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="netops.check.interfaces">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.interfaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        interfaces
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="interfaces">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.interfaces-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Classes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.interfaces-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.interfaces.parse_cisco_interfaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        parse_cisco_interfaces
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.interfaces.check_interfaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_interfaces
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.interfaces.main" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        main
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#netopscheckvlan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.check.vlan
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="netops.check.vlan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.vlan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        vlan
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="vlan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.vlan-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Classes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.vlan-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.vlan.audit_vlans" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        audit_vlans
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.vlan.build_vlan_report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        build_vlan_report
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.vlan.main" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        main
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#netopscheckarista" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.check.arista
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="netops.check.arista">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.arista" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        arista
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="arista">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.arista-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Classes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.arista-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.arista.check_eos_cpu_memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_eos_cpu_memory
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.arista.check_eos_interfaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_eos_interfaces
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.arista.check_eos_transceivers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_eos_transceivers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.arista.check_eos_bgp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_eos_bgp
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.arista.check_eos_bgp_evpn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_eos_bgp_evpn
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.arista.check_eos_ospf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_eos_ospf
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.arista.check_eos_mlag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_eos_mlag
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.arista.check_eos_environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_eos_environment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.arista.run_health_check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        run_health_check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.arista.build_eos_health_report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        build_eos_health_report
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.arista.main" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        main
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#netopscheckcisco" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.check.cisco
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="netops.check.cisco">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.cisco" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cisco
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="cisco">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.cisco-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Classes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.cisco-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.cisco.check_cisco_cpu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_cisco_cpu
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.cisco.check_cisco_memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_cisco_memory
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.cisco.check_cisco_interfaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_cisco_interfaces
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.cisco.check_cisco_logs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_cisco_logs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.cisco.check_cisco_bgp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_cisco_bgp
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.cisco.check_cisco_ospf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_cisco_ospf
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.cisco.check_cisco_environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_cisco_environment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.cisco.check_cisco_uptime" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_cisco_uptime
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.cisco.run_cisco_health_check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        run_cisco_health_check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.cisco.build_cisco_health_report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        build_cisco_health_report
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.cisco.main" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        main
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#netopscheckjuniper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.check.juniper
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="netops.check.juniper">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.juniper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        juniper
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="juniper">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.juniper-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Classes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.juniper-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.juniper.check_junos_re" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_junos_re
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.juniper.check_junos_fpc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_junos_fpc
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.juniper.check_junos_interfaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_junos_interfaces
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.juniper.check_junos_bgp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_junos_bgp
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.juniper.check_junos_ospf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_junos_ospf
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.juniper.check_junos_alarms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_junos_alarms
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.juniper.check_junos_environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_junos_environment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.juniper.check_junos_routes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_junos_routes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.juniper.run_health_check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        run_health_check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.juniper.build_junos_health_report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        build_junos_health_report
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.juniper.main" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        main
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#netopscheckpaloalto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.check.paloalto
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="netops.check.paloalto">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.paloalto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        paloalto
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="paloalto">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.paloalto-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Classes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.paloalto-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.paloalto.check_unused_rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_unused_rules
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.paloalto.check_shadowed_rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_shadowed_rules
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.paloalto.run_policy_audit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        run_policy_audit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.paloalto.check_ha" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_ha
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.paloalto.check_sessions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_sessions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.paloalto.check_threat_status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_threat_status
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.paloalto.run_health_check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        run_health_check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netops.check.paloalto.main" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        main
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="netopscheck-health-compliance-checks"><code>netops.check</code> — Health &amp; Compliance Checks<a class="headerlink" href="#netopscheck-health-compliance-checks" title="Permanent link">&para;</a></h1>
+<p>Composable health, BGP, interface, VLAN, and vendor-specific checks.</p>
+<hr />
+<h2 id="netopscheckhealth"><code>netops.check.health</code><a class="headerlink" href="#netopscheckhealth" title="Permanent link">&para;</a></h2>
+<p>Composable health checks for network devices.</p>
+<p>Runs CPU, memory, interface-error, and log checks across vendors and reports
+results as structured JSON for monitoring integration.</p>
+<p><strong>CLI usage:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>python -m netops.check.health --inventory inv.yaml --group core \
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    --threshold cpu=80,mem=85
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>python -m netops.check.health --host 10.0.0.1 --vendor cisco_ios \
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    --threshold cpu=80,mem=85 --json
+</code></pre></div></p>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<h4 id="netops.check.health" class="doc doc-heading">
+            <span class="doc doc-object-name doc-module-name">health</span>
+
+
+<a href="#netops.check.health" class="headerlink" title="Permanent link">&para;</a></h4>
+
+    <div class="doc doc-contents first">
+
+        <p>Composable health checks for network devices.</p>
+<p>Runs CPU, memory, interface-error, and log checks across vendors and reports
+results as structured JSON for monitoring integration.</p>
+<p>Usage::</p>
+<div class="highlight"><pre><span></span><code>python -m netops.check.health --inventory inv.yaml --group core \\
+    --threshold cpu=80,mem=85
+
+python -m netops.check.health --host 10.0.0.1 --vendor cisco_ios \\
+    --threshold cpu=80,mem=85 --json
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<h5 id="netops.check.health-classes">Classes<a href="#netops.check.health-classes" class="headerlink" title="Permanent link">&para;</a></h5>
+<h5 id="netops.check.health-functions">Functions<a href="#netops.check.health-functions" class="headerlink" title="Permanent link">&para;</a></h5>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.health.check_cpu" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_cpu</span>
+
+
+<a href="#netops.check.health.check_cpu" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_cpu</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">,</span> <span class="n">device_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return CPU utilisation check result.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.health.check_memory" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_memory</span>
+
+
+<a href="#netops.check.health.check_memory" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_memory</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">,</span> <span class="n">device_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return memory utilisation check result.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.health.check_interface_errors" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_interface_errors</span>
+
+
+<a href="#netops.check.health.check_interface_errors" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_interface_errors</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">,</span> <span class="n">device_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return interface error-counter check result.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.health.check_logs" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_logs</span>
+
+
+<a href="#netops.check.health.check_logs" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_logs</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">,</span> <span class="n">device_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return log-scan check result (critical/major events).</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.health.run_health_check" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">run_health_check</span>
+
+
+<a href="#netops.check.health.run_health_check" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">run_health_check</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">ConnectionParams</span><span class="p">,</span> <span class="n">cpu_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DEFAULT_CPU_THRESHOLD</span><span class="p">,</span> <span class="n">mem_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DEFAULT_MEM_THRESHOLD</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Run all health checks against a single device.</p>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Result dict with keys:</p>
+<ul>
+<li><code>host</code>         – device IP/hostname</li>
+<li><code>timestamp</code>    – ISO-8601 UTC timestamp</li>
+<li><code>success</code>      – <code>True</code> when connection succeeded</li>
+<li><code>checks</code>       – dict of individual check results</li>
+<li><code>overall_alert</code>– <code>True</code> when any check triggered an alert</li>
+<li><code>error</code>        – error message when connection failed</li>
+</ul>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.health.build_health_report" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">build_health_report</span>
+
+
+<a href="#netops.check.health.build_health_report" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">build_health_report</span><span class="p">(</span><span class="n">results</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Build an aggregated health report from a list of per-device results.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>results</code>
+            </td>
+            <td>
+                  <code><span title="list">list</span>[<span title="dict">dict</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>List of dicts returned by :func:<code>run_health_check</code>.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Summary dict with keys:</p>
+<ul>
+<li><code>devices</code>                  – total devices polled</li>
+<li><code>devices_reachable</code>        – devices successfully reached</li>
+<li><code>devices_with_alerts</code>      – count of devices with at least one alert</li>
+<li><code>cpu_alerts</code>               – count of devices with a CPU alert</li>
+<li><code>memory_alerts</code>            – count of devices with a memory alert</li>
+<li><code>interface_error_alerts</code>   – count of devices with interface error alerts</li>
+<li><code>log_alerts</code>               – count of devices with log alerts</li>
+<li><code>overall_alert</code>            – <code>True</code> when any device triggered an alert</li>
+<li><code>results</code>                  – original per-device result list</li>
+</ul>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.health.main" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">main</span>
+
+
+<a href="#netops.check.health.main" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>CLI entry point for composable device health checks.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div><hr />
+<h2 id="netopscheckbgp"><code>netops.check.bgp</code><a class="headerlink" href="#netopscheckbgp" title="Permanent link">&para;</a></h2>
+<p>BGP peer monitoring — peer state, prefix counts, and flap detection.</p>
+<p><strong>CLI usage:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>python -m netops.check.bgp --inventory inv.yaml
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>python -m netops.check.bgp --inventory inv.yaml --expected-prefixes 10.0.0.2=100 --fail-on-alert
+</code></pre></div></p>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<h4 id="netops.check.bgp" class="doc doc-heading">
+            <span class="doc doc-object-name doc-module-name">bgp</span>
+
+
+<a href="#netops.check.bgp" class="headerlink" title="Permanent link">&para;</a></h4>
+
+    <div class="doc doc-contents first">
+
+        <p>BGP session monitor — peer status, prefix counts, flap detection.</p>
+<p>Checks BGP sessions across one or many routers and reports:</p>
+<ul>
+<li>Peer up/down status</li>
+<li>Prefix count vs expected (alert on configurable deviation %)</li>
+<li>Flap detection — sessions established for fewer than <em>flap_min_uptime</em>
+  seconds are flagged as potentially flapping</li>
+<li>Summary report aggregated across all polled routers</li>
+</ul>
+<p>Supports Cisco IOS/IOS-XE/IOS-XR and Nokia SR-OS.</p>
+<p>Usage::</p>
+<div class="highlight"><pre><span></span><code>python -m netops.check.bgp --inventory inventory.yaml \\
+    --expected-prefixes 10.0.0.2=100,10.0.0.3=200 \\
+    --flap-min-uptime 300 --prefix-deviation 20
+
+python -m netops.check.bgp --host 10.0.0.1 --vendor cisco_ios --json
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<h5 id="netops.check.bgp-classes">Classes<a href="#netops.check.bgp-classes" class="headerlink" title="Permanent link">&para;</a></h5>
+<h5 id="netops.check.bgp-functions">Functions<a href="#netops.check.bgp-functions" class="headerlink" title="Permanent link">&para;</a></h5>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.bgp.check_bgp_peers" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_bgp_peers</span>
+
+
+<a href="#netops.check.bgp.check_bgp_peers" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_bgp_peers</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">ConnectionParams</span><span class="p">,</span> <span class="n">expected_prefixes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">flap_min_uptime</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_FLAP_MIN_UPTIME</span><span class="p">,</span> <span class="n">prefix_deviation_pct</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DEFAULT_PREFIX_DEVIATION_PCT</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Check BGP peer status on a single device.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>params</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="ConnectionParams
+
+
+  
+      dataclass
+   (netops.core.connection.ConnectionParams)" href="../core/#netops.core.connection.ConnectionParams">ConnectionParams</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Device connection parameters.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>expected_prefixes</code>
+            </td>
+            <td>
+                  <code><span title="dict">dict</span>[<span title="str">str</span>, <span title="int">int</span>] | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional dict mapping <em>neighbor IP</em> → <em>expected prefix count</em>.
+An alert fires when the actual received-prefix count deviates from
+the expected value by more than <em>prefix_deviation_pct</em> percent.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>flap_min_uptime</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Sessions established for fewer than this many seconds are flagged
+as potentially flapping (default: 300 s = 5 min).</p>
+              </div>
+            </td>
+            <td>
+                  <code><span title="netops.check.bgp.DEFAULT_FLAP_MIN_UPTIME">DEFAULT_FLAP_MIN_UPTIME</span></code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>prefix_deviation_pct</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Percentage threshold for prefix-count deviation alerts
+(default: 20%).</p>
+              </div>
+            </td>
+            <td>
+                  <code><span title="netops.check.bgp.DEFAULT_PREFIX_DEVIATION_PCT">DEFAULT_PREFIX_DEVIATION_PCT</span></code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Result dict with keys:</p>
+<ul>
+<li><code>host</code>          – device IP/hostname</li>
+<li><code>timestamp</code>     – ISO-8601 UTC timestamp</li>
+<li><code>success</code>       – <code>True</code> when the device was reached</li>
+<li><code>peers</code>         – list of per-peer check dicts</li>
+<li><code>summary</code>       – aggregate counts across all peers on this device</li>
+<li><code>overall_alert</code> – <code>True</code> when any alert fired</li>
+<li><code>error</code>         – error message when connection failed</li>
+</ul>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.bgp.build_bgp_report" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">build_bgp_report</span>
+
+
+<a href="#netops.check.bgp.build_bgp_report" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">build_bgp_report</span><span class="p">(</span><span class="n">results</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Build an aggregated BGP report from a list of per-device results.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>results</code>
+            </td>
+            <td>
+                  <code><span title="list">list</span>[<span title="dict">dict</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>List of dicts returned by :func:<code>check_bgp_peers</code>.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Summary dict with keys:</p>
+<ul>
+<li><code>routers</code>             – total routers polled</li>
+<li><code>routers_reachable</code>   – routers successfully reached</li>
+<li><code>total_peers</code>         – total BGP peers across all routers</li>
+<li><code>established</code>         – peers in Established state</li>
+<li><code>not_established</code>     – peers not in Established state</li>
+<li><code>flapping</code>            – peers flagged as potentially flapping</li>
+<li><code>prefix_alerts</code>       – peers with prefix-count deviations</li>
+<li><code>overall_alert</code>       – <code>True</code> when any alert fired</li>
+<li><code>peers</code>               – flat list of all peer dicts with <code>router</code> key</li>
+</ul>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.bgp.main" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">main</span>
+
+
+<a href="#netops.check.bgp.main" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>CLI entry point for the BGP session monitor.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div><hr />
+<h2 id="netopscheckinterfaces"><code>netops.check.interfaces</code><a class="headerlink" href="#netopscheckinterfaces" title="Permanent link">&para;</a></h2>
+<p>Interface status and error checking.</p>
+<p><strong>CLI usage:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>python -m netops.check.interfaces --inventory inv.yaml --down-only
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>python -m netops.check.interfaces --host 10.0.0.1 --vendor cisco_ios --json
+</code></pre></div></p>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<h4 id="netops.check.interfaces" class="doc doc-heading">
+            <span class="doc doc-object-name doc-module-name">interfaces</span>
+
+
+<a href="#netops.check.interfaces" class="headerlink" title="Permanent link">&para;</a></h4>
+
+    <div class="doc doc-contents first">
+
+        <p>Check interface status across devices.</p>
+<p>Usage:
+    python -m netops.check.interfaces --inventory inventory.yaml --down-only
+    python -m netops.check.interfaces --host 10.0.0.1 --vendor cisco_ios</p>
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<h5 id="netops.check.interfaces-classes">Classes<a href="#netops.check.interfaces-classes" class="headerlink" title="Permanent link">&para;</a></h5>
+<h5 id="netops.check.interfaces-functions">Functions<a href="#netops.check.interfaces-functions" class="headerlink" title="Permanent link">&para;</a></h5>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.interfaces.parse_cisco_interfaces" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">parse_cisco_interfaces</span>
+
+
+<a href="#netops.check.interfaces.parse_cisco_interfaces" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">parse_cisco_interfaces</span><span class="p">(</span><span class="n">output</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Parse 'show ip interface brief' output.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.interfaces.check_interfaces" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_interfaces</span>
+
+
+<a href="#netops.check.interfaces.check_interfaces" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_interfaces</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">ConnectionParams</span><span class="p">,</span> <span class="n">down_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Check interface status on a device.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.interfaces.main" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">main</span>
+
+
+<a href="#netops.check.interfaces.main" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>CLI entry point for the interface status checker.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div><hr />
+<h2 id="netopscheckvlan"><code>netops.check.vlan</code><a class="headerlink" href="#netopscheckvlan" title="Permanent link">&para;</a></h2>
+<p>VLAN consistency audit across switching infrastructure.</p>
+<p><strong>CLI usage:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>python -m netops.check.vlan --inventory inv.yaml --orphans
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>python -m netops.check.vlan --inventory inv.yaml --json
+</code></pre></div></p>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<h4 id="netops.check.vlan" class="doc doc-heading">
+            <span class="doc doc-object-name doc-module-name">vlan</span>
+
+
+<a href="#netops.check.vlan" class="headerlink" title="Permanent link">&para;</a></h4>
+
+    <div class="doc doc-contents first">
+
+        <p>VLAN audit — compare declared vs actual VLAN configuration across switches.</p>
+<p>Checks VLAN configuration on a switch fabric and reports:</p>
+<ul>
+<li>Missing VLANs   — declared VLANs not present on a switch</li>
+<li>Extra VLANs     — VLANs present on a switch but not in the declared database</li>
+<li>Name mismatches — VLANs present but with a different name than declared</li>
+<li>Trunk mismatches — declared VLANs not active on trunk interfaces</li>
+<li>Per-switch compliance status</li>
+</ul>
+<p>Supports Cisco IOS/IOS-XE.</p>
+<p>Usage::</p>
+<div class="highlight"><pre><span></span><code>python -m netops.check.vlan --inventory inventory.yaml \\
+    --expected-vlans 10,20,30-50,100 \\
+    --check-trunks
+
+python -m netops.check.vlan --host 10.0.0.1 --vendor cisco_ios \\
+    --vlan-db vlans.yaml --json
+</code></pre></div>
+<p>VLAN database file (<code>vlans.yaml</code>) format::</p>
+<div class="highlight"><pre><span></span><code>vlans:
+  10: MANAGEMENT
+  20: SERVERS
+  100: DMZ
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<h5 id="netops.check.vlan-classes">Classes<a href="#netops.check.vlan-classes" class="headerlink" title="Permanent link">&para;</a></h5>
+<h5 id="netops.check.vlan-functions">Functions<a href="#netops.check.vlan-functions" class="headerlink" title="Permanent link">&para;</a></h5>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.vlan.audit_vlans" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">audit_vlans</span>
+
+
+<a href="#netops.check.vlan.audit_vlans" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">audit_vlans</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">ConnectionParams</span><span class="p">,</span> <span class="n">expected_vlans</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">expected_names</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">check_trunks</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">ignore_vlans</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Audit VLAN configuration on a single switch.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>params</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="ConnectionParams
+
+
+  
+      dataclass
+   (netops.core.connection.ConnectionParams)" href="../core/#netops.core.connection.ConnectionParams">ConnectionParams</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Device connection parameters.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>expected_vlans</code>
+            </td>
+            <td>
+                  <code><span title="set">set</span>[<span title="int">int</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Set of VLAN IDs that should be present on the switch.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>expected_names</code>
+            </td>
+            <td>
+                  <code><span title="dict">dict</span>[<span title="int">int</span>, <span title="str">str</span>] | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional mapping of VLAN ID → declared VLAN name.  When provided,
+name mismatches are included in the result.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>check_trunks</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>When <code>True</code>, also issue <code>show interfaces trunk</code> and flag any
+expected VLAN that is not active on a trunking interface.</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>ignore_vlans</code>
+            </td>
+            <td>
+                  <code><span title="set">set</span>[<span title="int">int</span>] | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Additional VLAN IDs to exclude from the <em>extra VLANs</em> check
+(system VLANs 1002–1005 are always excluded regardless).</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Result dict with keys:</p>
+<ul>
+<li><code>host</code>             – device IP/hostname</li>
+<li><code>timestamp</code>        – ISO-8601 UTC timestamp</li>
+<li><code>success</code>          – <code>True</code> when the device was reached</li>
+<li><code>actual_vlans</code>     – list of per-VLAN dicts from :func:<code>~netops.parsers.vlan.parse_vlan_brief</code></li>
+<li><code>trunks</code>           – list of trunk-port dicts (empty when <em>check_trunks</em> is <code>False</code>)</li>
+<li><code>missing_vlans</code>    – VLAN IDs in <em>expected_vlans</em> but absent from the switch</li>
+<li><code>extra_vlans</code>      – VLAN IDs on switch but not in <em>expected_vlans</em></li>
+<li><code>name_mismatches</code>  – list of <code>{vlan_id, expected_name, actual_name}</code></li>
+<li><code>trunk_mismatches</code> – list of <code>{port, missing_vlans}</code> (empty when <em>check_trunks</em> is <code>False</code>)</li>
+<li><code>compliant</code>        – <code>True</code> when no discrepancies were found</li>
+<li><code>alerts</code>           – human-readable list of alert messages</li>
+<li><code>error</code>            – error message when the connection failed</li>
+</ul>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.vlan.build_vlan_report" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">build_vlan_report</span>
+
+
+<a href="#netops.check.vlan.build_vlan_report" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">build_vlan_report</span><span class="p">(</span><span class="n">results</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Build an aggregated VLAN audit report from per-switch results.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>results</code>
+            </td>
+            <td>
+                  <code><span title="list">list</span>[<span title="dict">dict</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>List of dicts returned by :func:<code>audit_vlans</code>.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Summary dict with keys:</p>
+<ul>
+<li><code>switches</code>                – total switches polled</li>
+<li><code>switches_reachable</code>      – switches successfully reached</li>
+<li><code>switches_compliant</code>      – fully compliant switches</li>
+<li><code>overall_alert</code>           – <code>True</code> when any switch is non-compliant</li>
+<li><code>missing_vlan_switches</code>   – list of <code>{host, missing_vlans}</code></li>
+<li><code>extra_vlan_switches</code>     – list of <code>{host, extra_vlans}</code></li>
+<li><code>name_mismatch_switches</code>  – list of <code>{host, name_mismatches}</code></li>
+<li><code>trunk_mismatch_switches</code> – list of <code>{host, trunk_mismatches}</code></li>
+</ul>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.vlan.main" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">main</span>
+
+
+<a href="#netops.check.vlan.main" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>CLI entry point for the VLAN configuration auditor.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div><hr />
+<h2 id="netopscheckarista"><code>netops.check.arista</code><a class="headerlink" href="#netopscheckarista" title="Permanent link">&para;</a></h2>
+<p>Arista EOS health checks — uses eAPI JSON as the primary transport with
+CLI text fallback.</p>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<h4 id="netops.check.arista" class="doc doc-heading">
+            <span class="doc doc-object-name doc-module-name">arista</span>
+
+
+<a href="#netops.check.arista" class="headerlink" title="Permanent link">&para;</a></h4>
+
+    <div class="doc doc-contents first">
+
+        <p>Arista EOS health checker.</p>
+<p>Provides health checks for Arista EOS devices (DCS-7xxx, DCS-720x, etc.):</p>
+<ul>
+<li>CPU and memory utilisation</li>
+<li>Interface error counters and transceiver DOM</li>
+<li>BGP/EVPN session state</li>
+<li>OSPF adjacency verification</li>
+<li>MLAG health and config-consistency</li>
+<li>Environment — temperature sensors, fans, power supplies</li>
+</ul>
+<p>eAPI JSON is the primary transport.  Plain-text CLI output is used as a
+fallback when eAPI is unavailable.</p>
+<p>Usage::</p>
+<div class="highlight"><pre><span></span><code>python -m netops.check.arista --host 10.0.0.1 --user netops \\
+    --threshold cpu=80,mem=85 --json
+
+python -m netops.check.arista --inventory inv.yaml --group arista \\
+    --threshold cpu=80,mem=85 --fail-on-alert
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<h5 id="netops.check.arista-classes">Classes<a href="#netops.check.arista-classes" class="headerlink" title="Permanent link">&para;</a></h5>
+<h5 id="netops.check.arista-functions">Functions<a href="#netops.check.arista-functions" class="headerlink" title="Permanent link">&para;</a></h5>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.arista.check_eos_cpu_memory" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_eos_cpu_memory</span>
+
+
+<a href="#netops.check.arista.check_eos_cpu_memory" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_eos_cpu_memory</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">,</span> <span class="n">cpu_threshold</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">mem_threshold</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return CPU and memory utilisation check result.</p>
+<p>Queries <code>show version</code> (JSON) and returns:</p>
+<ul>
+<li><code>cpu_utilization</code>  – overall CPU % (float) or <code>None</code></li>
+<li><code>memory_util</code>      – memory utilisation % (float) or <code>None</code></li>
+<li><code>cpu_threshold</code>    – configured CPU alert threshold</li>
+<li><code>mem_threshold</code>    – configured memory alert threshold</li>
+<li><code>cpu_alert</code>        – <code>True</code> when CPU ≥ <em>cpu_threshold</em></li>
+<li><code>mem_alert</code>        – <code>True</code> when memory ≥ <em>mem_threshold</em></li>
+<li><code>alert</code>            – <code>True</code> when either cpu_alert or mem_alert</li>
+<li><code>eos_version</code>      – EOS software version string or <code>None</code></li>
+<li><code>model</code>            – hardware model or <code>None</code></li>
+<li><code>serial_number</code>    – chassis serial number or <code>None</code></li>
+<li><code>error</code>            – error message on failure, else <code>None</code></li>
+</ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.arista.check_eos_interfaces" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_eos_interfaces</span>
+
+
+<a href="#netops.check.arista.check_eos_interfaces" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_eos_interfaces</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return interface error-counter check result.</p>
+<p>Queries <code>show interfaces</code> (JSON) and returns:</p>
+<ul>
+<li><code>interfaces</code>   – list of per-interface dicts</li>
+<li><code>total</code>        – total interfaces parsed</li>
+<li><code>with_errors</code>  – count of interfaces with at least one error counter &gt; 0</li>
+<li><code>alert</code>        – <code>True</code> when any interface has errors</li>
+<li><code>error</code>        – error message on failure, else <code>None</code></li>
+</ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.arista.check_eos_transceivers" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_eos_transceivers</span>
+
+
+<a href="#netops.check.arista.check_eos_transceivers" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_eos_transceivers</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return transceiver DOM check result.</p>
+<p>Queries <code>show interfaces transceiver</code> (JSON) and returns:</p>
+<ul>
+<li><code>transceivers</code> – list of transceiver DOM dicts</li>
+<li><code>total</code>        – total transceivers parsed</li>
+<li><code>with_alerts</code>  – count of transceivers with DOM alerts</li>
+<li><code>alert</code>        – <code>True</code> when any transceiver has a DOM alert</li>
+<li><code>error</code>        – error message on failure, else <code>None</code></li>
+</ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.arista.check_eos_bgp" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_eos_bgp</span>
+
+
+<a href="#netops.check.arista.check_eos_bgp" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_eos_bgp</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return BGP session state check result.</p>
+<p>Queries <code>show bgp summary</code> (JSON) and returns:</p>
+<ul>
+<li><code>peers</code>             – list of BGP peer dicts</li>
+<li><code>total</code>             – total peers parsed</li>
+<li><code>established</code>       – count of peers in Established state</li>
+<li><code>not_established</code>   – count of peers not Established</li>
+<li><code>alert</code>             – <code>True</code> when any peer is not Established</li>
+<li><code>error</code>             – error message on failure, else <code>None</code></li>
+</ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.arista.check_eos_bgp_evpn" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_eos_bgp_evpn</span>
+
+
+<a href="#netops.check.arista.check_eos_bgp_evpn" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_eos_bgp_evpn</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return BGP EVPN session state check result.</p>
+<p>Queries <code>show bgp evpn summary</code> (JSON).  Returns the same structure as
+:func:<code>check_eos_bgp</code>.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.arista.check_eos_ospf" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_eos_ospf</span>
+
+
+<a href="#netops.check.arista.check_eos_ospf" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_eos_ospf</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return OSPF neighbour state check result.</p>
+<p>Queries <code>show ip ospf neighbor</code> (JSON) and returns:</p>
+<ul>
+<li><code>neighbors</code>   – list of OSPF neighbour dicts</li>
+<li><code>total</code>       – total neighbours parsed</li>
+<li><code>full</code>        – count of adjacencies in Full state</li>
+<li><code>not_full</code>    – count of adjacencies not in Full state</li>
+<li><code>alert</code>       – <code>True</code> when any adjacency is not Full</li>
+<li><code>error</code>       – error message on failure, else <code>None</code></li>
+</ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.arista.check_eos_mlag" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_eos_mlag</span>
+
+
+<a href="#netops.check.arista.check_eos_mlag" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_eos_mlag</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return MLAG health check result.</p>
+<p>Queries <code>show mlag</code> and <code>show mlag config-sanity</code> (JSON) and returns:</p>
+<ul>
+<li><code>mlag</code>                – parsed mlag status dict</li>
+<li><code>config_sanity</code>       – parsed mlag config-sanity dict</li>
+<li><code>is_active</code>           – <code>True</code> when MLAG state is active</li>
+<li><code>peer_link_ok</code>        – <code>True</code> when peer-link is up</li>
+<li><code>peer_active</code>         – <code>True</code> when peer is active</li>
+<li><code>config_consistent</code>   – <code>True</code> when config-sanity reports consistent</li>
+<li><code>alert</code>               – <code>True</code> when MLAG is active but has issues</li>
+<li><code>error</code>               – error message on failure, else <code>None</code></li>
+</ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.arista.check_eos_environment" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_eos_environment</span>
+
+
+<a href="#netops.check.arista.check_eos_environment" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_eos_environment</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return environment (temperature, fans, PSUs) check result.</p>
+<p>Queries <code>show environment all</code> (JSON) and returns:</p>
+<ul>
+<li><code>power_supplies</code> – list of PSU status dicts</li>
+<li><code>fans</code>           – list of fan status dicts</li>
+<li><code>temperatures</code>   – list of temperature sensor dicts</li>
+<li><code>overall_ok</code>     – <code>True</code> when every component reports OK</li>
+<li><code>alert</code>          – <code>True</code> when <code>overall_ok</code> is <code>False</code></li>
+<li><code>error</code>          – error message on failure, else <code>None</code></li>
+</ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.arista.run_health_check" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">run_health_check</span>
+
+
+<a href="#netops.check.arista.run_health_check" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">run_health_check</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">ConnectionParams</span><span class="p">,</span> <span class="n">cpu_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DEFAULT_CPU_THRESHOLD</span><span class="p">,</span> <span class="n">mem_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DEFAULT_MEM_THRESHOLD</span><span class="p">,</span> <span class="n">check_bgp</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">check_evpn</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">check_ospf</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">check_mlag</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">check_transceivers</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Run all EOS health checks against a single device.</p>
+<p>Runs:</p>
+<ul>
+<li><strong>cpu_memory</strong> – CPU and memory utilisation</li>
+<li><strong>interfaces</strong> – interface error counters</li>
+<li><strong>transceivers</strong> – DOM alerts (when <em>check_transceivers</em> is <code>True</code>)</li>
+<li><strong>bgp</strong> – BGP session states (when <em>check_bgp</em> is <code>True</code>)</li>
+<li><strong>bgp_evpn</strong> – EVPN BGP sessions (when <em>check_evpn</em> is <code>True</code>)</li>
+<li><strong>ospf</strong> – OSPF adjacency states (when <em>check_ospf</em> is <code>True</code>)</li>
+<li><strong>mlag</strong> – MLAG health and config-sanity (when <em>check_mlag</em> is <code>True</code>)</li>
+<li><strong>environment</strong> – PSUs, fans and temperatures</li>
+</ul>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Result dict with keys:</p>
+<ul>
+<li><code>host</code>          – device IP/hostname</li>
+<li><code>timestamp</code>     – ISO-8601 UTC timestamp</li>
+<li><code>success</code>       – <code>True</code> when connection succeeded</li>
+<li><code>checks</code>        – dict of individual check results</li>
+<li><code>overall_alert</code> – <code>True</code> when any check triggered an alert</li>
+<li><code>error</code>         – error message when connection failed</li>
+</ul>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.arista.build_eos_health_report" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">build_eos_health_report</span>
+
+
+<a href="#netops.check.arista.build_eos_health_report" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">build_eos_health_report</span><span class="p">(</span><span class="n">results</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Build an aggregated health report from a list of per-device results.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>results</code>
+            </td>
+            <td>
+                  <code><span title="list">list</span>[<span title="dict">dict</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>List of dicts returned by :func:<code>run_health_check</code>.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Summary dict with keys:</p>
+<ul>
+<li><code>devices</code>                – total devices polled</li>
+<li><code>devices_reachable</code>      – devices successfully reached</li>
+<li><code>devices_with_alerts</code>    – count of devices with at least one alert</li>
+<li><code>cpu_memory_alerts</code>      – count of devices with CPU/memory alerts</li>
+<li><code>interface_alerts</code>       – count of devices with interface error alerts</li>
+<li><code>bgp_alerts</code>             – count of devices with BGP peer alerts</li>
+<li><code>ospf_alerts</code>            – count of devices with OSPF adjacency alerts</li>
+<li><code>mlag_alerts</code>            – count of devices with MLAG health alerts</li>
+<li><code>environment_alerts</code>     – count of devices with environment alerts</li>
+<li><code>overall_alert</code>          – <code>True</code> when any device triggered an alert</li>
+<li><code>results</code>                – original per-device result list</li>
+</ul>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.arista.main" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">main</span>
+
+
+<a href="#netops.check.arista.main" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">main</span><span class="p">(</span><span class="n">argv</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>CLI entry point for Arista EOS health checks.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div><hr />
+<h2 id="netopscheckcisco"><code>netops.check.cisco</code><a class="headerlink" href="#netopscheckcisco" title="Permanent link">&para;</a></h2>
+<p>Cisco IOS/IOS-XE/IOS-XR/NX-OS health checks.</p>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<h4 id="netops.check.cisco" class="doc doc-heading">
+            <span class="doc doc-object-name doc-module-name">cisco</span>
+
+
+<a href="#netops.check.cisco" class="headerlink" title="Permanent link">&para;</a></h4>
+
+    <div class="doc doc-contents first">
+
+        <p>Cisco IOS/IOS-XE health checker.</p>
+<p>Extends the generic health check with Cisco-specific checks:</p>
+<ul>
+<li>CPU utilisation (<code>show processes cpu</code>)</li>
+<li>Memory utilisation (<code>show processes memory</code>)</li>
+<li>Interface error counters (CRC, input/output errors, drops)</li>
+<li>BGP neighbour state and prefix counts</li>
+<li>OSPF adjacency verification</li>
+<li>Environment — temperature, power supplies, fans</li>
+<li>Uptime and last reload reason</li>
+</ul>
+<p>Supports IOS 15.x+ and IOS-XE 16.x+.</p>
+<p>Usage::</p>
+<div class="highlight"><pre><span></span><code>python -m netops.check.cisco --host 10.0.0.1 --user admin \\
+    --threshold cpu=80,mem=85 --json
+
+python -m netops.check.cisco --inventory inv.yaml --group core \\
+    --threshold cpu=80,mem=85 --fail-on-alert
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<h5 id="netops.check.cisco-classes">Classes<a href="#netops.check.cisco-classes" class="headerlink" title="Permanent link">&para;</a></h5>
+<h5 id="netops.check.cisco-functions">Functions<a href="#netops.check.cisco-functions" class="headerlink" title="Permanent link">&para;</a></h5>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.cisco.check_cisco_cpu" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_cisco_cpu</span>
+
+
+<a href="#netops.check.cisco.check_cisco_cpu" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_cisco_cpu</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return CPU utilisation check result for a Cisco IOS/IOS-XE device.</p>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Dict with keys:</p>
+<ul>
+<li><code>utilization</code>  – 1-minute average CPU % (<code>float</code>) or <code>None</code> on parse failure</li>
+<li><code>threshold</code>    – configured alert threshold</li>
+<li><code>alert</code>        – <code>True</code> when <code>utilization &gt;= threshold</code></li>
+<li><code>raw</code>          – full parsed data from the <code>show processes cpu</code> output</li>
+</ul>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.cisco.check_cisco_memory" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_cisco_memory</span>
+
+
+<a href="#netops.check.cisco.check_cisco_memory" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_cisco_memory</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return memory utilisation check result for a Cisco IOS/IOS-XE device.</p>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Dict with keys:</p>
+<ul>
+<li><code>utilization</code>  – memory used % (<code>float</code>) or <code>None</code> on parse failure</li>
+<li><code>threshold</code>    – configured alert threshold</li>
+<li><code>alert</code>        – <code>True</code> when <code>utilization &gt;= threshold</code></li>
+<li><code>raw</code>          – full parsed data from the <code>show processes memory</code> output</li>
+</ul>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.cisco.check_cisco_interfaces" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_cisco_interfaces</span>
+
+
+<a href="#netops.check.cisco.check_cisco_interfaces" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_cisco_interfaces</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return interface error-counter check result for a Cisco IOS/IOS-XE device.</p>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Dict with keys:</p>
+<ul>
+<li><code>interfaces</code>   – list of per-interface error dicts</li>
+<li><code>total</code>        – total number of interfaces parsed</li>
+<li><code>with_errors</code>  – count of interfaces that have at least one error counter &gt; 0</li>
+<li><code>alert</code>        – <code>True</code> when any interface has errors</li>
+</ul>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.cisco.check_cisco_logs" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_cisco_logs</span>
+
+
+<a href="#netops.check.cisco.check_cisco_logs" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_cisco_logs</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return log-scan check result (severity 0–3 events) for a Cisco IOS/IOS-XE device.</p>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Dict with keys:</p>
+<ul>
+<li><code>critical_count</code> – count of severity 0–2 events</li>
+<li><code>major_count</code>    – count of severity 3 events</li>
+<li><code>events</code>         – list of parsed event dicts</li>
+<li><code>alert</code>          – <code>True</code> when any critical or major events are present</li>
+</ul>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.cisco.check_cisco_bgp" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_cisco_bgp</span>
+
+
+<a href="#netops.check.cisco.check_cisco_bgp" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_cisco_bgp</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">,</span> <span class="n">device_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;cisco_ios&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return BGP neighbour state check result for a Cisco IOS/IOS-XE device.</p>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Dict with keys:</p>
+<ul>
+<li><code>peers</code>              – list of peer dicts from the BGP summary parser</li>
+<li><code>total</code>              – total BGP peers parsed</li>
+<li><code>established</code>        – count of peers in Established state</li>
+<li><code>not_established</code>    – count of peers not in Established state</li>
+<li><code>alert</code>              – <code>True</code> when any peer is not Established</li>
+</ul>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.cisco.check_cisco_ospf" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_cisco_ospf</span>
+
+
+<a href="#netops.check.cisco.check_cisco_ospf" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_cisco_ospf</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return OSPF adjacency check result for a Cisco IOS/IOS-XE device.</p>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Dict with keys:</p>
+<ul>
+<li><code>neighbors</code>      – list of neighbour dicts from the OSPF parser</li>
+<li><code>total</code>          – total OSPF neighbours parsed</li>
+<li><code>full</code>           – count of neighbours in FULL state</li>
+<li><code>not_full</code>       – count of neighbours not in FULL state</li>
+<li><code>alert</code>          – <code>True</code> when any neighbour is not in FULL state</li>
+</ul>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.cisco.check_cisco_environment" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_cisco_environment</span>
+
+
+<a href="#netops.check.cisco.check_cisco_environment" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_cisco_environment</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return environment check result for a Cisco IOS/IOS-XE device.</p>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Dict with keys:</p>
+<ul>
+<li><code>fans</code>           – list of fan status dicts</li>
+<li><code>temperatures</code>   – list of temperature sensor dicts</li>
+<li><code>power_supplies</code> – list of power-supply status dicts</li>
+<li><code>overall_ok</code>     – <code>True</code> when all reported components are OK</li>
+<li><code>alert</code>          – <code>True</code> when <code>overall_ok</code> is <code>False</code></li>
+</ul>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.cisco.check_cisco_uptime" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_cisco_uptime</span>
+
+
+<a href="#netops.check.cisco.check_cisco_uptime" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_cisco_uptime</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return uptime and reload reason check result for a Cisco IOS/IOS-XE device.</p>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Dict with keys:</p>
+<ul>
+<li><code>version</code>       – IOS/IOS-XE version string</li>
+<li><code>platform</code>      – hardware platform identifier</li>
+<li><code>uptime</code>        – uptime string as reported by the device</li>
+<li><code>reload_reason</code> – last reload or restart reason</li>
+<li><code>image</code>         – system image file path</li>
+<li><code>alert</code>         – always <code>False</code> (informational only)</li>
+</ul>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.cisco.run_cisco_health_check" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">run_cisco_health_check</span>
+
+
+<a href="#netops.check.cisco.run_cisco_health_check" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">run_cisco_health_check</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">ConnectionParams</span><span class="p">,</span> <span class="n">cpu_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DEFAULT_CPU_THRESHOLD</span><span class="p">,</span> <span class="n">mem_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DEFAULT_MEM_THRESHOLD</span><span class="p">,</span> <span class="n">include_bgp</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">include_ospf</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">include_environment</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Run all Cisco IOS/IOS-XE health checks against a single device.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>params</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="ConnectionParams
+
+
+  
+      dataclass
+   (netops.core.connection.ConnectionParams)" href="../core/#netops.core.connection.ConnectionParams">ConnectionParams</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Device connection parameters.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>cpu_threshold</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>CPU alert threshold in percent (default: 80).</p>
+              </div>
+            </td>
+            <td>
+                  <code><span title="netops.check.cisco.DEFAULT_CPU_THRESHOLD">DEFAULT_CPU_THRESHOLD</span></code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>mem_threshold</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Memory alert threshold in percent (default: 85).</p>
+              </div>
+            </td>
+            <td>
+                  <code><span title="netops.check.cisco.DEFAULT_MEM_THRESHOLD">DEFAULT_MEM_THRESHOLD</span></code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>include_bgp</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>When <code>True</code> (default), run the BGP peer check.</p>
+              </div>
+            </td>
+            <td>
+                  <code>True</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>include_ospf</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>When <code>True</code> (default), run the OSPF adjacency check.</p>
+              </div>
+            </td>
+            <td>
+                  <code>True</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>include_environment</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>When <code>True</code> (default), run the environment check.</p>
+              </div>
+            </td>
+            <td>
+                  <code>True</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Result dict matching the standard health-check schema::</p>
+<div class="highlight"><pre><span></span><code>{
+    &quot;host&quot;:          &lt;str&gt;,
+    &quot;timestamp&quot;:     &lt;ISO-8601 UTC&gt;,
+    &quot;success&quot;:       &lt;bool&gt;,
+    &quot;checks&quot;: {
+        &quot;cpu&quot;:               { &quot;utilization&quot;: &lt;float&gt;, &quot;alert&quot;: &lt;bool&gt;, ... },
+        &quot;memory&quot;:            { &quot;utilization&quot;: &lt;float&gt;, &quot;alert&quot;: &lt;bool&gt;, ... },
+        &quot;interface_errors&quot;:  { &quot;with_errors&quot;: &lt;int&gt;,   &quot;alert&quot;: &lt;bool&gt;, ... },
+        &quot;logs&quot;:              { &quot;critical_count&quot;: &lt;int&gt;, &quot;alert&quot;: &lt;bool&gt;, ... },
+        &quot;bgp&quot;:               { &quot;not_established&quot;: &lt;int&gt;, &quot;alert&quot;: &lt;bool&gt;, ... },
+        &quot;ospf&quot;:              { &quot;not_full&quot;: &lt;int&gt;,      &quot;alert&quot;: &lt;bool&gt;, ... },
+        &quot;environment&quot;:       { &quot;overall_ok&quot;: &lt;bool&gt;,   &quot;alert&quot;: &lt;bool&gt;, ... },
+        &quot;uptime&quot;:            { &quot;uptime&quot;: &lt;str&gt;,        &quot;alert&quot;: False, ... },
+    },
+    &quot;overall_alert&quot;: &lt;bool&gt;,
+    &quot;error&quot;:         &lt;str | None&gt;,
+}
+</code></pre></div>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.cisco.build_cisco_health_report" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">build_cisco_health_report</span>
+
+
+<a href="#netops.check.cisco.build_cisco_health_report" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">build_cisco_health_report</span><span class="p">(</span><span class="n">results</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Build an aggregated health report from a list of per-device results.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>results</code>
+            </td>
+            <td>
+                  <code><span title="list">list</span>[<span title="dict">dict</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>List of dicts returned by :func:<code>run_cisco_health_check</code>.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Summary dict with keys:</p>
+<ul>
+<li><code>devices</code>                  – total devices polled</li>
+<li><code>devices_reachable</code>        – devices successfully reached</li>
+<li><code>devices_with_alerts</code>      – count of devices with at least one alert</li>
+<li><code>cpu_alerts</code>               – devices with a CPU alert</li>
+<li><code>memory_alerts</code>            – devices with a memory alert</li>
+<li><code>interface_error_alerts</code>   – devices with interface error alerts</li>
+<li><code>log_alerts</code>               – devices with log alerts</li>
+<li><code>bgp_alerts</code>               – devices with BGP peer alerts</li>
+<li><code>ospf_alerts</code>              – devices with OSPF adjacency alerts</li>
+<li><code>environment_alerts</code>       – devices with environment alerts</li>
+<li><code>overall_alert</code>            – <code>True</code> when any device triggered an alert</li>
+<li><code>results</code>                  – original per-device result list</li>
+</ul>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.cisco.main" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">main</span>
+
+
+<a href="#netops.check.cisco.main" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>CLI entry point for Cisco IOS/IOS-XE health checks.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div><hr />
+<h2 id="netopscheckjuniper"><code>netops.check.juniper</code><a class="headerlink" href="#netopscheckjuniper" title="Permanent link">&para;</a></h2>
+<p>Juniper JunOS health checks — Routing Engine status, FPC, BGP, OSPF,
+chassis alarms, environment, and route summary.</p>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<h4 id="netops.check.juniper" class="doc doc-heading">
+            <span class="doc doc-object-name doc-module-name">juniper</span>
+
+
+<a href="#netops.check.juniper" class="headerlink" title="Permanent link">&para;</a></h4>
+
+    <div class="doc doc-contents first">
+
+        <p>Juniper JunOS health checker.</p>
+<p>Provides health checks for Juniper JunOS devices (MX, QFX, EX, SRX):</p>
+<ul>
+<li>Routing Engine (RE) CPU and memory utilisation</li>
+<li>FPC slot operational status</li>
+<li>Interface error counters</li>
+<li>BGP neighbour state and prefix counts</li>
+<li>OSPF adjacency verification</li>
+<li>Chassis alarms (major/minor)</li>
+<li>Chassis environment — power, cooling, temperature</li>
+<li>Routing table summary</li>
+</ul>
+<p>Supports JunOS 18.x+.  Works with both XML RPC and CLI (text) modes via
+Netmiko's <code>juniper</code> / <code>juniper_junos</code> device type.</p>
+<p>Usage::</p>
+<div class="highlight"><pre><span></span><code>python -m netops.check.juniper --host 10.0.0.1 --user netops \\
+    --threshold cpu=80,mem=85 --json
+
+python -m netops.check.juniper --inventory inv.yaml --group juniper \\
+    --threshold cpu=80,mem=85 --fail-on-alert
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<h5 id="netops.check.juniper-classes">Classes<a href="#netops.check.juniper-classes" class="headerlink" title="Permanent link">&para;</a></h5>
+<h5 id="netops.check.juniper-functions">Functions<a href="#netops.check.juniper-functions" class="headerlink" title="Permanent link">&para;</a></h5>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.juniper.check_junos_re" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_junos_re</span>
+
+
+<a href="#netops.check.juniper.check_junos_re" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_junos_re</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">,</span> <span class="n">cpu_threshold</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">mem_threshold</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return Routing Engine CPU and memory check result.</p>
+<p>Queries <code>show chassis routing-engine</code> and returns:</p>
+<ul>
+<li><code>routing_engines</code> – list of per-RE dicts from the parser</li>
+<li><code>cpu_utilization</code> – highest CPU % across all REs (<code>float</code>) or <code>None</code></li>
+<li><code>mem_utilization</code> – highest memory % across all REs (<code>float</code>) or <code>None</code></li>
+<li><code>cpu_threshold</code>   – configured CPU alert threshold</li>
+<li><code>mem_threshold</code>   – configured memory alert threshold</li>
+<li><code>cpu_alert</code>       – <code>True</code> when any RE CPU ≥ <em>cpu_threshold</em></li>
+<li><code>mem_alert</code>       – <code>True</code> when any RE memory ≥ <em>mem_threshold</em></li>
+<li><code>alert</code>           – <code>True</code> when either cpu_alert or mem_alert is <code>True</code></li>
+<li><code>error</code>           – error message on failure, else <code>None</code></li>
+</ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.juniper.check_junos_fpc" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_junos_fpc</span>
+
+
+<a href="#netops.check.juniper.check_junos_fpc" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_junos_fpc</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return FPC slot status check result.</p>
+<p>Queries <code>show chassis fpc</code> and returns:</p>
+<ul>
+<li><code>fpcs</code>        – list of per-FPC dicts from the parser</li>
+<li><code>total</code>       – total FPC slots parsed</li>
+<li><code>online</code>      – count of FPCs in Online state</li>
+<li><code>offline</code>     – count of FPCs in Offline state (excluding Empty/Spare)</li>
+<li><code>alert</code>       – <code>True</code> when any non-empty FPC is not Online</li>
+<li><code>error</code>       – error message on failure, else <code>None</code></li>
+</ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.juniper.check_junos_interfaces" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_junos_interfaces</span>
+
+
+<a href="#netops.check.juniper.check_junos_interfaces" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_junos_interfaces</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return interface error-counter check result.</p>
+<p>Queries <code>show interfaces extensive</code> and returns:</p>
+<ul>
+<li><code>interfaces</code>   – list of per-interface error dicts from the parser</li>
+<li><code>total</code>        – total interfaces parsed</li>
+<li><code>with_errors</code>  – count of interfaces with at least one non-zero error counter</li>
+<li><code>alert</code>        – <code>True</code> when any interface has errors</li>
+<li><code>error</code>        – error message on failure, else <code>None</code></li>
+</ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.juniper.check_junos_bgp" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_junos_bgp</span>
+
+
+<a href="#netops.check.juniper.check_junos_bgp" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_junos_bgp</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return BGP neighbour state check result.</p>
+<p>Queries <code>show bgp summary</code> and returns:</p>
+<ul>
+<li><code>peers</code>             – list of peer dicts from the parser</li>
+<li><code>total</code>             – total BGP peers parsed</li>
+<li><code>established</code>       – count of peers in Established state</li>
+<li><code>not_established</code>   – count of peers not in Established state</li>
+<li><code>alert</code>             – <code>True</code> when any peer is not Established</li>
+<li><code>error</code>             – error message on failure, else <code>None</code></li>
+</ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.juniper.check_junos_ospf" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_junos_ospf</span>
+
+
+<a href="#netops.check.juniper.check_junos_ospf" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_junos_ospf</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return OSPF neighbour state check result.</p>
+<p>Queries <code>show ospf neighbor</code> and returns:</p>
+<ul>
+<li><code>neighbors</code>     – list of neighbour dicts from the parser</li>
+<li><code>total</code>         – total OSPF neighbours parsed</li>
+<li><code>full</code>          – count of adjacencies in Full state</li>
+<li><code>not_full</code>      – count of adjacencies not in Full state</li>
+<li><code>alert</code>         – <code>True</code> when any adjacency is not Full</li>
+<li><code>error</code>         – error message on failure, else <code>None</code></li>
+</ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.juniper.check_junos_alarms" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_junos_alarms</span>
+
+
+<a href="#netops.check.juniper.check_junos_alarms" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_junos_alarms</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return chassis alarm check result.</p>
+<p>Queries <code>show chassis alarms</code> and returns:</p>
+<ul>
+<li><code>alarms</code>        – list of alarm dicts from the parser</li>
+<li><code>major_count</code>   – number of Major alarms</li>
+<li><code>minor_count</code>   – number of Minor alarms</li>
+<li><code>alert</code>         – <code>True</code> when any Major alarm is present</li>
+<li><code>error</code>         – error message on failure, else <code>None</code></li>
+</ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.juniper.check_junos_environment" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_junos_environment</span>
+
+
+<a href="#netops.check.juniper.check_junos_environment" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_junos_environment</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return chassis environment check result.</p>
+<p>Queries <code>show chassis environment</code> and returns:</p>
+<ul>
+<li><code>power_supplies</code> – list of PSU status dicts</li>
+<li><code>fans</code>           – list of fan status dicts</li>
+<li><code>temperatures</code>   – list of temperature sensor dicts</li>
+<li><code>overall_ok</code>     – <code>True</code> when every component reports OK</li>
+<li><code>alert</code>          – <code>True</code> when <code>overall_ok</code> is <code>False</code></li>
+<li><code>error</code>          – error message on failure, else <code>None</code></li>
+</ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.juniper.check_junos_routes" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_junos_routes</span>
+
+
+<a href="#netops.check.juniper.check_junos_routes" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_junos_routes</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return routing table summary check result (informational).</p>
+<p>Queries <code>show route summary</code> and returns:</p>
+<ul>
+<li><code>tables</code>  – list of routing-table summary dicts</li>
+<li><code>alert</code>   – always <code>False</code> (informational only)</li>
+<li><code>error</code>   – error message on failure, else <code>None</code></li>
+</ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.juniper.run_health_check" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">run_health_check</span>
+
+
+<a href="#netops.check.juniper.run_health_check" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">run_health_check</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">ConnectionParams</span><span class="p">,</span> <span class="n">cpu_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DEFAULT_CPU_THRESHOLD</span><span class="p">,</span> <span class="n">mem_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DEFAULT_MEM_THRESHOLD</span><span class="p">,</span> <span class="n">check_bgp</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">check_ospf</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Run all JunOS health checks against a single device.</p>
+<p>Runs:</p>
+<ul>
+<li><strong>RE</strong> – Routing Engine CPU and memory utilisation</li>
+<li><strong>FPC</strong> – slot operational status</li>
+<li><strong>interfaces</strong> – error counters</li>
+<li><strong>BGP</strong> – neighbour session states (when <em>check_bgp</em> is <code>True</code>)</li>
+<li><strong>OSPF</strong> – adjacency states (when <em>check_ospf</em> is <code>True</code>)</li>
+<li><strong>alarms</strong> – chassis alarm summary</li>
+<li><strong>environment</strong> – power supplies, fans and temperatures</li>
+<li><strong>routes</strong> – routing table summary (informational)</li>
+</ul>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Result dict with keys:</p>
+<ul>
+<li><code>host</code>          – device IP/hostname</li>
+<li><code>timestamp</code>     – ISO-8601 UTC timestamp</li>
+<li><code>success</code>       – <code>True</code> when connection succeeded</li>
+<li><code>checks</code>        – dict of individual check results</li>
+<li><code>overall_alert</code> – <code>True</code> when any check triggered an alert</li>
+<li><code>error</code>         – error message when connection failed</li>
+</ul>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.juniper.build_junos_health_report" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">build_junos_health_report</span>
+
+
+<a href="#netops.check.juniper.build_junos_health_report" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">build_junos_health_report</span><span class="p">(</span><span class="n">results</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Build an aggregated health report from a list of per-device results.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>results</code>
+            </td>
+            <td>
+                  <code><span title="list">list</span>[<span title="dict">dict</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>List of dicts returned by :func:<code>run_health_check</code>.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Summary dict with keys:</p>
+<ul>
+<li><code>devices</code>                – total devices polled</li>
+<li><code>devices_reachable</code>      – devices successfully reached</li>
+<li><code>devices_with_alerts</code>    – count of devices with at least one alert</li>
+<li><code>re_alerts</code>              – count of devices with RE CPU/memory alerts</li>
+<li><code>fpc_alerts</code>             – count of devices with FPC alerts</li>
+<li><code>interface_alerts</code>       – count of devices with interface error alerts</li>
+<li><code>bgp_alerts</code>             – count of devices with BGP peer alerts</li>
+<li><code>ospf_alerts</code>            – count of devices with OSPF adjacency alerts</li>
+<li><code>alarm_alerts</code>           – count of devices with chassis alarm alerts</li>
+<li><code>environment_alerts</code>     – count of devices with environment alerts</li>
+<li><code>overall_alert</code>          – <code>True</code> when any device triggered an alert</li>
+<li><code>results</code>                – original per-device result list</li>
+</ul>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.juniper.main" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">main</span>
+
+
+<a href="#netops.check.juniper.main" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>CLI entry point for JunOS health checks.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div><hr />
+<h2 id="netopscheckpaloalto"><code>netops.check.paloalto</code><a class="headerlink" href="#netopscheckpaloalto" title="Permanent link">&para;</a></h2>
+<p>Palo Alto PAN-OS health checks and security policy audit.</p>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<h4 id="netops.check.paloalto" class="doc doc-heading">
+            <span class="doc doc-object-name doc-module-name">paloalto</span>
+
+
+<a href="#netops.check.paloalto" class="headerlink" title="Permanent link">&para;</a></h4>
+
+    <div class="doc doc-contents first">
+
+        <p>Security policy audit and health checks for Palo Alto Networks PAN-OS devices.</p>
+<p>Policy audit::</p>
+<div class="highlight"><pre><span></span><code>python -m netops.check.paloalto --host 10.0.0.1 --audit
+</code></pre></div>
+<p>Health checks::</p>
+<div class="highlight"><pre><span></span><code>python -m netops.check.paloalto --inventory inv.yaml --group firewalls \\
+    --health --json
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<h5 id="netops.check.paloalto-classes">Classes<a href="#netops.check.paloalto-classes" class="headerlink" title="Permanent link">&para;</a></h5>
+<h5 id="netops.check.paloalto-functions">Functions<a href="#netops.check.paloalto-functions" class="headerlink" title="Permanent link">&para;</a></h5>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.paloalto.check_unused_rules" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_unused_rules</span>
+
+
+<a href="#netops.check.paloalto.check_unused_rules" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_unused_rules</span><span class="p">(</span><span class="n">policy</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span> <span class="n">stats</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Identify security rules that have never been matched.</p>
+<p>Correlates <code>policy</code> (from :func:<code>~netops.parsers.paloalto.parse_security_policy</code>)
+with <code>stats</code> (from
+:func:<code>~netops.parsers.paloalto.parse_security_policy_stats</code>) and
+returns those rules whose hit count is zero.</p>
+<p>Each returned dict is the original rule dict augmented with a
+<code>hit_count</code> key (<code>int</code>).</p>
+<p>:param policy: parsed list of security rule dicts
+:param stats:  parsed list of per-rule hit-count dicts
+:returns:      list of unused rule dicts (hit count == 0)</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.paloalto.check_shadowed_rules" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_shadowed_rules</span>
+
+
+<a href="#netops.check.paloalto.check_shadowed_rules" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_shadowed_rules</span><span class="p">(</span><span class="n">policy</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Identify security rules that are shadowed by an earlier, broader rule.</p>
+<p>A rule R[i] is considered <em>shadowed</em> when there exists an earlier rule
+R[j] (j &lt; i) such that:</p>
+<ul>
+<li>R[j]'s source zones cover all of R[i]'s source zones  (or R[j] uses <code>any</code>)</li>
+<li>R[j]'s destination zones cover all of R[i]'s destination zones (or <code>any</code>)</li>
+<li>R[j]'s sources cover R[i]'s sources (or <code>any</code>)</li>
+<li>R[j]'s destinations cover R[i]'s destinations (or <code>any</code>)</li>
+<li>R[j]'s applications cover R[i]'s applications (or <code>any</code>)</li>
+</ul>
+<p>The action of the shadowing rule is noted but not required to match —
+an <code>allow</code> above a <code>deny</code> shadows the <code>deny</code> just as much as two
+<code>deny</code> rules would.</p>
+<p>Each returned dict is the original rule dict augmented with:</p>
+<ul>
+<li><code>shadowed_by</code> – name of the first earlier rule that shadows this one</li>
+</ul>
+<p>:param policy: parsed list of security rule dicts (ordered as on device)
+:returns:      list of shadowed rule dicts</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.paloalto.run_policy_audit" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">run_policy_audit</span>
+
+
+<a href="#netops.check.paloalto.run_policy_audit" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">run_policy_audit</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Run a full security policy audit against a connected device.</p>
+<p>Collects the security policy and per-rule hit counts, then runs:</p>
+<ul>
+<li><strong>unused rules</strong> – rules with zero hits</li>
+<li><strong>shadowed rules</strong> – rules obscured by a broader preceding rule</li>
+</ul>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Dict with keys:</p>
+<ul>
+<li><code>policy</code>         – full list of parsed security rules</li>
+<li><code>stats</code>          – full list of hit-count records</li>
+<li><code>unused_rules</code>   – list of rules with no hits</li>
+<li><code>shadowed_rules</code> – list of rules shadowed by an earlier rule</li>
+<li><code>rule_count</code>     – total number of security rules</li>
+<li><code>alert</code>          – <code>True</code> when unused or shadowed rules were found</li>
+<li><code>error</code>          – error message on failure, else <code>None</code></li>
+</ul>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.paloalto.check_ha" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_ha</span>
+
+
+<a href="#netops.check.paloalto.check_ha" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_ha</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return HA state check result.</p>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Dict with keys:</p>
+<ul>
+<li><code>enabled</code>     – <code>True</code> when HA is configured</li>
+<li><code>mode</code>        – HA mode string (e.g. <code>'Active-Passive'</code>)</li>
+<li><code>local_state</code> – local HA state (e.g. <code>'active'</code>)</li>
+<li><code>peer_state</code>  – peer HA state</li>
+<li><code>peer_ip</code>     – peer management IP</li>
+<li><code>alert</code>       – <code>True</code> when local state is not <code>'active'</code> or
+                    <code>'passive'</code> in a known-good pair</li>
+<li><code>error</code>       – error message on failure, else <code>None</code></li>
+</ul>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.paloalto.check_sessions" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_sessions</span>
+
+
+<a href="#netops.check.paloalto.check_sessions" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_sessions</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return session table utilization check result.</p>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Dict with keys:</p>
+<ul>
+<li><code>max_sessions</code>        – maximum supported sessions</li>
+<li><code>active_sessions</code>     – current active sessions</li>
+<li><code>session_utilization</code> – utilization percentage (<code>float</code>)</li>
+<li><code>threshold</code>           – alert threshold percentage</li>
+<li><code>alert</code>               – <code>True</code> when utilization &gt;= threshold</li>
+<li><code>error</code>               – error message on failure, else <code>None</code></li>
+</ul>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.paloalto.check_threat_status" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_threat_status</span>
+
+
+<a href="#netops.check.paloalto.check_threat_status" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">check_threat_status</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">DeviceConnection</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return threat and URL filtering content status.</p>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Dict with keys:</p>
+<ul>
+<li><code>threat_version</code>  – installed threat content version</li>
+<li><code>url_version</code>     – installed URL filtering database version</li>
+<li><code>ha_mode</code>         – HA mode from <code>show system info</code></li>
+<li><code>alert</code>           – always <code>False</code> (informational only)</li>
+<li><code>error</code>           – error message on failure, else <code>None</code></li>
+</ul>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.paloalto.run_health_check" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">run_health_check</span>
+
+
+<a href="#netops.check.paloalto.run_health_check" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">run_health_check</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">ConnectionParams</span><span class="p">,</span> <span class="n">session_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DEFAULT_SESSION_THRESHOLD</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Run all PAN-OS-specific health checks against a single device.</p>
+<p>Runs:</p>
+<ul>
+<li><strong>HA state</strong> – checks that the local unit is in a stable HA role</li>
+<li><strong>Sessions</strong> – checks session-table utilization against <em>session_threshold</em></li>
+<li><strong>Threat status</strong> – reports content versions (informational)</li>
+</ul>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Result dict with keys:</p>
+<ul>
+<li><code>host</code>          – device IP/hostname</li>
+<li><code>timestamp</code>     – ISO-8601 UTC timestamp</li>
+<li><code>success</code>       – <code>True</code> when connection succeeded</li>
+<li><code>checks</code>        – dict of individual check results</li>
+<li><code>overall_alert</code> – <code>True</code> when any check triggered an alert</li>
+<li><code>error</code>         – error message when connection failed</li>
+</ul>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="netops.check.paloalto.main" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">main</span>
+
+
+<a href="#netops.check.paloalto.main" class="headerlink" title="Permanent link">&para;</a></h6>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>CLI entry point for the Palo Alto PAN-OS security policy auditor.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
