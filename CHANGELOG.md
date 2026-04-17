@@ -1,3 +1,9 @@
+## [0.0.1] — 2026-04-17
+
+- fix(lifecycle): label-based retry counter + CI fix priority (2c990ba)
+- ci: inline lifecycle workflow — fix schedule failures (3a52b4d)
+- chore: centralize release to org-wide reusable workflow (eef1d38)
+
 # Changelog
 
 All notable changes to netops-toolkit are documented here.
