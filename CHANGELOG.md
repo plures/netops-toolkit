@@ -1,3 +1,15 @@
+## [0.37.0] — 2026-05-10
+
+- feat: add offline bundle to release pipeline + TUI (63f7b23)
+- docs: refresh ROADMAP.md with OASIS strategic alignment (00856d3)
+- docs: update copilot-instructions with praxis, design-dojo, automation rules (d44a03f)
+- feat(release): add target_version input for milestone-driven releases (722f061)
+- feat(lifecycle): milestone-close triggers roadmap-aware release (a02cd25)
+- docs: update copilot-instructions with Plures stack architecture (efdb797)
+- docs: update copilot-instructions with Plures stack architecture (e5d78dc)
+- feat(lifecycle v12): auto-release when milestone completes (1693b90)
+- feat(lifecycle v11): smart CI failure handling — infra vs code (8942ad1)
+
 ## [0.0.1] — 2026-04-17
 
 - fix(lifecycle): label-based retry counter + CI fix priority (2c990ba)
