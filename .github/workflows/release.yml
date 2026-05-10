@@ -24,3 +24,106 @@ jobs:
       bump: ${{ inputs.bump || '' }}
       target_version: ${{ inputs.target_version || '' }}
     secrets: inherit
+
+  # Build offline bundle with all dependencies + TUI and attach to the release
+  offline-bundle:
+    needs: release
+    if: needs.release.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Get version from pyproject.toml
+        id: version
+        run: |
+          VERSION=$(python -c "import re; print(re.search(r'version\s*=\s*\"(.+?)\"', open('pyproject.toml').read()).group(1))")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Build offline bundle
+        run: |
+          mkdir -p dist/netops-wheels
+
+          # Build netops-toolkit wheel
+          pip wheel . --wheel-dir dist/netops-wheels --no-deps
+
+          # Download all runtime dependencies
+          pip download \
+            "netmiko>=4.3.0,<4.5.0" \
+            "paramiko>=3.4.0" \
+            "pyyaml>=6.0" \
+            "cryptography>=46.0.5" \
+            "pysnmp>=7.0" \
+            "textual>=8.0" \
+            --dest dist/netops-wheels
+
+          # Include the TUI script
+          if [ -f netops_tui.py ]; then
+            cp netops_tui.py dist/netops-wheels/
+          fi
+
+          # Create install script
+          cat > dist/netops-wheels/install.sh << 'INSTALL_EOF'
+          #!/bin/bash
+          set -e
+          echo "Installing netops-toolkit (offline)..."
+          pip install --user --no-index --find-links . netops-toolkit textual 2>/dev/null || \
+          pip install --user --no-index --find-links . --break-system-packages netops-toolkit textual
+          if [ -f netops_tui.py ]; then
+            cp netops_tui.py ~/netops_tui.py
+            chmod +x ~/netops_tui.py
+            echo "TUI installed to ~/netops_tui.py"
+          fi
+          echo "Done! Run: python3 ~/netops_tui.py"
+          INSTALL_EOF
+          chmod +x dist/netops-wheels/install.sh
+
+          # Create README for the bundle
+          cat > dist/netops-wheels/README.txt << 'README_EOF'
+          netops-toolkit offline bundle
+          =============================
+
+          Install (no sudo, no internet required):
+            cd netops-wheels && bash install.sh
+
+          Or manually:
+            pip install --user --no-index --find-links netops-wheels/ netops-toolkit textual
+
+          Launch TUI:
+            python3 ~/netops_tui.py
+
+          CLI examples:
+            python -m netops.inventory.scan --subnet 10.0.0.0/24 --output inventory.csv --format csv
+            python -m netops.inventory.scan --subnet 10.0.0.0/24 --deep --user admin --output inventory.csv
+            python -m netops.change.push --host router1 --commands changes.txt --commit
+            python -m netops.collect.backup --host router1 --output ./backups/
+
+          Requirements: Python 3.10+
+          README_EOF
+
+          # Create tarball
+          cd dist
+          tar czf netops-toolkit-offline-${{ steps.version.outputs.version }}.tar.gz netops-wheels/
+          ls -lh netops-toolkit-offline-*.tar.gz
+
+      - name: Find latest release tag
+        id: tag
+        run: |
+          TAG=$(gh release list --limit 1 --json tagName -q '.[0].tagName' 2>/dev/null || echo "")
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Upload bundle to release
+        if: steps.tag.outputs.tag != ''
+        run: |
+          gh release upload "${{ steps.tag.outputs.tag }}" \
+            dist/netops-toolkit-offline-${{ steps.version.outputs.version }}.tar.gz \
+            --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}
