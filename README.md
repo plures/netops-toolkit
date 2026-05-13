@@ -2,7 +2,7 @@
 
 [![Version](https://img.shields.io/badge/version-0.30.3-blue.svg)](CHANGELOG.md)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![License: BSL-1.1](https://img.shields.io/badge/License-BSL--1.1-blue.svg)](LICENSE) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE-MIT)
 [![CI](https://github.com/plures/netops-toolkit/actions/workflows/release.yml/badge.svg)](https://github.com/plures/netops-toolkit/actions)
 [![interrogate](https://img.shields.io/badge/interrogate-100%25-brightgreen.svg)](https://interrogate.readthedocs.io)
 [![docs](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://plures.github.io/netops-toolkit/)
@@ -477,4 +477,6 @@ See [CHANGELOG.md](CHANGELOG.md) for a full history of changes.
 
 ## License
 
-[MIT](LICENSE)
+
+Dual-licensed under [BSL-1.1](LICENSE) and [MIT](LICENSE-MIT). You may choose either license at your option.
+
