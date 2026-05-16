@@ -1,0 +1,3199 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Modular network automation utilities for telco operations">
+      
+      
+      
+        <link rel="canonical" href="https://plures.github.io/netops-toolkit/guides/cli-reference/">
+      
+      
+        <link rel="prev" href="../getting-started/">
+      
+      
+        <link rel="next" href="../config-collector/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>CLI Reference - netops-toolkit</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#cli-reference" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="netops-toolkit" class="md-header__button md-logo" aria-label="netops-toolkit" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            netops-toolkit
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              CLI Reference
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/plures/netops-toolkit" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    plures/netops-toolkit
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../getting-started/" class="md-tabs__link">
+          
+  
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="netops-toolkit" class="md-nav__button md-logo" aria-label="netops-toolkit" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    netops-toolkit
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/plures/netops-toolkit" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    plures/netops-toolkit
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Reference
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Table of Contents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#check-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Check commands
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Check commands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netopscheckbgp-bgp-session-monitor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.check.bgp — BGP session monitor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netopscheckhealth-device-health" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.check.health — Device health
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netopscheckinterfaces-interface-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.check.interfaces — Interface status
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netopscheckpaloalto-palo-alto-audit-health" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.check.paloalto — Palo Alto audit &amp; health
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netopscheckvlan-vlan-audit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.check.vlan — VLAN audit
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#collect-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Collect commands
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Collect commands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netopscollectbackup-bulk-config-backup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.collect.backup — Bulk config backup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netopscollectconfig-config-collection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.collect.config — Config collection
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#change-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Change commands
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Change commands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netopschangediff-semantic-config-diff" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.change.diff — Semantic config diff
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netopschangepush-safe-config-push" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.change.push — Safe config push
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#inventory-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inventory commands
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Inventory commands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netopsinventoryscan-subnet-scanner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.inventory.scan — Subnet scanner
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core-utilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core utilities
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Core utilities">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netopscorevault-credential-vault" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.core.vault — Credential vault
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="netops.core.vault — Credential vault">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#subcommands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Subcommands
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Subcommands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#init-initialise-a-new-vault" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        init — initialise a new vault
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#set-store-credentials" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        set — store credentials
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-show-credentials-passwords-masked" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get — show credentials (passwords masked)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete-remove-credentials" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        delete — remove credentials
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common patterns
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#password-via-environment-variable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Password via environment variable
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#json-output-for-pipeline-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JSON output for pipeline integration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exit-codes-for-monitoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exit codes for monitoring
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inventory-file-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inventory file format
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config-collector/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Config Collector
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interface-checker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interface Checker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../inventory-management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventory Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../auto-inventory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Auto-Inventory Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Network Scanner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config-diff/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Config Diff Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cisco-health/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cisco Health Checks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../brocade/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Brocade Support
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../paloalto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Palo Alto Support
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../juniper/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Juniper Support
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/core/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/check/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Check
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/change/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Change
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/collect/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collect
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/parsers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parsers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/playbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Playbooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/ansible/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ansible
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/inventory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Table of Contents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#check-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Check commands
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Check commands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netopscheckbgp-bgp-session-monitor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.check.bgp — BGP session monitor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netopscheckhealth-device-health" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.check.health — Device health
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netopscheckinterfaces-interface-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.check.interfaces — Interface status
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netopscheckpaloalto-palo-alto-audit-health" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.check.paloalto — Palo Alto audit &amp; health
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netopscheckvlan-vlan-audit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.check.vlan — VLAN audit
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#collect-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Collect commands
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Collect commands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netopscollectbackup-bulk-config-backup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.collect.backup — Bulk config backup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netopscollectconfig-config-collection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.collect.config — Config collection
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#change-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Change commands
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Change commands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netopschangediff-semantic-config-diff" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.change.diff — Semantic config diff
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#netopschangepush-safe-config-push" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.change.push — Safe config push
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#inventory-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inventory commands
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Inventory commands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netopsinventoryscan-subnet-scanner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.inventory.scan — Subnet scanner
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core-utilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core utilities
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Core utilities">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#netopscorevault-credential-vault" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        netops.core.vault — Credential vault
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="netops.core.vault — Credential vault">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#subcommands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Subcommands
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Subcommands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#init-initialise-a-new-vault" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        init — initialise a new vault
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#set-store-credentials" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        set — store credentials
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-show-credentials-passwords-masked" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get — show credentials (passwords masked)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete-remove-credentials" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        delete — remove credentials
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common patterns
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#password-via-environment-variable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Password via environment variable
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#json-output-for-pipeline-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JSON output for pipeline integration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exit-codes-for-monitoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exit codes for monitoring
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inventory-file-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inventory file format
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="cli-reference">CLI Reference<a class="headerlink" href="#cli-reference" title="Permanent link">&para;</a></h1>
+<p>All commands in netops-toolkit are invoked as Python modules (<code>python -m &lt;module&gt;</code>).
+There are no top-level <code>netops</code> shell entry points — each subsystem has its own
+module path, which you call directly.</p>
+<h2 id="table-of-contents">Table of Contents<a class="headerlink" href="#table-of-contents" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="#check-commands">Check commands</a></li>
+<li><a href="#netopscheckbgp-bgp-session-monitor">netops.check.bgp — BGP session monitor</a></li>
+<li><a href="#netopscheckhealth-device-health">netops.check.health — Device health</a></li>
+<li><a href="#netopscheckinterfaces-interface-status">netops.check.interfaces — Interface status</a></li>
+<li><a href="#netopscheckpaloalto-palo-alto-audit-health">netops.check.paloalto — Palo Alto audit &amp; health</a></li>
+<li><a href="#netopscheckvlan-vlan-audit">netops.check.vlan — VLAN audit</a></li>
+<li><a href="#collect-commands">Collect commands</a></li>
+<li><a href="#netopscollectbackup-bulk-config-backup">netops.collect.backup — Bulk config backup</a></li>
+<li><a href="#netopscollectconfig-config-collection">netops.collect.config — Config collection</a></li>
+<li><a href="#change-commands">Change commands</a></li>
+<li><a href="#netopschangediff-semantic-config-diff">netops.change.diff — Semantic config diff</a></li>
+<li><a href="#netopschangepush-safe-config-push">netops.change.push — Safe config push</a></li>
+<li><a href="#inventory-commands">Inventory commands</a></li>
+<li><a href="#netopsinventoryscan-subnet-scanner">netops.inventory.scan — Subnet scanner</a></li>
+<li><a href="#core-utilities">Core utilities</a></li>
+<li><a href="#netopscorevault-credential-vault">netops.core.vault — Credential vault</a></li>
+<li><a href="#common-patterns">Common patterns</a></li>
+</ul>
+<hr />
+<h2 id="check-commands">Check commands<a class="headerlink" href="#check-commands" title="Permanent link">&para;</a></h2>
+<h3 id="netopscheckbgp-bgp-session-monitor">netops.check.bgp — BGP session monitor<a class="headerlink" href="#netopscheckbgp-bgp-session-monitor" title="Permanent link">&para;</a></h3>
+<p>Monitors BGP sessions across one or many routers. Reports peer up/down status,
+prefix counts vs expected, and flap detection.</p>
+<p>Supports: Cisco IOS / IOS-XE / IOS-XR, Nokia SR-OS.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>python -m netops.check.bgp [--inventory FILE | --host IP] [OPTIONS]
+</code></pre></div>
+<p><strong>Target selection (mutually exclusive, one required)</strong></p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--inventory FILE</code>, <code>-i FILE</code></td>
+<td>YAML/JSON inventory file</td>
+</tr>
+<tr>
+<td><code>--host IP</code></td>
+<td>Single device IP/hostname</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Options</strong></p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--group GROUP</code>, <code>-g GROUP</code></td>
+<td>—</td>
+<td>Filter inventory by group name</td>
+</tr>
+<tr>
+<td><code>--vendor VENDOR</code></td>
+<td><code>cisco_ios</code></td>
+<td>Device vendor/type (single-host mode only)</td>
+</tr>
+<tr>
+<td><code>--user USER</code>, <code>-u USER</code></td>
+<td>—</td>
+<td>SSH username</td>
+</tr>
+<tr>
+<td><code>--password PASS</code>, <code>-p PASS</code></td>
+<td>—</td>
+<td>SSH password (or env <code>NETOPS_PASSWORD</code>)</td>
+</tr>
+<tr>
+<td><code>--expected-prefixes IP=N[,...]</code></td>
+<td>—</td>
+<td>Expected prefix counts, e.g. <code>10.0.0.2=100,10.0.0.3=200</code></td>
+</tr>
+<tr>
+<td><code>--flap-min-uptime SECS</code></td>
+<td><code>300</code></td>
+<td>Sessions up for fewer than this many seconds are flagged as flapping</td>
+</tr>
+<tr>
+<td><code>--prefix-deviation PCT</code></td>
+<td><code>20.0</code></td>
+<td>Alert when received prefixes deviate from expected by more than this %</td>
+</tr>
+<tr>
+<td><code>--json</code></td>
+<td>off</td>
+<td>Output results as JSON</td>
+</tr>
+<tr>
+<td><code>--fail-on-alert</code></td>
+<td>off</td>
+<td>Exit code 1 if any alert fires</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Examples</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Check all routers in inventory</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.check.bgp<span class="w"> </span>--inventory<span class="w"> </span>inventory.yaml
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># Check only the core group, with prefix expectations</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.check.bgp<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span>--inventory<span class="w"> </span>inventory.yaml<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span>--group<span class="w"> </span>core<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span>--expected-prefixes<span class="w"> </span><span class="m">10</span>.0.0.2<span class="o">=</span><span class="m">100</span>,10.0.0.3<span class="o">=</span><span class="m">200</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">  </span>--flap-min-uptime<span class="w"> </span><span class="m">300</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">  </span>--prefix-deviation<span class="w"> </span><span class="m">20</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="c1"># Check a single router and output JSON</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.check.bgp<span class="w"> </span>--host<span class="w"> </span><span class="m">10</span>.0.0.1<span class="w"> </span>--vendor<span class="w"> </span>cisco_ios<span class="w"> </span>--json
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="c1"># Use in a monitoring script — exit non-zero on any alert</span>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.check.bgp<span class="w"> </span>--inventory<span class="w"> </span>inventory.yaml<span class="w"> </span>--fail-on-alert
+</code></pre></div>
+<p><strong>Output (human-readable)</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>✅ 10.0.0.1 [2024-01-15T12:00:00Z]
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>   Peers: 3/3 established  |  flapping: 0  |  prefix alerts: 0
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>   ✅ 10.0.0.2 AS65001 — Established  pfx=100/100  up=1d02h
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>   ✅ 10.0.0.3 AS65002 — Established  pfx=200/200  up=2w03d
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>   ✅ 10.0.0.4 AS65003 — Established  pfx=50  up=5d10h
+</code></pre></div>
+<hr />
+<h3 id="netopscheckhealth-device-health">netops.check.health — Device health<a class="headerlink" href="#netopscheckhealth-device-health" title="Permanent link">&para;</a></h3>
+<p>Runs CPU, memory, interface-error, and log checks across vendors. Results are
+returned as structured data suitable for monitoring integration.</p>
+<p>Supports: Cisco IOS / IOS-XE / IOS-XR, Nokia SR-OS, Brocade, Palo Alto PAN-OS.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>python -m netops.check.health [--inventory FILE | --host IP] [OPTIONS]
+</code></pre></div>
+<p><strong>Target selection (mutually exclusive, one required)</strong></p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--inventory FILE</code>, <code>-i FILE</code></td>
+<td>YAML/JSON inventory file</td>
+</tr>
+<tr>
+<td><code>--host IP</code></td>
+<td>Single device IP/hostname</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Options</strong></p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--group GROUP</code>, <code>-g GROUP</code></td>
+<td>—</td>
+<td>Filter inventory by group name</td>
+</tr>
+<tr>
+<td><code>--vendor VENDOR</code></td>
+<td><code>cisco_ios</code></td>
+<td>Device vendor/type (single-host mode only)</td>
+</tr>
+<tr>
+<td><code>--user USER</code>, <code>-u USER</code></td>
+<td>—</td>
+<td>SSH username</td>
+</tr>
+<tr>
+<td><code>--password PASS</code>, <code>-p PASS</code></td>
+<td>—</td>
+<td>SSH password (or env <code>NETOPS_PASSWORD</code>)</td>
+</tr>
+<tr>
+<td><code>--threshold KEY=VAL[,...]</code></td>
+<td><code>cpu=80,mem=85</code></td>
+<td>Alert thresholds, e.g. <code>cpu=80,mem=85</code></td>
+</tr>
+<tr>
+<td><code>--json</code></td>
+<td>off</td>
+<td>Output results as JSON</td>
+</tr>
+<tr>
+<td><code>--fail-on-alert</code></td>
+<td>off</td>
+<td>Exit code 1 if any alert fires</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Examples</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Health check with custom thresholds</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.check.health<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>--inventory<span class="w"> </span>inv.yaml<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span>--group<span class="w"> </span>core<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span>--threshold<span class="w"> </span><span class="nv">cpu</span><span class="o">=</span><span class="m">80</span>,mem<span class="o">=</span><span class="m">85</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="c1"># Single device, JSON output</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.check.health<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">  </span>--host<span class="w"> </span><span class="m">10</span>.0.0.1<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">  </span>--vendor<span class="w"> </span>cisco_ios<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">  </span>--threshold<span class="w"> </span><span class="nv">cpu</span><span class="o">=</span><span class="m">80</span>,mem<span class="o">=</span><span class="m">85</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">  </span>--json
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="c1"># Exit non-zero on any alert (for CI/monitoring)</span>
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.check.health<span class="w"> </span>--inventory<span class="w"> </span>inv.yaml<span class="w"> </span>--fail-on-alert
+</code></pre></div>
+<p><strong>Output (human-readable)</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>✅ 10.0.0.1 [2024-01-15T12:00:00Z]
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>   CPU : 23.5% (threshold 80%)
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>   MEM : 41.2% (threshold 85%)
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>   IFACE ERRORS: 0/48 interfaces with errors
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>   LOGS: 0 critical, 0 major
+</code></pre></div>
+<hr />
+<h3 id="netopscheckinterfaces-interface-status">netops.check.interfaces — Interface status<a class="headerlink" href="#netopscheckinterfaces-interface-status" title="Permanent link">&para;</a></h3>
+<p>Checks interface up/down status across devices. Uses <code>show ip interface brief</code>
+(Cisco) or <code>show port</code> (Nokia).</p>
+<p>Supports: Cisco IOS / IOS-XE / IOS-XR / NX-OS, Nokia SR-OS.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>python -m netops.check.interfaces --host IP [OPTIONS]
+</code></pre></div>
+<p><strong>Required</strong></p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--host IP</code></td>
+<td>Device IP/hostname</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Options</strong></p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--vendor VENDOR</code></td>
+<td><code>cisco_ios</code></td>
+<td>Device vendor/type</td>
+</tr>
+<tr>
+<td><code>--user USER</code>, <code>-u USER</code></td>
+<td>—</td>
+<td>SSH username</td>
+</tr>
+<tr>
+<td><code>--password PASS</code>, <code>-p PASS</code></td>
+<td>—</td>
+<td>SSH password (or env <code>NETOPS_PASSWORD</code>)</td>
+</tr>
+<tr>
+<td><code>--down-only</code></td>
+<td>off</td>
+<td>Show only interfaces that are down</td>
+</tr>
+<tr>
+<td><code>--json</code></td>
+<td>off</td>
+<td>Output results as JSON</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Examples</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Show all interfaces</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.check.interfaces<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span>--host<span class="w"> </span><span class="m">10</span>.0.0.1<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span>--vendor<span class="w"> </span>cisco_ios<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">  </span>--user<span class="w"> </span>admin
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="c1"># Show only down interfaces</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.check.interfaces<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">  </span>--host<span class="w"> </span><span class="m">10</span>.0.0.1<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">  </span>--vendor<span class="w"> </span>cisco_ios<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">  </span>--down-only
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="c1"># JSON output for integration</span>
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.check.interfaces<span class="w"> </span>--host<span class="w"> </span><span class="m">10</span>.0.0.1<span class="w"> </span>--json
+</code></pre></div>
+<p><strong>Output (human-readable)</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>📊 10.0.0.1: 46/48 interfaces up, 2 down
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>  ✅ GigabitEthernet0/0 (10.0.0.1) — up/up
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>  ✅ GigabitEthernet0/1 — up/up
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>  ❌ GigabitEthernet0/2 — administratively down/down
+</code></pre></div>
+<hr />
+<h3 id="netopscheckpaloalto-palo-alto-audit-health">netops.check.paloalto — Palo Alto audit &amp; health<a class="headerlink" href="#netopscheckpaloalto-palo-alto-audit-health" title="Permanent link">&para;</a></h3>
+<p>Runs security policy audit (unused/shadowed rules) and health checks (HA state,
+session table utilization, content versions) on Palo Alto PAN-OS firewalls.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>python -m netops.check.paloalto [--inventory FILE | --host IP] [OPTIONS]
+</code></pre></div>
+<p><strong>Target selection (mutually exclusive, one required)</strong></p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--inventory FILE</code>, <code>-i FILE</code></td>
+<td>YAML/JSON inventory file</td>
+</tr>
+<tr>
+<td><code>--host IP</code></td>
+<td>Single device IP/hostname</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Options</strong></p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--group GROUP</code>, <code>-g GROUP</code></td>
+<td>—</td>
+<td>Filter inventory by group name</td>
+</tr>
+<tr>
+<td><code>--vendor VENDOR</code></td>
+<td><code>paloalto_panos</code></td>
+<td>Device vendor/type (single-host mode only)</td>
+</tr>
+<tr>
+<td><code>--user USER</code>, <code>-u USER</code></td>
+<td>—</td>
+<td>SSH username</td>
+</tr>
+<tr>
+<td><code>--password PASS</code>, <code>-p PASS</code></td>
+<td>—</td>
+<td>SSH password (or env <code>NETOPS_PASSWORD</code>)</td>
+</tr>
+<tr>
+<td><code>--session-threshold PCT</code></td>
+<td><code>80.0</code></td>
+<td>Session table utilization alert threshold (%)</td>
+</tr>
+<tr>
+<td><code>--audit</code></td>
+<td>off</td>
+<td>Run security policy audit (unused + shadowed rules)</td>
+</tr>
+<tr>
+<td><code>--health</code></td>
+<td>on</td>
+<td>Run health checks — HA state, sessions, content versions (default mode)</td>
+</tr>
+<tr>
+<td><code>--json</code></td>
+<td>off</td>
+<td>Output results as JSON</td>
+</tr>
+<tr>
+<td><code>--fail-on-alert</code></td>
+<td>off</td>
+<td>Exit code 1 if any alert fires</td>
+</tr>
+</tbody>
+</table>
+<p><code>--audit</code> and <code>--health</code> are mutually exclusive.</p>
+<p><strong>Examples</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># Health check on all firewalls</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.check.paloalto<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">  </span>--inventory<span class="w"> </span>inv.yaml<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">  </span>--group<span class="w"> </span>firewalls<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">  </span>--health<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">  </span>--json
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="c1"># Security policy audit on a single firewall</span>
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.check.paloalto<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="w">  </span>--host<span class="w"> </span><span class="m">10</span>.0.0.1<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="w">  </span>--audit
+<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>
+<a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="c1"># Custom session threshold</span>
+<a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.check.paloalto<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a><span class="w">  </span>--host<span class="w"> </span><span class="m">10</span>.0.0.1<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a><span class="w">  </span>--health<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a><span class="w">  </span>--session-threshold<span class="w"> </span><span class="m">70</span>
+</code></pre></div>
+<p><strong>Output — health (human-readable)</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>✅ 10.0.0.1 [2024-01-15T12:00:00Z]
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>   HA : mode=Active-Passive  local=active  peer=passive
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>   SESSIONS : 12543 active  (15.7% of 80000)
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>   CONTENT : threat=8678-7488  url=20230115.20003
+</code></pre></div>
+<p><strong>Output — policy audit (human-readable)</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>🚨 Policy audit — 42 rules total
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>   ⚠️  UNUSED RULES (3):
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>      • legacy-permit-any  (action: allow)
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>      • old-dmz-access     (action: allow)
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>      • test-rule-delete   (action: deny)
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>   ✅ No shadowed rules
+</code></pre></div>
+<hr />
+<h3 id="netopscheckvlan-vlan-audit">netops.check.vlan — VLAN audit<a class="headerlink" href="#netopscheckvlan-vlan-audit" title="Permanent link">&para;</a></h3>
+<p>Audits VLAN configuration on Cisco IOS/IOS-XE switches. Compares declared
+(expected) VLANs against what is actually configured. Optionally checks trunk
+interfaces too.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>python -m netops.check.vlan [--inventory FILE | --host IP] [--expected-vlans RANGE | --vlan-db FILE] [OPTIONS]
+</code></pre></div>
+<p><strong>Target selection (mutually exclusive, one required)</strong></p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--inventory FILE</code>, <code>-i FILE</code></td>
+<td>YAML/JSON inventory file</td>
+</tr>
+<tr>
+<td><code>--host IP</code></td>
+<td>Single device IP/hostname</td>
+</tr>
+</tbody>
+</table>
+<p><strong>VLAN source (mutually exclusive, one required)</strong></p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--expected-vlans RANGE</code></td>
+<td>Comma/range notation, e.g. <code>10,20,30-50,100</code></td>
+</tr>
+<tr>
+<td><code>--vlan-db FILE</code></td>
+<td>YAML file mapping VLAN IDs to names (see below)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Options</strong></p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--group GROUP</code>, <code>-g GROUP</code></td>
+<td>—</td>
+<td>Filter inventory by group name</td>
+</tr>
+<tr>
+<td><code>--vendor VENDOR</code></td>
+<td><code>cisco_ios</code></td>
+<td>Device vendor/type (single-host mode only)</td>
+</tr>
+<tr>
+<td><code>--user USER</code>, <code>-u USER</code></td>
+<td>—</td>
+<td>SSH username</td>
+</tr>
+<tr>
+<td><code>--password PASS</code>, <code>-p PASS</code></td>
+<td>—</td>
+<td>SSH password (or env <code>NETOPS_PASSWORD</code>)</td>
+</tr>
+<tr>
+<td><code>--ignore-vlans RANGE</code></td>
+<td>—</td>
+<td>VLAN IDs to exclude from the extra-VLANs check</td>
+</tr>
+<tr>
+<td><code>--check-trunks</code></td>
+<td>off</td>
+<td>Also verify expected VLANs are active on trunk interfaces</td>
+</tr>
+<tr>
+<td><code>--json</code></td>
+<td>off</td>
+<td>Output results as JSON</td>
+</tr>
+<tr>
+<td><code>--fail-on-alert</code></td>
+<td>off</td>
+<td>Exit code 1 if any alert fires</td>
+</tr>
+</tbody>
+</table>
+<p><strong>VLAN database file format (<code>vlans.yaml</code>)</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nt">vlans</span><span class="p">:</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">  </span><span class="nt">10</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">MANAGEMENT</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">  </span><span class="nt">20</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SERVERS</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">  </span><span class="nt">100</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DMZ</span>
+</code></pre></div>
+<p><strong>Examples</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1"># Audit using inline VLAN range</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.check.vlan<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">  </span>--inventory<span class="w"> </span>inventory.yaml<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="w">  </span>--expected-vlans<span class="w"> </span><span class="m">10</span>,20,30-50,100<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="w">  </span>--check-trunks
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>
+<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="c1"># Audit using a VLAN database file (also validates VLAN names)</span>
+<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.check.vlan<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="w">  </span>--inventory<span class="w"> </span>inventory.yaml<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="w">  </span>--vlan-db<span class="w"> </span>vlans.yaml<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a><span class="w">  </span>--check-trunks
+<a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a>
+<a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a><span class="c1"># Single switch, JSON output</span>
+<a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.check.vlan<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a><span class="w">  </span>--host<span class="w"> </span><span class="m">10</span>.0.0.1<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-15-16" name="__codelineno-15-16" href="#__codelineno-15-16"></a><span class="w">  </span>--vendor<span class="w"> </span>cisco_ios<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-15-17" name="__codelineno-15-17" href="#__codelineno-15-17"></a><span class="w">  </span>--expected-vlans<span class="w"> </span><span class="m">10</span>,20,100<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-15-18" name="__codelineno-15-18" href="#__codelineno-15-18"></a><span class="w">  </span>--json
+<a id="__codelineno-15-19" name="__codelineno-15-19" href="#__codelineno-15-19"></a>
+<a id="__codelineno-15-20" name="__codelineno-15-20" href="#__codelineno-15-20"></a><span class="c1"># Ignore VLANs 999 and 1001 from the extra-VLANs check</span>
+<a id="__codelineno-15-21" name="__codelineno-15-21" href="#__codelineno-15-21"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.check.vlan<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-15-22" name="__codelineno-15-22" href="#__codelineno-15-22"></a><span class="w">  </span>--host<span class="w"> </span><span class="m">10</span>.0.0.1<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-15-23" name="__codelineno-15-23" href="#__codelineno-15-23"></a><span class="w">  </span>--expected-vlans<span class="w"> </span><span class="m">10</span>,20<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-15-24" name="__codelineno-15-24" href="#__codelineno-15-24"></a><span class="w">  </span>--ignore-vlans<span class="w"> </span><span class="m">999</span>,1001
+</code></pre></div>
+<p><strong>Output (human-readable)</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>🚨 10.0.0.1 [2024-01-15T12:00:00Z] — NON-COMPLIANT
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>   VLANs on switch: 15
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>   ⚠  Missing VLANs : 30, 40, 50
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>   ⚠  Extra VLANs   : 999
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>   ⚠  VLAN 20 name: expected &#39;SERVERS&#39;, got &#39;servers&#39;
+</code></pre></div>
+<hr />
+<h2 id="collect-commands">Collect commands<a class="headerlink" href="#collect-commands" title="Permanent link">&para;</a></h2>
+<h3 id="netopscollectbackup-bulk-config-backup">netops.collect.backup — Bulk config backup<a class="headerlink" href="#netopscollectbackup-bulk-config-backup" title="Permanent link">&para;</a></h3>
+<p>Collects running configs from all inventory devices, saves them with timestamps,
+and generates unified diffs against the previous backup so unexpected changes are
+immediately visible. Optionally commits every changed file to a local git
+repository.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>python -m netops.collect.backup --inventory FILE --output DIR [OPTIONS]
+</code></pre></div>
+<p><strong>Required</strong></p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--inventory FILE</code>, <code>-i FILE</code></td>
+<td>Inventory file (YAML/JSON)</td>
+</tr>
+<tr>
+<td><code>--output DIR</code>, <code>-o DIR</code></td>
+<td>Root directory for the backup archive</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Options</strong></p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--group GROUP</code>, <code>-g GROUP</code></td>
+<td>—</td>
+<td>Target a specific inventory group</td>
+</tr>
+<tr>
+<td><code>--user USER</code>, <code>-u USER</code></td>
+<td>—</td>
+<td>Username override</td>
+</tr>
+<tr>
+<td><code>--password PASS</code>, <code>-p PASS</code></td>
+<td>—</td>
+<td>Password (or env <code>NETOPS_PASSWORD</code>)</td>
+</tr>
+<tr>
+<td><code>--workers N</code>, <code>-w N</code></td>
+<td><code>5</code></td>
+<td>Number of concurrent collection threads</td>
+</tr>
+<tr>
+<td><code>--git</code></td>
+<td>off</td>
+<td>Commit every backup to a local git repository</td>
+</tr>
+<tr>
+<td><code>--no-alert</code></td>
+<td>off</td>
+<td>Suppress per-device change alerts on stderr</td>
+</tr>
+<tr>
+<td><code>--json</code></td>
+<td>off</td>
+<td>Output backup summary as JSON to stdout</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Directory layout</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>&lt;output&gt;/
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>  &lt;hostname&gt;/
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>    20240101-120000.cfg
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>    20240102-130000.cfg   ← newest backup
+</code></pre></div>
+<p>Diffs are computed automatically between the two most-recent backups for each
+device.</p>
+<p><strong>Examples</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1"># Backup all devices in inventory</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.collect.backup<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="w">  </span>--inventory<span class="w"> </span>inv.yaml<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="w">  </span>--output<span class="w"> </span>/var/backups/network/
+<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>
+<a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a><span class="c1"># Backup with git commits and 10 parallel workers</span>
+<a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.collect.backup<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a><span class="w">  </span>--inventory<span class="w"> </span>inv.yaml<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a><span class="w">  </span>--output<span class="w"> </span>/var/backups/network/<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a><span class="w">  </span>--git<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a><span class="w">  </span>--workers<span class="w"> </span><span class="m">10</span>
+<a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a>
+<a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a><span class="c1"># Backup only the core group</span>
+<a id="__codelineno-19-14" name="__codelineno-19-14" href="#__codelineno-19-14"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.collect.backup<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-19-15" name="__codelineno-19-15" href="#__codelineno-19-15"></a><span class="w">  </span>--inventory<span class="w"> </span>inv.yaml<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-19-16" name="__codelineno-19-16" href="#__codelineno-19-16"></a><span class="w">  </span>--output<span class="w"> </span>/var/backups/network/<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-19-17" name="__codelineno-19-17" href="#__codelineno-19-17"></a><span class="w">  </span>--group<span class="w"> </span>core
+<a id="__codelineno-19-18" name="__codelineno-19-18" href="#__codelineno-19-18"></a>
+<a id="__codelineno-19-19" name="__codelineno-19-19" href="#__codelineno-19-19"></a><span class="c1"># JSON summary for pipeline integration</span>
+<a id="__codelineno-19-20" name="__codelineno-19-20" href="#__codelineno-19-20"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.collect.backup<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-19-21" name="__codelineno-19-21" href="#__codelineno-19-21"></a><span class="w">  </span>--inventory<span class="w"> </span>inv.yaml<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-19-22" name="__codelineno-19-22" href="#__codelineno-19-22"></a><span class="w">  </span>--output<span class="w"> </span>/var/backups/network/<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-19-23" name="__codelineno-19-23" href="#__codelineno-19-23"></a><span class="w">  </span>--json
+</code></pre></div>
+<p><strong>Output (human-readable)</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>📦 Backup complete: 12 ok, 3 changed, 0 failed
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>  ✅ core-rtr-01 → /var/backups/network/core-rtr-01/20240115-120000.cfg ⚠️  CHANGED
+<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>  ✅ core-rtr-02 → /var/backups/network/core-rtr-02/20240115-120000.cfg
+<a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>  ✅ access-sw-01 → /var/backups/network/access-sw-01/20240115-120000.cfg ⚠️  CHANGED
+</code></pre></div>
+<p>Change diffs (first 20 lines) are written to <strong>stderr</strong> unless <code>--no-alert</code> is passed.</p>
+<hr />
+<h3 id="netopscollectconfig-config-collection">netops.collect.config — Config collection<a class="headerlink" href="#netopscollectconfig-config-collection" title="Permanent link">&para;</a></h3>
+<p>Collects the running configuration from one or many devices. Simpler than
+<code>netops.collect.backup</code> — no diff tracking or git integration.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>python -m netops.collect.config [--inventory FILE | --host IP] [OPTIONS]
+</code></pre></div>
+<p><strong>Target selection (one required)</strong></p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--inventory FILE</code>, <code>-i FILE</code></td>
+<td>Inventory file (YAML/JSON)</td>
+</tr>
+<tr>
+<td><code>--host IP</code></td>
+<td>Single device IP/hostname</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Options</strong></p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--group GROUP</code>, <code>-g GROUP</code></td>
+<td>—</td>
+<td>Target a specific inventory group</td>
+</tr>
+<tr>
+<td><code>--vendor VENDOR</code></td>
+<td><code>cisco_ios</code></td>
+<td>Device type (single-host mode only)</td>
+</tr>
+<tr>
+<td><code>--user USER</code>, <code>-u USER</code></td>
+<td>—</td>
+<td>Username</td>
+</tr>
+<tr>
+<td><code>--password PASS</code>, <code>-p PASS</code></td>
+<td>—</td>
+<td>Password (or env <code>NETOPS_PASSWORD</code>)</td>
+</tr>
+<tr>
+<td><code>--transport {ssh,telnet}</code></td>
+<td><code>ssh</code></td>
+<td>Transport protocol</td>
+</tr>
+<tr>
+<td><code>--output DIR</code>, <code>-o DIR</code></td>
+<td>—</td>
+<td>Save configs to this directory (one file per device)</td>
+</tr>
+<tr>
+<td><code>--json</code></td>
+<td>off</td>
+<td>Print all results as JSON to stdout</td>
+</tr>
+</tbody>
+</table>
+<p>When <code>--output</code> is given, files are named <code>&lt;host&gt;_&lt;timestamp&gt;.cfg</code>.
+When neither <code>--output</code> nor <code>--json</code> is given, a one-line summary per device
+is printed.</p>
+<p><strong>Examples</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="c1"># Collect from a single device</span>
+<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.collect.config<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="w">  </span>--host<span class="w"> </span><span class="m">10</span>.0.0.1<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="w">  </span>--vendor<span class="w"> </span>cisco_ios<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a><span class="w">  </span>--user<span class="w"> </span>admin
+<a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a>
+<a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a><span class="c1"># Collect from all inventory devices and save to files</span>
+<a id="__codelineno-22-8" name="__codelineno-22-8" href="#__codelineno-22-8"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.collect.config<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-22-9" name="__codelineno-22-9" href="#__codelineno-22-9"></a><span class="w">  </span>--inventory<span class="w"> </span>inv.yaml<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-22-10" name="__codelineno-22-10" href="#__codelineno-22-10"></a><span class="w">  </span>--output<span class="w"> </span>/tmp/configs/
+<a id="__codelineno-22-11" name="__codelineno-22-11" href="#__codelineno-22-11"></a>
+<a id="__codelineno-22-12" name="__codelineno-22-12" href="#__codelineno-22-12"></a><span class="c1"># Only the core group, via Telnet, with JSON output</span>
+<a id="__codelineno-22-13" name="__codelineno-22-13" href="#__codelineno-22-13"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.collect.config<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-22-14" name="__codelineno-22-14" href="#__codelineno-22-14"></a><span class="w">  </span>--inventory<span class="w"> </span>inv.yaml<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-22-15" name="__codelineno-22-15" href="#__codelineno-22-15"></a><span class="w">  </span>--group<span class="w"> </span>core<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-22-16" name="__codelineno-22-16" href="#__codelineno-22-16"></a><span class="w">  </span>--transport<span class="w"> </span>telnet<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-22-17" name="__codelineno-22-17" href="#__codelineno-22-17"></a><span class="w">  </span>--json
+</code></pre></div>
+<p><strong>Output (human-readable)</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>✅ 10.0.0.1: 347 lines collected
+<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>❌ 10.0.0.2: Authentication failed.
+</code></pre></div>
+<hr />
+<h2 id="change-commands">Change commands<a class="headerlink" href="#change-commands" title="Permanent link">&para;</a></h2>
+<h3 id="netopschangediff-semantic-config-diff">netops.change.diff — Semantic config diff<a class="headerlink" href="#netopschangediff-semantic-config-diff" title="Permanent link">&para;</a></h3>
+<p>Compares two network configuration snapshots with structural awareness.
+Understands Cisco IOS / JunOS / flat config formats and highlights
+security-sensitive changes (ACLs, authentication, routing policy).</p>
+<p>See the full guide: <a href="../config-diff/">Config Diff Engine</a></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>python -m netops.change.diff --before FILE --after FILE [OPTIONS]
+</code></pre></div>
+<p><strong>Required</strong></p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--before FILE</code></td>
+<td>Before (original / running) config file</td>
+</tr>
+<tr>
+<td><code>--after FILE</code></td>
+<td>After (new / candidate) config file</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Options</strong></p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--format FORMAT</code></td>
+<td><code>semantic</code></td>
+<td>Output format: <code>unified</code>, <code>semantic</code>, or <code>json</code></td>
+</tr>
+<tr>
+<td><code>--style STYLE</code></td>
+<td>auto-detect</td>
+<td>Config syntax: <code>cisco</code>, <code>junos</code>, or <code>flat</code></td>
+</tr>
+<tr>
+<td><code>--fail-on-change</code></td>
+<td>off</td>
+<td>Exit code 1 if any change is detected</td>
+</tr>
+<tr>
+<td><code>--fail-on-security</code></td>
+<td>off</td>
+<td>Exit code 2 if security-sensitive changes detected</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Examples</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="c1"># Semantic diff (default)</span>
+<a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.change.diff<span class="w"> </span>--before<span class="w"> </span>before.txt<span class="w"> </span>--after<span class="w"> </span>after.txt
+<a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a>
+<a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="c1"># Unified diff (patch-compatible)</span>
+<a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.change.diff<span class="w"> </span>--before<span class="w"> </span>b.txt<span class="w"> </span>--after<span class="w"> </span>a.txt<span class="w"> </span>--format<span class="w"> </span>unified
+<a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a>
+<a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a><span class="c1"># JSON output for CI pipelines</span>
+<a id="__codelineno-25-8" name="__codelineno-25-8" href="#__codelineno-25-8"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.change.diff<span class="w"> </span>--before<span class="w"> </span>b.txt<span class="w"> </span>--after<span class="w"> </span>a.txt<span class="w"> </span>--format<span class="w"> </span>json
+<a id="__codelineno-25-9" name="__codelineno-25-9" href="#__codelineno-25-9"></a>
+<a id="__codelineno-25-10" name="__codelineno-25-10" href="#__codelineno-25-10"></a><span class="c1"># Block pipeline on security changes</span>
+<a id="__codelineno-25-11" name="__codelineno-25-11" href="#__codelineno-25-11"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.change.diff<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-25-12" name="__codelineno-25-12" href="#__codelineno-25-12"></a><span class="w">  </span>--before<span class="w"> </span>b.txt<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-25-13" name="__codelineno-25-13" href="#__codelineno-25-13"></a><span class="w">  </span>--after<span class="w"> </span>a.txt<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-25-14" name="__codelineno-25-14" href="#__codelineno-25-14"></a><span class="w">  </span>--format<span class="w"> </span>json<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-25-15" name="__codelineno-25-15" href="#__codelineno-25-15"></a><span class="w">  </span>--fail-on-security
+</code></pre></div>
+<hr />
+<h3 id="netopschangepush-safe-config-push">netops.change.push — Safe config push<a class="headerlink" href="#netopschangepush-safe-config-push" title="Permanent link">&para;</a></h3>
+<p>Pushes configuration changes to a device with a pre/post diff, an optional
+confirm timer, and automatic rollback if the change is not confirmed in time.
+Dry-run by default — changes are only applied when <code>--commit</code> is passed.</p>
+<p><strong>Workflow:</strong></p>
+<ol>
+<li>Connect and snapshot the running config (pre-change).</li>
+<li>When <code>--commit</code> is given, push the commands from the supplied file.</li>
+<li>Snapshot the config again (post-change) and compute a unified diff.</li>
+<li>If <code>--confirm-timer N</code> is set, start a countdown — type <code>confirm</code> within
+   <em>N</em> minutes or the pre-change config is restored.</li>
+<li>Append a structured entry to the JSON-lines change log.</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>python -m netops.change.push --host IP --commands FILE [OPTIONS]
+</code></pre></div>
+<p><strong>Required</strong></p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--host IP</code></td>
+<td>Target device hostname or IP</td>
+</tr>
+<tr>
+<td><code>--commands FILE</code></td>
+<td>File containing config commands, one per line</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Options</strong></p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--vendor VENDOR</code></td>
+<td><code>cisco_ios</code></td>
+<td>Device type</td>
+</tr>
+<tr>
+<td><code>--user USER</code>, <code>-u USER</code></td>
+<td>—</td>
+<td>Username (or env <code>NETOPS_USER</code>, else system user)</td>
+</tr>
+<tr>
+<td><code>--password PASS</code>, <code>-p PASS</code></td>
+<td>—</td>
+<td>Password (or env <code>NETOPS_PASSWORD</code>)</td>
+</tr>
+<tr>
+<td><code>--transport {ssh,telnet}</code></td>
+<td><code>ssh</code></td>
+<td>Transport protocol</td>
+</tr>
+<tr>
+<td><code>--port PORT</code></td>
+<td>—</td>
+<td>Override default port</td>
+</tr>
+<tr>
+<td><code>--commit</code></td>
+<td>off</td>
+<td>Actually push changes (default is dry-run)</td>
+</tr>
+<tr>
+<td><code>--confirm-timer MINUTES</code></td>
+<td><code>0</code></td>
+<td>Auto-rollback if not confirmed within N minutes (0 = disabled)</td>
+</tr>
+<tr>
+<td><code>--operator NAME</code></td>
+<td>current user</td>
+<td>Operator name written to the change log</td>
+</tr>
+<tr>
+<td><code>--changelog FILE</code></td>
+<td><code>~/.netops/changelog.jsonl</code></td>
+<td>Path to the JSON-lines change log</td>
+</tr>
+<tr>
+<td><code>--json</code></td>
+<td>off</td>
+<td>Output result as JSON to stdout</td>
+</tr>
+</tbody>
+</table>
+<p>Commands file format — one command per line; lines starting with <code>#</code> and blank
+lines are ignored:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a># Enable OSPF on loopback
+<a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>router ospf 1
+<a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a> network 192.168.0.1 0.0.0.0 area 0
+</code></pre></div>
+<p><strong>Examples</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="c1"># Dry-run — show what would change without touching the device</span>
+<a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.change.push<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a><span class="w">  </span>--host<span class="w"> </span>router1<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a><span class="w">  </span>--commands<span class="w"> </span>changes.txt
+<a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a>
+<a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a><span class="c1"># Commit with a 5-minute confirm timer</span>
+<a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.change.push<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a><span class="w">  </span>--host<span class="w"> </span>router1<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-28-9" name="__codelineno-28-9" href="#__codelineno-28-9"></a><span class="w">  </span>--commands<span class="w"> </span>changes.txt<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-28-10" name="__codelineno-28-10" href="#__codelineno-28-10"></a><span class="w">  </span>--commit<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-28-11" name="__codelineno-28-11" href="#__codelineno-28-11"></a><span class="w">  </span>--confirm-timer<span class="w"> </span><span class="m">5</span>
+<a id="__codelineno-28-12" name="__codelineno-28-12" href="#__codelineno-28-12"></a>
+<a id="__codelineno-28-13" name="__codelineno-28-13" href="#__codelineno-28-13"></a><span class="c1"># Commit immediately (no confirm timer) and log JSON output</span>
+<a id="__codelineno-28-14" name="__codelineno-28-14" href="#__codelineno-28-14"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.change.push<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-28-15" name="__codelineno-28-15" href="#__codelineno-28-15"></a><span class="w">  </span>--host<span class="w"> </span>router1<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-28-16" name="__codelineno-28-16" href="#__codelineno-28-16"></a><span class="w">  </span>--vendor<span class="w"> </span>cisco_xr<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-28-17" name="__codelineno-28-17" href="#__codelineno-28-17"></a><span class="w">  </span>--commands<span class="w"> </span>changes.txt<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-28-18" name="__codelineno-28-18" href="#__codelineno-28-18"></a><span class="w">  </span>--commit<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-28-19" name="__codelineno-28-19" href="#__codelineno-28-19"></a><span class="w">  </span>--json
+<a id="__codelineno-28-20" name="__codelineno-28-20" href="#__codelineno-28-20"></a>
+<a id="__codelineno-28-21" name="__codelineno-28-21" href="#__codelineno-28-21"></a><span class="c1"># Custom changelog location</span>
+<a id="__codelineno-28-22" name="__codelineno-28-22" href="#__codelineno-28-22"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.change.push<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-28-23" name="__codelineno-28-23" href="#__codelineno-28-23"></a><span class="w">  </span>--host<span class="w"> </span>router1<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-28-24" name="__codelineno-28-24" href="#__codelineno-28-24"></a><span class="w">  </span>--commands<span class="w"> </span>changes.txt<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-28-25" name="__codelineno-28-25" href="#__codelineno-28-25"></a><span class="w">  </span>--commit<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-28-26" name="__codelineno-28-26" href="#__codelineno-28-26"></a><span class="w">  </span>--changelog<span class="w"> </span>/var/log/netops/changes.jsonl
+</code></pre></div>
+<p><strong>Output (human-readable)</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>🔍 DRY-RUN: pre-change config captured (412 lines)
+<a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a>   (no changes pushed — use --commit to apply)
+<a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a>
+<a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a>--- pre-change
+<a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a>+++ post-change  (simulated)
+<a id="__codelineno-29-6" name="__codelineno-29-6" href="#__codelineno-29-6"></a>@@ -10,6 +10,8 @@
+<a id="__codelineno-29-7" name="__codelineno-29-7" href="#__codelineno-29-7"></a> router ospf 1
+<a id="__codelineno-29-8" name="__codelineno-29-8" href="#__codelineno-29-8"></a>+ network 192.168.0.1 0.0.0.0 area 0
+</code></pre></div>
+<hr />
+<h2 id="inventory-commands">Inventory commands<a class="headerlink" href="#inventory-commands" title="Permanent link">&para;</a></h2>
+<h3 id="netopsinventoryscan-subnet-scanner">netops.inventory.scan — Subnet scanner<a class="headerlink" href="#netopsinventoryscan-subnet-scanner" title="Permanent link">&para;</a></h3>
+<p>Discovers devices on a subnet using a ping sweep followed by SNMP, CDP, and LLDP
+identification. Results can be saved as a JSON inventory fragment or merged into
+an existing YAML inventory file.</p>
+<p>Requires the optional <code>snmp</code> extra for SNMP identification:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>pip<span class="w"> </span>install<span class="w"> </span>netops-toolkit<span class="o">[</span>snmp<span class="o">]</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a>python -m netops.inventory.scan --subnet CIDR [OPTIONS]
+</code></pre></div>
+<p><strong>Required</strong></p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--subnet CIDR</code></td>
+<td>Subnet in CIDR notation, e.g. <code>10.0.0.0/24</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Options</strong></p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--community STRING</code></td>
+<td><code>public</code></td>
+<td>SNMPv2c community string</td>
+</tr>
+<tr>
+<td><code>--snmp-port PORT</code></td>
+<td><code>161</code></td>
+<td>SNMP UDP port</td>
+</tr>
+<tr>
+<td><code>--snmp-timeout SECS</code></td>
+<td><code>2</code></td>
+<td>Per-host SNMP timeout in seconds</td>
+</tr>
+<tr>
+<td><code>--ping-workers N</code></td>
+<td><code>50</code></td>
+<td>Ping sweep thread-pool size</td>
+</tr>
+<tr>
+<td><code>--snmp-concurrency N</code></td>
+<td><code>10</code></td>
+<td>Maximum simultaneous SNMP sessions</td>
+</tr>
+<tr>
+<td><code>--output FILE</code>, <code>-o FILE</code></td>
+<td>—</td>
+<td>Write JSON inventory fragment to this file</td>
+</tr>
+<tr>
+<td><code>--merge FILE</code>, <code>-m FILE</code></td>
+<td>—</td>
+<td>Merge scan results into an existing inventory file</td>
+</tr>
+<tr>
+<td><code>--skip-ping</code></td>
+<td>off</td>
+<td>Skip ping sweep — probe every address in the subnet</td>
+</tr>
+<tr>
+<td><code>--skip-snmp</code></td>
+<td>off</td>
+<td>Skip SNMP — perform a ping sweep only</td>
+</tr>
+<tr>
+<td><code>--verbose</code>, <code>-v</code></td>
+<td>off</td>
+<td>Enable debug logging</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Examples</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a><span class="c1"># Basic ping sweep</span>
+<a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.inventory.scan<span class="w"> </span>--subnet<span class="w"> </span><span class="m">10</span>.0.0.0/24
+<a id="__codelineno-32-3" name="__codelineno-32-3" href="#__codelineno-32-3"></a>
+<a id="__codelineno-32-4" name="__codelineno-32-4" href="#__codelineno-32-4"></a><span class="c1"># Full discovery with SNMPv2c community string</span>
+<a id="__codelineno-32-5" name="__codelineno-32-5" href="#__codelineno-32-5"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.inventory.scan<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-32-6" name="__codelineno-32-6" href="#__codelineno-32-6"></a><span class="w">  </span>--subnet<span class="w"> </span><span class="m">10</span>.0.0.0/24<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-32-7" name="__codelineno-32-7" href="#__codelineno-32-7"></a><span class="w">  </span>--community<span class="w"> </span>mysecret
+<a id="__codelineno-32-8" name="__codelineno-32-8" href="#__codelineno-32-8"></a>
+<a id="__codelineno-32-9" name="__codelineno-32-9" href="#__codelineno-32-9"></a><span class="c1"># Save results as a JSON fragment</span>
+<a id="__codelineno-32-10" name="__codelineno-32-10" href="#__codelineno-32-10"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.inventory.scan<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-32-11" name="__codelineno-32-11" href="#__codelineno-32-11"></a><span class="w">  </span>--subnet<span class="w"> </span><span class="m">10</span>.0.0.0/24<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-32-12" name="__codelineno-32-12" href="#__codelineno-32-12"></a><span class="w">  </span>--output<span class="w"> </span>fragment.json
+<a id="__codelineno-32-13" name="__codelineno-32-13" href="#__codelineno-32-13"></a>
+<a id="__codelineno-32-14" name="__codelineno-32-14" href="#__codelineno-32-14"></a><span class="c1"># Merge newly discovered devices into an existing inventory</span>
+<a id="__codelineno-32-15" name="__codelineno-32-15" href="#__codelineno-32-15"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.inventory.scan<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-32-16" name="__codelineno-32-16" href="#__codelineno-32-16"></a><span class="w">  </span>--subnet<span class="w"> </span><span class="m">10</span>.0.0.0/24<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-32-17" name="__codelineno-32-17" href="#__codelineno-32-17"></a><span class="w">  </span>--merge<span class="w"> </span>existing.yaml
+<a id="__codelineno-32-18" name="__codelineno-32-18" href="#__codelineno-32-18"></a>
+<a id="__codelineno-32-19" name="__codelineno-32-19" href="#__codelineno-32-19"></a><span class="c1"># Ping sweep only (no SNMP)</span>
+<a id="__codelineno-32-20" name="__codelineno-32-20" href="#__codelineno-32-20"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.inventory.scan<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-32-21" name="__codelineno-32-21" href="#__codelineno-32-21"></a><span class="w">  </span>--subnet<span class="w"> </span><span class="m">10</span>.0.0.0/24<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-32-22" name="__codelineno-32-22" href="#__codelineno-32-22"></a><span class="w">  </span>--skip-snmp
+</code></pre></div>
+<p><strong>Output</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a>🔍 Scan complete: 12 reachable, 9 identified via SNMP, 4 CDP neighbors, 0 LLDP neighbors
+</code></pre></div>
+<hr />
+<h2 id="core-utilities">Core utilities<a class="headerlink" href="#core-utilities" title="Permanent link">&para;</a></h2>
+<h3 id="netopscorevault-credential-vault">netops.core.vault — Credential vault<a class="headerlink" href="#netopscorevault-credential-vault" title="Permanent link">&para;</a></h3>
+<p>Manages an AES-256-GCM encrypted credential vault stored at
+<code>~/.netops/vault.yaml</code> (override with <code>--vault</code>). Credentials are stored per
+device, per group, or as a site-wide default. At runtime the vault is consulted
+automatically; environment variables take precedence (see
+<a href="#common-patterns">Common patterns</a>).</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a>python -m netops.core.vault [--vault FILE] &lt;subcommand&gt; [OPTIONS]
+</code></pre></div>
+<p><strong>Global options</strong></p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--vault FILE</code></td>
+<td><code>~/.netops/vault.yaml</code></td>
+<td>Path to the vault file</td>
+</tr>
+</tbody>
+</table>
+<h4 id="subcommands">Subcommands<a class="headerlink" href="#subcommands" title="Permanent link">&para;</a></h4>
+<h5 id="init-initialise-a-new-vault"><code>init</code> — initialise a new vault<a class="headerlink" href="#init-initialise-a-new-vault" title="Permanent link">&para;</a></h5>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.core.vault<span class="w"> </span>init
+</code></pre></div>
+<p>Prompts for a master password and creates an empty vault file.</p>
+<h5 id="set-store-credentials"><code>set</code> — store credentials<a class="headerlink" href="#set-store-credentials" title="Permanent link">&para;</a></h5>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a>python -m netops.core.vault set [--device HOSTNAME | --group GROUP | --default] --user USERNAME [--enable]
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--device HOSTNAME</code></td>
+<td>Store credentials for a specific device</td>
+</tr>
+<tr>
+<td><code>--group GROUP</code></td>
+<td>Store credentials for a device group</td>
+</tr>
+<tr>
+<td><code>--default</code></td>
+<td>Store site-wide default credentials</td>
+</tr>
+<tr>
+<td><code>--user USERNAME</code></td>
+<td>Username to store (required)</td>
+</tr>
+<tr>
+<td><code>--enable</code></td>
+<td>Also prompt for an enable/privileged-exec password</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Examples</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a><span class="c1"># Store credentials for a specific device</span>
+<a id="__codelineno-37-2" name="__codelineno-37-2" href="#__codelineno-37-2"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.core.vault<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--device<span class="w"> </span>router1.example.com<span class="w"> </span>--user<span class="w"> </span>admin
+<a id="__codelineno-37-3" name="__codelineno-37-3" href="#__codelineno-37-3"></a>
+<a id="__codelineno-37-4" name="__codelineno-37-4" href="#__codelineno-37-4"></a><span class="c1"># Store default credentials used when no device/group match is found</span>
+<a id="__codelineno-37-5" name="__codelineno-37-5" href="#__codelineno-37-5"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.core.vault<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--default<span class="w"> </span>--user<span class="w"> </span>netops
+<a id="__codelineno-37-6" name="__codelineno-37-6" href="#__codelineno-37-6"></a>
+<a id="__codelineno-37-7" name="__codelineno-37-7" href="#__codelineno-37-7"></a><span class="c1"># Store credentials for a whole group, including enable password</span>
+<a id="__codelineno-37-8" name="__codelineno-37-8" href="#__codelineno-37-8"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.core.vault<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--group<span class="w"> </span>core-routers<span class="w"> </span>--user<span class="w"> </span>admin<span class="w"> </span>--enable
+</code></pre></div>
+<h5 id="get-show-credentials-passwords-masked"><code>get</code> — show credentials (passwords masked)<a class="headerlink" href="#get-show-credentials-passwords-masked" title="Permanent link">&para;</a></h5>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a>python -m netops.core.vault get --device HOSTNAME [--groups GROUP1,GROUP2]
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--device HOSTNAME</code></td>
+<td>Device hostname to look up (required)</td>
+</tr>
+<tr>
+<td><code>--groups GROUP1,GROUP2</code></td>
+<td>Comma-separated list of groups the device belongs to</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.core.vault<span class="w"> </span>get<span class="w"> </span>--device<span class="w"> </span>router1.example.com<span class="w"> </span>--groups<span class="w"> </span>core-routers,dc1
+</code></pre></div>
+<p>Lookup order: environment variables → device → group → default.</p>
+<h5 id="delete-remove-credentials"><code>delete</code> — remove credentials<a class="headerlink" href="#delete-remove-credentials" title="Permanent link">&para;</a></h5>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a>python -m netops.core.vault delete [--device HOSTNAME | --group GROUP | --default]
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a><span class="c1"># Remove credentials for a specific device</span>
+<a id="__codelineno-41-2" name="__codelineno-41-2" href="#__codelineno-41-2"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.core.vault<span class="w"> </span>delete<span class="w"> </span>--device<span class="w"> </span>router1.example.com
+<a id="__codelineno-41-3" name="__codelineno-41-3" href="#__codelineno-41-3"></a>
+<a id="__codelineno-41-4" name="__codelineno-41-4" href="#__codelineno-41-4"></a><span class="c1"># Remove credentials for a group</span>
+<a id="__codelineno-41-5" name="__codelineno-41-5" href="#__codelineno-41-5"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.core.vault<span class="w"> </span>delete<span class="w"> </span>--group<span class="w"> </span>core-routers
+<a id="__codelineno-41-6" name="__codelineno-41-6" href="#__codelineno-41-6"></a>
+<a id="__codelineno-41-7" name="__codelineno-41-7" href="#__codelineno-41-7"></a><span class="c1"># Remove default credentials</span>
+<a id="__codelineno-41-8" name="__codelineno-41-8" href="#__codelineno-41-8"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.core.vault<span class="w"> </span>delete<span class="w"> </span>--default
+</code></pre></div>
+<hr />
+<h2 id="common-patterns">Common patterns<a class="headerlink" href="#common-patterns" title="Permanent link">&para;</a></h2>
+<h3 id="password-via-environment-variable">Password via environment variable<a class="headerlink" href="#password-via-environment-variable" title="Permanent link">&para;</a></h3>
+<p>All commands accept <code>NETOPS_PASSWORD</code> (and <code>NETOPS_USER</code> where applicable) so
+that passwords are never written to shell history:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NETOPS_PASSWORD</span><span class="o">=</span><span class="s1">&#39;s3cret&#39;</span>
+<a id="__codelineno-42-2" name="__codelineno-42-2" href="#__codelineno-42-2"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.check.health<span class="w"> </span>--inventory<span class="w"> </span>inv.yaml
+</code></pre></div>
+<h3 id="json-output-for-pipeline-integration">JSON output for pipeline integration<a class="headerlink" href="#json-output-for-pipeline-integration" title="Permanent link">&para;</a></h3>
+<p>Every command supports <code>--json</code> to emit machine-readable output on stdout:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-43-1" name="__codelineno-43-1" href="#__codelineno-43-1"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.check.bgp<span class="w"> </span>--inventory<span class="w"> </span>inv.yaml<span class="w"> </span>--json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.report.overall_alert&#39;</span>
+</code></pre></div>
+<h3 id="exit-codes-for-monitoring">Exit codes for monitoring<a class="headerlink" href="#exit-codes-for-monitoring" title="Permanent link">&para;</a></h3>
+<p>Use <code>--fail-on-alert</code> to make a command exit with code 1 when any alert fires —
+useful in CI pipelines or monitoring scripts:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-44-1" name="__codelineno-44-1" href="#__codelineno-44-1"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.check.health<span class="w"> </span>--inventory<span class="w"> </span>inv.yaml<span class="w"> </span>--fail-on-alert
+<a id="__codelineno-44-2" name="__codelineno-44-2" href="#__codelineno-44-2"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Exit: </span><span class="nv">$?</span><span class="s2">&quot;</span>
+</code></pre></div>
+<h3 id="inventory-file-format">Inventory file format<a class="headerlink" href="#inventory-file-format" title="Permanent link">&para;</a></h3>
+<p>All commands that accept <code>--inventory</code> expect a YAML file in this format:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-45-1" name="__codelineno-45-1" href="#__codelineno-45-1"></a><span class="nt">defaults</span><span class="p">:</span>
+<a id="__codelineno-45-2" name="__codelineno-45-2" href="#__codelineno-45-2"></a><span class="w">  </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">admin</span>
+<a id="__codelineno-45-3" name="__codelineno-45-3" href="#__codelineno-45-3"></a><span class="w">  </span><span class="nt">transport</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ssh</span>
+<a id="__codelineno-45-4" name="__codelineno-45-4" href="#__codelineno-45-4"></a>
+<a id="__codelineno-45-5" name="__codelineno-45-5" href="#__codelineno-45-5"></a><span class="nt">devices</span><span class="p">:</span>
+<a id="__codelineno-45-6" name="__codelineno-45-6" href="#__codelineno-45-6"></a><span class="w">  </span><span class="nt">core-rtr-01</span><span class="p">:</span>
+<a id="__codelineno-45-7" name="__codelineno-45-7" href="#__codelineno-45-7"></a><span class="w">    </span><span class="nt">host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.0.0.1</span>
+<a id="__codelineno-45-8" name="__codelineno-45-8" href="#__codelineno-45-8"></a><span class="w">    </span><span class="nt">vendor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cisco_ios</span>
+<a id="__codelineno-45-9" name="__codelineno-45-9" href="#__codelineno-45-9"></a><span class="w">    </span><span class="nt">groups</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">routers</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">core</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-45-10" name="__codelineno-45-10" href="#__codelineno-45-10"></a>
+<a id="__codelineno-45-11" name="__codelineno-45-11" href="#__codelineno-45-11"></a><span class="w">  </span><span class="nt">nokia-pe-01</span><span class="p">:</span>
+<a id="__codelineno-45-12" name="__codelineno-45-12" href="#__codelineno-45-12"></a><span class="w">    </span><span class="nt">host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.0.0.2</span>
+<a id="__codelineno-45-13" name="__codelineno-45-13" href="#__codelineno-45-13"></a><span class="w">    </span><span class="nt">vendor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nokia_sros</span>
+<a id="__codelineno-45-14" name="__codelineno-45-14" href="#__codelineno-45-14"></a><span class="w">    </span><span class="nt">groups</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">routers</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">pe</span><span class="p p-Indicator">]</span>
+</code></pre></div>
+<p>See <a href="../inventory-management/">Inventory Management</a> for full details.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
