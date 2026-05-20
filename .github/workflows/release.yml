@@ -84,6 +84,7 @@ jobs:
           cp -r tests/      "/tmp/${NAME}/"
           cp README.md      "/tmp/${NAME}/"
           cp pyproject.toml "/tmp/${NAME}/"
+          cp install.sh     "/tmp/${NAME}/"
           cp LICENSE        "/tmp/${NAME}/" 2>/dev/null || true
 
           # tar.gz (primary — for air-gapped/jumpbox install)
@@ -104,35 +105,31 @@ jobs:
           body: |
             ## netops-toolkit v${{ steps.version.outputs.new }}
 
-            ### 📥 Install
+            ### 📥 One-command install
 
-            **From source (network access):**
             ```bash
-            pip install git+https://github.com/plures/netops-toolkit@${{ steps.version.outputs.tag }}
-            # With TUI:
-            pip install "netops-toolkit[tui] @ git+https://github.com/plures/netops-toolkit@${{ steps.version.outputs.tag }}"
+            curl -sSL https://raw.githubusercontent.com/plures/netops-toolkit/main/install.sh | bash
             ```
 
-            **Air-gapped / jumpbox (offline):**
+            Then:
             ```bash
-            # Download the .tar.gz, copy to target machine, then:
+            source ~/.venv/netops/bin/activate
+            netops-tui
+            ```
+
+            ### 📥 Air-gapped / offline
+
+            ```bash
+            # Copy the tarball to the target machine, then:
             tar xzf netops-toolkit-${{ steps.version.outputs.new }}.tar.gz
             cd netops-toolkit-${{ steps.version.outputs.new }}
-            pip install .
-            # With TUI: pip install ".[tui]"
-            ```
-
-            ### 🖥️ TUI
-
-            ```bash
-            netops-tui
-            # or: python -m netops.tui
+            ./install.sh
             ```
 
             ### Requirements
 
             - Python >= 3.9
-            - Dependencies installed automatically via pip
+            - No sudo needed (installs to ~/.venv/netops)
 
             **Full Changelog**: https://github.com/plures/netops-toolkit/compare/v${{ steps.version.outputs.current }}...v${{ steps.version.outputs.new }}
           files: |

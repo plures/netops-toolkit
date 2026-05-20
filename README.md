@@ -102,49 +102,49 @@ Core dependencies (installed automatically):
 
 ## Installation
 
+**One command (recommended):**
 ```bash
-# Stable install (editable/development)
-pip install -e .
-
-# With Terminal UI (textual-based TUI for jumpboxes)
-pip install -e ".[tui]"
-
-# With SNMP support (for inventory auto-discovery)
-pip install -e ".[snmp]"
-
-# With Ansible modules
-pip install -e ".[ansible]"
-
-# With HTML report generation
-pip install -e ".[report]"
-
-# With HTML + PDF report generation
-pip install -e ".[report-pdf]"
-
-# All optional extras
-pip install -e ".[snmp,ansible,report-pdf,tui]"
-
-# Development (includes pytest, ruff)
-pip install -e ".[dev]"
+curl -sSL https://raw.githubusercontent.com/plures/netops-toolkit/main/install.sh | bash
 ```
 
-### Air-gapped / offline install
+Then:
+```bash
+source ~/.venv/netops/bin/activate
+netops-tui
+```
 
-Download the release tarball from [Releases](https://github.com/plures/netops-toolkit/releases):
+Installs to `~/.venv/netops` — no sudo, no system-wide pollution.
+
+### Air-gapped / offline
+
+Download the release tarball from [Releases](https://github.com/plures/netops-toolkit/releases), copy to target:
 
 ```bash
 tar xzf netops-toolkit-<version>.tar.gz
 cd netops-toolkit-<version>
-pip install .
-# With TUI: pip install ".[tui]"
+./install.sh
 ```
 
-### TUI (Terminal UI)
+### Manual install (if you prefer)
 
 ```bash
-# After installing with [tui] extra:
-netops-tui
-# or: python -m netops.tui
+# With TUI:
+pip install --user "netops-toolkit[tui] @ git+https://github.com/plures/netops-toolkit@v0.38.1"
+
+# Or in a venv:
+python3 -m venv ~/.venv/netops
+source ~/.venv/netops/bin/activate
+pip install ".[tui]"
+```
+
+### Optional extras
+
+```bash
+pip install ".[snmp]"           # SNMP inventory auto-discovery
+pip install ".[ansible]"        # Ansible modules
+pip install ".[report]"         # HTML reports
+pip install ".[report-pdf]"     # HTML + PDF reports
+pip install ".[dev]"            # pytest, ruff, mypy
 ```
 
 ---

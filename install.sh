@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+# install.sh — one-command install for netops-toolkit + TUI
+#
+# Usage:
+#   curl -sSL https://raw.githubusercontent.com/plures/netops-toolkit/main/install.sh | bash
+#   # or from the extracted tarball:
+#   ./install.sh
+#
+# Installs into ~/.venv/netops (user-local, no sudo needed).
+# After install: source ~/.venv/netops/bin/activate && netops-tui
+
+set -euo pipefail
+
+VENV_DIR="$HOME/.venv/netops"
+REPO="https://github.com/plures/netops-toolkit"
+TAG="${NETOPS_VERSION:-v0.38.1}"
+
+echo "╔══════════════════════════════════════╗"
+echo "║  netops-toolkit installer            ║"
+echo "╚══════════════════════════════════════╝"
+echo ""
+
+# ── Find or install uv (fast Python package manager) ──────────────────────────
+install_uv() {
+  if command -v uv &>/dev/null; then
+    UV="uv"
+  elif [ -x "$HOME/.local/bin/uv" ]; then
+    UV="$HOME/.local/bin/uv"
+  elif [ -x "$HOME/.cargo/bin/uv" ]; then
+    UV="$HOME/.cargo/bin/uv"
+  else
+    echo "→ Installing uv (fast Python package manager)..."
+    curl -LsSf https://astral.sh/uv/install.sh | sh 2>/dev/null
+    UV="$HOME/.local/bin/uv"
+  fi
+  echo "  uv: $($UV --version)"
+}
+
+# ── Create venv ───────────────────────────────────────────────────────────────
+create_venv() {
+  if [ -d "$VENV_DIR" ]; then
+    echo "→ Upgrading existing install at $VENV_DIR"
+    $UV venv "$VENV_DIR" --clear --quiet
+  else
+    echo "→ Creating virtual environment at $VENV_DIR"
+    $UV venv "$VENV_DIR" --quiet
+  fi
+}
+
+# ── Install netops-toolkit ────────────────────────────────────────────────────
+install_package() {
+  # If we're running from inside an extracted tarball, install local
+  if [ -f "pyproject.toml" ] && grep -q "netops-toolkit" pyproject.toml 2>/dev/null; then
+    echo "→ Installing from local source..."
+    $UV pip install --python "$VENV_DIR/bin/python" ".[tui]" --quiet
+  else
+    echo "→ Installing netops-toolkit@${TAG} from GitHub..."
+    $UV pip install --python "$VENV_DIR/bin/python" \
+      "netops-toolkit[tui] @ git+${REPO}@${TAG}" --quiet
+  fi
+}
+
+# ── Shell activation helper ───────────────────────────────────────────────────
+setup_activation() {
+  SHELL_NAME="$(basename "${SHELL:-/bin/bash}")"
+  case "$SHELL_NAME" in
+    zsh)  RC="$HOME/.zshrc" ;;
+    fish) RC="$HOME/.config/fish/config.fish" ;;
+    *)    RC="$HOME/.bashrc" ;;
+  esac
+
+  # Add alias if not already present
+  if ! grep -q "netops-activate" "$RC" 2>/dev/null; then
+    echo "" >> "$RC"
+    echo "# netops-toolkit" >> "$RC"
+    echo "alias netops-activate='source $VENV_DIR/bin/activate'" >> "$RC"
+    echo "  Added 'netops-activate' alias to $RC"
+  fi
+}
+
+# ── Run ───────────────────────────────────────────────────────────────────────
+install_uv
+create_venv
+install_package
+setup_activation
+
+echo ""
+echo "✅ netops-toolkit installed successfully!"
+echo ""
+echo "   To use now:"
+echo "     source $VENV_DIR/bin/activate"
+echo "     netops-tui"
+echo ""
+echo "   Next time (shortcut):"
+echo "     netops-activate"
+echo "     netops-tui"
+echo ""
+echo "   Or run directly without activating:"
+echo "     $VENV_DIR/bin/netops-tui"
+echo ""
