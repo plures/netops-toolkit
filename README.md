@@ -106,6 +106,9 @@ Core dependencies (installed automatically):
 # Stable install (editable/development)
 pip install -e .
 
+# With Terminal UI (textual-based TUI for jumpboxes)
+pip install -e ".[tui]"
+
 # With SNMP support (for inventory auto-discovery)
 pip install -e ".[snmp]"
 
@@ -119,10 +122,29 @@ pip install -e ".[report]"
 pip install -e ".[report-pdf]"
 
 # All optional extras
-pip install -e ".[snmp,ansible,report-pdf]"
+pip install -e ".[snmp,ansible,report-pdf,tui]"
 
 # Development (includes pytest, ruff)
 pip install -e ".[dev]"
+```
+
+### Air-gapped / offline install
+
+Download the release tarball from [Releases](https://github.com/plures/netops-toolkit/releases):
+
+```bash
+tar xzf netops-toolkit-<version>.tar.gz
+cd netops-toolkit-<version>
+pip install .
+# With TUI: pip install ".[tui]"
+```
+
+### TUI (Terminal UI)
+
+```bash
+# After installing with [tui] extra:
+netops-tui
+# or: python -m netops.tui
 ```
 
 ---

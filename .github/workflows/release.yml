@@ -1,26 +1,139 @@
 name: Release
+
 on:
   push:
-    tags: ['v*']
+    branches: [main]
   workflow_dispatch:
     inputs:
       bump:
-        description: 'Force version bump (patch/minor/major)'
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
         type: choice
         options: [patch, minor, major]
-      target_version:
-        description: 'Exact version to release (e.g. 1.0.0). Overrides bump logic.'
-        type: string
-        required: false
+
 permissions:
   contents: write
-  packages: write
-  id-token: write
 
 jobs:
   release:
-    uses: plures/.github/.github/workflows/release-reusable.yml@main
-    with:
-      bump: ${{ inputs.bump || '' }}
-      target_version: ${{ inputs.target_version || '' }}
-    secrets: inherit
+    runs-on: ubuntu-latest
+    # Prevent release loops
+    if: "!contains(github.event.head_commit.message, '[skip-release]') && !contains(github.event.head_commit.message, 'chore(release):')"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine bump type from commit message
+        id: bump
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "type=${{ github.event.inputs.bump }}" >> "$GITHUB_OUTPUT"
+          else
+            MSG="${{ github.event.head_commit.message }}"
+            if echo "$MSG" | grep -qiE '^feat!:|BREAKING CHANGE'; then
+              echo "type=major" >> "$GITHUB_OUTPUT"
+            elif echo "$MSG" | grep -qiE '^feat'; then
+              echo "type=minor" >> "$GITHUB_OUTPUT"
+            else
+              echo "type=patch" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+
+      - name: Bump version in pyproject.toml
+        id: version
+        run: |
+          CURRENT=$(grep '^version' pyproject.toml | head -1 | sed 's/.*"\(.*\)"/\1/')
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+
+          case "${{ steps.bump.outputs.type }}" in
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH + 1)) ;;
+          esac
+
+          NEW="${MAJOR}.${MINOR}.${PATCH}"
+          echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
+          echo "new=$NEW" >> "$GITHUB_OUTPUT"
+          echo "tag=v${NEW}" >> "$GITHUB_OUTPUT"
+          echo "Bump: ${{ steps.bump.outputs.type }} ($CURRENT → $NEW)"
+
+          sed -i "s/^version = \".*\"/version = \"$NEW\"/" pyproject.toml
+
+      - name: Commit + tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add pyproject.toml
+          git commit -m "chore(release): v${{ steps.version.outputs.new }} [skip-release]"
+          git tag -a "v${{ steps.version.outputs.new }}" -m "Release v${{ steps.version.outputs.new }}"
+          git push origin main --follow-tags
+
+      - name: Build release archives
+        run: |
+          VERSION="${{ steps.version.outputs.new }}"
+          NAME="netops-toolkit-${VERSION}"
+
+          # Build a clean release directory with everything users need
+          mkdir -p "/tmp/${NAME}"
+          cp -r netops/     "/tmp/${NAME}/"
+          cp -r docs/       "/tmp/${NAME}/"
+          cp -r examples/   "/tmp/${NAME}/"
+          cp -r tests/      "/tmp/${NAME}/"
+          cp README.md      "/tmp/${NAME}/"
+          cp pyproject.toml "/tmp/${NAME}/"
+          cp LICENSE        "/tmp/${NAME}/" 2>/dev/null || true
+
+          # tar.gz (primary — for air-gapped/jumpbox install)
+          cd /tmp
+          tar czf "${GITHUB_WORKSPACE}/${NAME}.tar.gz" "${NAME}/"
+
+          echo "### 📦 Release archive" >> "$GITHUB_STEP_SUMMARY"
+          echo "- \`${NAME}.tar.gz\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Contents: netops/ (with TUI), docs/, examples/, tests/, README, pyproject.toml" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: "v${{ steps.version.outputs.new }}"
+          make_latest: true
+          body: |
+            ## netops-toolkit v${{ steps.version.outputs.new }}
+
+            ### 📥 Install
+
+            **From source (network access):**
+            ```bash
+            pip install git+https://github.com/plures/netops-toolkit@${{ steps.version.outputs.tag }}
+            # With TUI:
+            pip install "netops-toolkit[tui] @ git+https://github.com/plures/netops-toolkit@${{ steps.version.outputs.tag }}"
+            ```
+
+            **Air-gapped / jumpbox (offline):**
+            ```bash
+            # Download the .tar.gz, copy to target machine, then:
+            tar xzf netops-toolkit-${{ steps.version.outputs.new }}.tar.gz
+            cd netops-toolkit-${{ steps.version.outputs.new }}
+            pip install .
+            # With TUI: pip install ".[tui]"
+            ```
+
+            ### 🖥️ TUI
+
+            ```bash
+            netops-tui
+            # or: python -m netops.tui
+            ```
+
+            ### Requirements
+
+            - Python >= 3.9
+            - Dependencies installed automatically via pip
+
+            **Full Changelog**: https://github.com/plures/netops-toolkit/compare/v${{ steps.version.outputs.current }}...v${{ steps.version.outputs.new }}
+          files: |
+            netops-toolkit-${{ steps.version.outputs.new }}.tar.gz
