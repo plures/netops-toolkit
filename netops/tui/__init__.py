@@ -11,8 +11,8 @@ without GUI access. Provides interactive access to:
 - CSV/JSON export
 
 Usage:
-    python -m netops_tui
-    python netops_tui.py
+    netops-tui
+    python -m netops.tui
 """
 
 from __future__ import annotations
