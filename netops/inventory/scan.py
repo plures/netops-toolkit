@@ -308,6 +308,8 @@ def identify_vendor(sys_descr: str, sys_obj_id: str = "") -> str:
         return "brocade_fastiron"
     if "icx" in descr_lower or "ruckus" in descr_lower or "commscope" in descr_lower:
         return "brocade_fastiron"
+    if "ironware" in descr_lower or "extreme networks" in descr_lower or "mlx" in descr_lower:
+        return "brocade_fastiron"
     if "cisco" in descr_lower:
         return "cisco_ios"
 
@@ -776,12 +778,20 @@ def _parse_version_generic(output: str, vendor: str) -> dict:
         stripped = line.strip()
 
         # --- Version ---
+        # IronWare/Extreme: always override if found (takes priority)
+        ironware_ver = re.search(r"IronWare\s*:\s*Version\s+(\S+)", line)
+        if ironware_ver:
+            result["version"] = ironware_ver.group(1)
+        # SW: Version for FastIron/ICX
+        sw_ver = re.search(r"SW:\s*Version\s+(\S+)", line)
+        if sw_ver:
+            result["version"] = sw_ver.group(1)
         if result["version"] is None:
             ver = re.search(r"\bVersion\s+([\d().a-zA-Z/:-]+)", line, re.IGNORECASE)
             if ver:
                 v = ver.group(1).rstrip(",")
-                # Reject garbage matches — real versions have a dot or are 3+ chars
-                if "." in v or len(v) >= 3:
+                # Reject garbage matches — real versions have a dot and are 3+ chars
+                if "." in v and len(v) >= 3:
                     result["version"] = v
             timos = re.search(r"TiMOS-\S+-([\d.]+\S*)", line)
             if timos:
@@ -799,6 +809,10 @@ def _parse_version_generic(output: str, vendor: str) -> dict:
             brocade_hw = re.search(r"HW:\s+(?:Stackable\s+)?(\S+)", stripped)
             if brocade_hw:
                 result["model"] = brocade_hw.group(1)
+            # Brocade MLX/XMR: "Chassis: MLXe 4-slot" or "System: BigIron RX-8"
+            chassis = re.search(r"Chassis:\s+(.+?)\s*\(", stripped)
+            if chassis and result["model"] is None:
+                result["model"] = chassis.group(1).strip()
             # Cisco: "cisco WS-C3750X-48P (PowerPC405) processor"
             plat = re.match(r"^[Cc]isco\s+(\S+)\s+.*processor", line)
             if plat:
@@ -843,7 +857,7 @@ def _parse_version_generic(output: str, vendor: str) -> dict:
             # Brocade: "Serial  #: CYR3444L01F" or "Serial #:CYR3444L01F"
             brocade_sn = re.search(r"Serial\s*#\s*:\s*(\S+)", stripped)
             if brocade_sn:
-                result["serial"] = brocade_sn.group(1)
+                result["serial"] = brocade_sn.group(1).rstrip(",")
             bid = re.search(r"Processor [Bb]oard ID\s+(\S+)", line)
             if bid:
                 result["serial"] = bid.group(1)
@@ -923,6 +937,10 @@ def _parse_version_generic(output: str, vendor: str) -> dict:
                 bfree = re.search(r"Free:\s*(\S+)", stripped)
                 if bfree and result.get("free_memory") is None:
                     result["free_memory"] = bfree.group(1)
+            # Brocade MLX: "4096 MB DRAM INSTALLED"
+            mlx_mem = re.search(r"(\d+)\s*MB\s*DRAM\s*INSTALLED", stripped, re.IGNORECASE)
+            if mlx_mem and result["total_memory"] is None:
+                result["total_memory"] = f"{mlx_mem.group(1)} MB"
 
         if result["free_memory"] is None:
             fmem = re.search(r"Free memory:\s+(.+)", stripped, re.IGNORECASE)
