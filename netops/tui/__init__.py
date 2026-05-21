@@ -169,10 +169,30 @@ class ScanScreen(ModalScreen):
                     all_results.extend(results)
 
                 fragment = results_to_inventory_fragment(all_results)
+                # Always attempt deep enrichment for unknown devices
+                unknowns = sum(1 for d in fragment.get("devices", {}).values()
+                               if isinstance(d, dict) and d.get("vendor", "unknown") == "unknown")
 
-                if user and password and not skip_snmp:
-                    log.write_line(f"  🔬 Deep scan with SSH ({user})...")
-                    import asyncio
+                if unknowns > 0 and user and password:
+                    log.write_line(f"  🔬 Deep scan: {unknowns} unknown device(s), trying SSH + auto-detect...")
+                    fragment = await asyncio.get_event_loop().run_in_executor(
+                        None,
+                        lambda: deep_enrich(
+                            fragment,
+                            username=user,
+                            password=password,
+                        ),
+                    )
+                    still_unknown = sum(1 for d in fragment.get("devices", {}).values()
+                                       if isinstance(d, dict) and d.get("vendor", "unknown") == "unknown")
+                    if still_unknown:
+                        log.write_line(f"    ℹ️ {still_unknown} device(s) still unidentified")
+                    else:
+                        log.write_line(f"    ✅ All devices identified")
+                elif unknowns > 0:
+                    log.write_line(f"  ℹ️ {unknowns} unknown device(s) — provide SSH creds for auto-detection")
+                elif user and password:
+                    log.write_line(f"  🔬 Deep scan for additional device details...")
                     fragment = await asyncio.get_event_loop().run_in_executor(
                         None,
                         lambda: deep_enrich(
