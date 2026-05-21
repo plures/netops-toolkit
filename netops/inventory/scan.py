@@ -1045,10 +1045,17 @@ def _try_vendor_commands(conn: DeviceConnection, vendor: str) -> dict:
 
     try:
         ver_output = conn.send(commands["version"])
+        logger.debug(f"    vendor={vendor} 'show version' output ({len(ver_output)} chars):\n{ver_output[:500]}")
+        if not ver_output or len(ver_output.strip()) < 10:
+            logger.warning(f"    vendor={vendor}: show version returned empty/minimal output")
         parsed = _parse_version_generic(ver_output, vendor)
         for k, v in parsed.items():
             if v is not None:
                 r[k] = v
+        if not any(r.get(k) for k in ("version", "model", "serial")):
+            # Nothing parsed — dump first 200 chars to help debug
+            print(f"    ⚠️  {vendor}: could not parse 'show version' output:", file=sys.stderr)
+            print(f"       {repr(ver_output[:200])}", file=sys.stderr)
     except Exception as e:
         logger.debug(f"    vendor={vendor} version cmd failed: {e}")
 
