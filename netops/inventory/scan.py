@@ -1136,12 +1136,15 @@ def _deep_scan_host(
     }
 
     # --- Step 1: Determine vendor for login ---
+    logger.info(f"  {host}: starting deep scan (known_vendor={known_vendor}, timeout={timeout}s)")
     if known_vendor and known_vendor != "unknown":
         vendors_to_try = [known_vendor]
+        logger.debug(f"  {host}: using known vendor '{known_vendor}', skipping auto-detect")
     else:
         try:
             from netmiko import SSHDetect
 
+            logger.debug(f"  {host}: attempting SSHDetect auto-detection...")
             detect = SSHDetect(
                 device_type="autodetect",
                 host=host,
@@ -1156,13 +1159,17 @@ def _deep_scan_host(
                 result["vendor"] = best
                 logger.info(f"  {host}: auto-detected vendor={best}")
             else:
+                logger.info(f"  {host}: SSHDetect returned '{best}', falling back to probe order")
                 vendors_to_try = list(_VENDOR_PROBE_ORDER)
         except Exception as e:
-            logger.debug(f"  {host}: autodetect failed ({e}), trying probe order")
+            logger.warning(f"  {host}: autodetect failed: {type(e).__name__}: {e}")
+            logger.info(f"  {host}: falling back to probe order ({len(_VENDOR_PROBE_ORDER)} vendors)")
             vendors_to_try = list(_VENDOR_PROBE_ORDER)
 
     # --- Step 2: Connect, then try all vendor command sets in the family ---
+    logger.debug(f"  {host}: will try login with vendors: {vendors_to_try}")
     for login_vendor in vendors_to_try:
+        logger.debug(f"  {host}: attempting SSH connection as '{login_vendor}'...")
         try:
             params = ConnectionParams(
                 host=host,
@@ -1210,10 +1217,11 @@ def _deep_scan_host(
                 return result
 
         except Exception as e:
-            logger.debug(f"  {host}: vendor={login_vendor} failed: {e}")
+            logger.warning(f"  {host}: connection as '{login_vendor}' failed: {type(e).__name__}: {e}")
             continue
 
-    result["error"] = "Could not connect with any vendor type"
+    logger.error(f"  {host}: exhausted all {len(vendors_to_try)} vendor types, giving up")
+    result["error"] = f"Could not connect with any vendor type (tried {len(vendors_to_try)})"
     return result
 
 
@@ -1442,6 +1450,8 @@ def _fragment_to_csv(fragment: dict, dest: IO[str] | str | Path) -> int:
 
 def main() -> None:
     """CLI entry point for the network device discovery scanner."""
+    from netops.logging_setup import setup_logging
+    setup_logging()
     parser = argparse.ArgumentParser(
         description="Discover devices on a subnet via ping sweep + SNMP/CDP/LLDP",
         formatter_class=argparse.RawDescriptionHelpFormatter,

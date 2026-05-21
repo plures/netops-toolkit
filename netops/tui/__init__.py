@@ -21,9 +21,12 @@ import asyncio
 import csv
 import io
 import json
+import logging
 import os
 import sys
 from pathlib import Path
+
+from netops.logging_setup import friendly_vendor_name, setup_logging
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
@@ -280,10 +283,29 @@ class HealthScreen(ModalScreen):
             yield Input(placeholder="Hostname or IP", id="health-host")
             yield Input(placeholder="SSH user", id="health-user")
             yield Input(placeholder="SSH password", password=True, id="health-pass")
+            yield Label("[dim]Device family: auto-detected from inventory (or specify below)[/dim]")
+            yield Input(placeholder="Device family (leave blank for auto-detect)", id="health-vendor")
             with Horizontal():
                 yield Button("Check", variant="primary", id="btn-health-run")
                 yield Button("Close", id="btn-health-close")
             yield Log(id="health-log", highlight=True)
+
+    def on_mount(self) -> None:
+        """Pre-populate vendor field if host is in inventory."""
+        pass
+
+    def on_input_changed(self, event: Input.Changed) -> None:
+        """When host changes, show the detected vendor from inventory."""
+        if event.input.id == "health-host":
+            host = event.value.strip()
+            inv = load_inventory()
+            device_info = inv.get("devices", {}).get(host, {})
+            vendor = device_info.get("vendor", "")
+            vendor_input = self.query_one("#health-vendor", Input)
+            if vendor and vendor != "unknown":
+                vendor_input.placeholder = f"Auto-detected: {friendly_vendor_name(vendor)}"
+            else:
+                vendor_input.placeholder = "Device family (leave blank for auto-detect)"
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "btn-health-close":
@@ -292,20 +314,28 @@ class HealthScreen(ModalScreen):
             host = self.query_one("#health-host", Input).value.strip()
             user = self.query_one("#health-user", Input).value.strip()
             password = self.query_one("#health-pass", Input).value.strip()
+            vendor_override = self.query_one("#health-vendor", Input).value.strip()
             log = self.query_one("#health-log", Log)
             if not all([host, user, password]):
-                log.write_line("❌ All fields required")
+                log.write_line("❌ Host, user, and password required")
                 return
-            log.write_line(f"🔍 Checking {host}...")
+
+            # Resolve vendor: explicit override > inventory > auto-detect
+            inv = load_inventory()
+            device_info = inv.get("devices", {}).get(host, {})
+            if vendor_override:
+                vendor = vendor_override
+            elif device_info.get("vendor") and device_info["vendor"] != "unknown":
+                vendor = device_info["vendor"]
+            else:
+                vendor = "autodetect"
+
+            log.write_line(f"🔍 Checking {host} (device family: {friendly_vendor_name(vendor)})...")
 
             async def _check():
                 try:
                     from netops.check.health import run_health_check
                     from netops.core.connection import ConnectionParams
-
-                    inv = load_inventory()
-                    device_info = inv.get("devices", {}).get(host, {})
-                    vendor = device_info.get("vendor", "autodetect")
 
                     params = ConnectionParams(
                         host=host,
@@ -318,12 +348,25 @@ class HealthScreen(ModalScreen):
                     )
 
                     if not result.get("success"):
-                        log.write_line(f"  X Connection failed: {result.get('error', 'unknown')}")
+                        log.write_line(f"  ❌ Connection failed: {result.get('error', 'unknown')}")
                         return
 
-                    for check_name, status in result.get("checks", {}).items():
-                        icon = "✅" if status.get("ok") else "⚠️"
-                        log.write_line(f"  {icon} {check_name}: {status.get('summary', '')}")
+                    for check_name, check_data in result.get("checks", {}).items():
+                        alert = check_data.get("alert", False)
+                        icon = "⚠️" if alert else "✅"
+                        # Build summary from check data
+                        if "utilization" in check_data and check_data["utilization"] is not None:
+                            summary = f"{check_data['utilization']:.1f}% (threshold {check_data.get('threshold', '?')}%)"
+                        elif "with_errors" in check_data:
+                            summary = f"{check_data['with_errors']}/{check_data.get('total', 0)} interfaces with errors"
+                        elif "critical_count" in check_data:
+                            summary = f"{check_data['critical_count']} critical, {check_data.get('major_count', 0)} major"
+                        else:
+                            summary = "OK" if not alert else "ALERT"
+                        log.write_line(f"  {icon} {check_name}: {summary}")
+
+                    overall = "🚨 ALERTS DETECTED" if result.get("overall_alert") else "✅ All checks passed"
+                    log.write_line(f"  {overall}")
 
                 except ImportError as e:
                     log.write_line(f"  ❌ Missing: {e}")
@@ -579,12 +622,14 @@ class NetopsTUI(App):
         Binding("r", "refresh", "Refresh"),
         Binding("/", "search", "Search"),
         Binding("d", "delete", "Delete"),
+        Binding("l", "view_logs", "View Logs"),
         Binding("?", "help_screen", "Help"),
         Binding("escape", "close_detail", "Close panel"),
     ]
 
     def __init__(self):
         super().__init__()
+        self._log_file = setup_logging()
         self.inventory = load_inventory()
 
     def compose(self) -> ComposeResult:
@@ -763,6 +808,20 @@ Press Escape to close this help.
         search.value = ""
         self._populate_table()
         self.query_one("#device-table", DataTable).focus()
+
+    def action_view_logs(self) -> None:
+        """Show the log file location and recent entries."""
+        if self._input_focused():
+            return
+        from netops.logging_setup import _get_current_log_path
+        log_path = _get_current_log_path()
+        if log_path.exists():
+            # Show last 20 lines
+            lines = log_path.read_text().splitlines()[-20:]
+            content = f"📋 Log file: {log_path}\n\n" + "\n".join(lines)
+        else:
+            content = f"📋 Log file: {log_path}\n\n(No logs yet)"
+        self.notify(content, timeout=30)
 
     def action_delete(self) -> None:
         if self._input_focused():
