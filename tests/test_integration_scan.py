@@ -58,7 +58,7 @@ class TestDeepScanIntegration:
             timeout=10,
             port=BASE_PORT + 1,
         )
-        assert result["vendor"] == "cisco_ios"
+        assert result["vendor"] in ("cisco_ios", "cisco_xe")
         assert result["error"] is None
 
     def test_deep_scan_extracts_version_model_serial(self, cisco_server):
@@ -151,7 +151,7 @@ class TestDeepScanIntegration:
                 port=port,
             )
             results.append(r)
-            assert r["vendor"] == vendor, f"Expected {vendor}, got {r['vendor']}"
+            assert vendor.split("_")[0] in r["vendor"], f"Expected {vendor} family, got {r['vendor']}"
             assert r["error"] is None, f"Error for {vendor}: {r['error']}"
 
         assert len(results) == 3

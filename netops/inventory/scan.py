@@ -306,6 +306,8 @@ def identify_vendor(sys_descr: str, sys_obj_id: str = "") -> str:
         return "brocade_nos"
     if "brocade" in descr_lower or "foundry" in descr_lower or "fastiron" in descr_lower:
         return "brocade_fastiron"
+    if "icx" in descr_lower or "ruckus" in descr_lower or "commscope" in descr_lower:
+        return "brocade_fastiron"
     if "cisco" in descr_lower:
         return "cisco_ios"
 
@@ -777,7 +779,10 @@ def _parse_version_generic(output: str, vendor: str) -> dict:
         if result["version"] is None:
             ver = re.search(r"\bVersion\s+([\d().a-zA-Z/:-]+)", line, re.IGNORECASE)
             if ver:
-                result["version"] = ver.group(1).rstrip(",")
+                v = ver.group(1).rstrip(",")
+                # Reject garbage matches — real versions have a dot or are 3+ chars
+                if "." in v or len(v) >= 3:
+                    result["version"] = v
             timos = re.search(r"TiMOS-\S+-([\d.]+\S*)", line)
             if timos:
                 result["version"] = timos.group(1)
@@ -1048,7 +1053,11 @@ def _try_vendor_commands(conn: DeviceConnection, vendor: str) -> dict:
         logger.debug(f"    vendor={vendor} 'show version' output ({len(ver_output)} chars):\n{ver_output[:500]}")
         if not ver_output or len(ver_output.strip()) < 10:
             logger.warning(f"    vendor={vendor}: show version returned empty/minimal output")
-        parsed = _parse_version_generic(ver_output, vendor)
+        # Identify actual vendor from raw output (overrides the guessed vendor)
+        detected_vendor = identify_vendor(ver_output)
+        if detected_vendor != "unknown":
+            r["vendor"] = detected_vendor
+        parsed = _parse_version_generic(ver_output, r["vendor"])
         for k, v in parsed.items():
             if v is not None:
                 r[k] = v
