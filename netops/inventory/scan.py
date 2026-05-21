@@ -1504,10 +1504,11 @@ def _fragment_to_csv(fragment: dict, dest: IO[str] | str | Path) -> int:
 
 def main() -> None:
     """CLI entry point for the network device discovery scanner."""
+    from netops import __version__
     from netops.logging_setup import setup_logging
     setup_logging()
     parser = argparse.ArgumentParser(
-        description="Discover devices on a subnet via ping sweep + SNMP/CDP/LLDP",
+        description=f"netops-toolkit v{__version__} — Discover devices via ping sweep + SNMP/CDP/LLDP",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""Examples:
   python -m netops.inventory.scan --subnet 10.0.0.0/24
@@ -1518,6 +1519,7 @@ def main() -> None:
   python -m netops.inventory.scan --subnet 10.0.0.0/24 --merge existing.yaml
 """,
     )
+    parser.add_argument("--version", "-V", action="version", version=f"netops-toolkit v{__version__}")
     parser.add_argument("--subnet", help="Subnet in CIDR notation (e.g. 10.0.0.0/24)")
     parser.add_argument(
         "--csv",

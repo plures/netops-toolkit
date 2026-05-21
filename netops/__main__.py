@@ -25,7 +25,8 @@ COMMANDS = {
 
 
 def _print_help() -> None:
-    print("netops-toolkit CLI — network automation without the GUI\n")
+    from netops import __version__
+    print(f"netops-toolkit v{__version__} — network automation without the GUI\n")
     print("Usage: netops <command> [options]\n")
     print("Commands:")
     for cmd, desc in COMMANDS.items():
@@ -34,8 +35,14 @@ def _print_help() -> None:
 
 
 def main() -> int:
+    from netops import __version__
+
     if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help"):
         _print_help()
+        return 0
+
+    if sys.argv[1] in ("-V", "--version", "version"):
+        print(f"netops-toolkit v{__version__}")
         return 0
 
     command = sys.argv[1]
