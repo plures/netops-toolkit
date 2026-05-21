@@ -277,10 +277,15 @@ class HealthScreen(ModalScreen):
 
     BINDINGS = [Binding("escape", "dismiss", "Close")]
 
+    def __init__(self, selected_host: str | None = None):
+        super().__init__()
+        self._selected_host = selected_host
+
     def compose(self) -> ComposeResult:
         with Vertical(id="health-modal"):
             yield Label("🏥 Health Check", id="health-title")
-            yield Input(placeholder="Hostname or IP", id="health-host")
+            yield Input(placeholder="Hostname or IP", id="health-host",
+                        value=self._selected_host or "")
             yield Input(placeholder="SSH user", id="health-user")
             yield Input(placeholder="SSH password", password=True, id="health-pass")
             with Horizontal():
@@ -369,10 +374,15 @@ class ConfigPushScreen(ModalScreen):
 
     BINDINGS = [Binding("escape", "dismiss", "Close")]
 
+    def __init__(self, selected_host: str | None = None):
+        super().__init__()
+        self._selected_host = selected_host
+
     def compose(self) -> ComposeResult:
         with Vertical(id="push-modal"):
             yield Label("⚙️ Config Push", id="push-title")
-            yield Input(placeholder="Hostname or IP (comma-separated for bulk)", id="push-hosts")
+            yield Input(placeholder="Hostname or IP (comma-separated for bulk)", id="push-hosts",
+                        value=self._selected_host or "")
             yield Input(placeholder="SSH user", id="push-user")
             yield Input(placeholder="SSH password", password=True, id="push-pass")
             yield Input(placeholder="Vendor (cisco_ios, nokia_sros, etc. — leave blank to auto-detect)", id="push-vendor")
@@ -473,10 +483,15 @@ class BackupScreen(ModalScreen):
 
     BINDINGS = [Binding("escape", "dismiss", "Close")]
 
+    def __init__(self, selected_host: str | None = None):
+        super().__init__()
+        self._selected_host = selected_host
+
     def compose(self) -> ComposeResult:
         with Vertical(id="backup-modal"):
             yield Label("💾 Config Backup", id="backup-title")
-            yield Input(placeholder="Hostnames (comma-separated, or 'all' for inventory)", id="backup-hosts")
+            yield Input(placeholder="Hostnames (comma-separated, or 'all' for inventory)", id="backup-hosts",
+                        value=self._selected_host or "")
             yield Input(placeholder="SSH user", id="backup-user")
             yield Input(placeholder="SSH password", password=True, id="backup-pass")
             yield Input(placeholder="Output directory (default: ./backups)", id="backup-dir")
@@ -615,6 +630,7 @@ class NetopsTUI(App):
         super().__init__()
         self._log_file = setup_logging()
         self.inventory = load_inventory()
+        self._selected_host: str | None = None
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -671,6 +687,7 @@ class NetopsTUI(App):
                         detail += f"  {tk}: {tv}\n"
                 else:
                     detail += f"[dim]{k}:[/dim] {v}\n"
+        self._selected_host = hostname
         self.query_one("#detail-content", Static).update(detail)
 
     def on_input_changed(self, event: Input.Changed) -> None:
@@ -706,17 +723,17 @@ class NetopsTUI(App):
     def action_health(self) -> None:
         if self._input_focused():
             return
-        self.push_screen(HealthScreen())
+        self.push_screen(HealthScreen(self._selected_host))
 
     def action_push(self) -> None:
         if self._input_focused():
             return
-        self.push_screen(ConfigPushScreen())
+        self.push_screen(ConfigPushScreen(self._selected_host))
 
     def action_backup(self) -> None:
         if self._input_focused():
             return
-        self.push_screen(BackupScreen())
+        self.push_screen(BackupScreen(self._selected_host))
 
     def action_help_screen(self) -> None:
         help_text = """[bold]netops-toolkit TUI — Help[/bold]

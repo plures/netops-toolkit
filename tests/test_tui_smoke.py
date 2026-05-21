@@ -89,3 +89,64 @@ async def test_paste_works_in_all_scan_fields():
             await pilot.pause()
             assert inp.value == f"test-{field_id}", f"Paste failed for {field_id}: got '{inp.value}'"
             inp.value = ""  # clear for next
+
+
+@pytest.mark.asyncio
+async def test_selected_device_prepopulates_health_check():
+    """Selecting a device then pressing 'h' must pre-fill the host field."""
+    from textual.widgets import Input, DataTable
+    from netops.tui import NetopsTUI
+
+    app = NetopsTUI()
+    app.inventory = {"devices": {"core-rtr-01": {"host": "10.0.0.1", "vendor": "brocade_fastiron"}}}
+    async with app.run_test(size=(120, 40)) as pilot:
+        table = app.query_one("#device-table", DataTable)
+        table.focus()
+        await pilot.pause()
+        await pilot.press("enter")
+        await pilot.pause()
+        assert app._selected_host == "core-rtr-01"
+        app.action_health()
+        await pilot.pause()
+        host_input = app.screen.query_one("#health-host", Input)
+        assert host_input.value == "core-rtr-01"
+
+
+@pytest.mark.asyncio
+async def test_selected_device_prepopulates_config_push():
+    """Selecting a device then pressing 'p' must pre-fill the host field."""
+    from textual.widgets import Input, DataTable
+    from netops.tui import NetopsTUI
+
+    app = NetopsTUI()
+    app.inventory = {"devices": {"sw-01": {"host": "10.0.0.5", "vendor": "cisco_ios"}}}
+    async with app.run_test(size=(120, 40)) as pilot:
+        table = app.query_one("#device-table", DataTable)
+        table.focus()
+        await pilot.pause()
+        await pilot.press("enter")
+        await pilot.pause()
+        app.action_push()
+        await pilot.pause()
+        host_input = app.screen.query_one("#push-hosts", Input)
+        assert host_input.value == "sw-01"
+
+
+@pytest.mark.asyncio
+async def test_selected_device_prepopulates_backup():
+    """Selecting a device then pressing 'b' must pre-fill the host field."""
+    from textual.widgets import Input, DataTable
+    from netops.tui import NetopsTUI
+
+    app = NetopsTUI()
+    app.inventory = {"devices": {"fw-01": {"host": "10.0.0.10", "vendor": "paloalto_panos"}}}
+    async with app.run_test(size=(120, 40)) as pilot:
+        table = app.query_one("#device-table", DataTable)
+        table.focus()
+        await pilot.pause()
+        await pilot.press("enter")
+        await pilot.pause()
+        app.action_backup()
+        await pilot.pause()
+        host_input = app.screen.query_one("#backup-hosts", Input)
+        assert host_input.value == "fw-01"
