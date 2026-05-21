@@ -1202,20 +1202,19 @@ def _deep_scan_host(
             t.join(timeout=timeout)  # Hard wall-clock timeout
 
             if t.is_alive():
-                logger.warning(f"  {host}: SSHDetect timed out after {timeout}s, falling back to probe order")
+                print(f"    ⏱️  {host}: SSHDetect timed out, falling back to probe order", file=sys.stderr)
                 vendors_to_try = list(_VENDOR_PROBE_ORDER)
             elif detect_exc:
                 raise detect_exc
             elif best and best != "autodetect":
                 vendors_to_try = [best]
                 result["vendor"] = best
-                logger.info(f"  {host}: auto-detected vendor={best}")
+                print(f"    ✅ {host}: auto-detected vendor={best}", file=sys.stderr)
             else:
-                logger.info(f"  {host}: SSHDetect returned '{best}', falling back to probe order")
+                print(f"    ❓ {host}: SSHDetect returned '{best}', trying all vendors", file=sys.stderr)
                 vendors_to_try = list(_VENDOR_PROBE_ORDER)
         except Exception as e:
-            logger.warning(f"  {host}: autodetect failed: {type(e).__name__}: {e}")
-            logger.info(f"  {host}: falling back to probe order ({len(_VENDOR_PROBE_ORDER)} vendors)")
+            print(f"    ❌ {host}: autodetect failed: {type(e).__name__}: {e}", file=sys.stderr)
             vendors_to_try = list(_VENDOR_PROBE_ORDER)
 
     # --- Step 2: Connect, then try all vendor command sets in the family ---
@@ -1234,7 +1233,7 @@ def _deep_scan_host(
                 port=port,
             )
             with DeviceConnection(params) as conn:
-                logger.info(f"  {host}: connected as {login_vendor}")
+                print(f"    ✅ {host}: connected as {login_vendor}", file=sys.stderr)
 
                 # If probing (SSHDetect failed), try ALL vendor command sets
                 # to find the best match. Otherwise just try the family.
@@ -1267,17 +1266,18 @@ def _deep_scan_host(
                 if best_result:
                     for k, v in best_result.items():
                         result[k] = v
+                    print(
+                        f"    📊 {host}: vendor={result['vendor']}, version={result.get('version')}, "
+                        f"model={result.get('model')}, serial={result.get('serial')}",
+                        file=sys.stderr,
+                    )
                 else:
                     result["vendor"] = login_vendor
-
-                logger.info(
-                    f"  {host}: FINAL vendor={result['vendor']}, version={result['version']}, "
-                    f"model={result['model']}, serial={result['serial']}"
-                )
+                    print(f"    ⚠️  {host}: connected but no data parsed (vendor={login_vendor})", file=sys.stderr)
                 return result
 
         except Exception as e:
-            logger.warning(f"  {host}: connection as '{login_vendor}' failed: {type(e).__name__}: {e}")
+            print(f"    ❌ {host}: {login_vendor} failed: {type(e).__name__}: {e}", file=sys.stderr)
             continue
 
     logger.error(f"  {host}: exhausted all {len(vendors_to_try)} vendor types, giving up")
