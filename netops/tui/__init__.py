@@ -583,16 +583,31 @@ class NetopsTUI(App):
         if event.input.id == "search-input":
             self._populate_table(event.value)
 
+
+    def _input_focused(self) -> bool:
+        """Return True if an Input or TextArea widget currently has focus."""
+        from textual.widgets import Input, TextArea
+        focused = self.focused
+        return isinstance(focused, (Input, TextArea))
+
     def action_scan(self) -> None:
+        if self._input_focused():
+            return
         self.push_screen(ScanScreen())
 
     def action_health(self) -> None:
+        if self._input_focused():
+            return
         self.push_screen(HealthScreen())
 
     def action_push(self) -> None:
+        if self._input_focused():
+            return
         self.push_screen(ConfigPushScreen())
 
     def action_backup(self) -> None:
+        if self._input_focused():
+            return
         self.push_screen(BackupScreen())
 
     def action_help_screen(self) -> None:
@@ -635,10 +650,14 @@ Press Escape to close this help.
         self.notify(help_text, timeout=30)
 
     def action_export(self) -> None:
+        if self._input_focused():
+            return
         count = export_csv(self.inventory)
         self.notify(f"Exported {count} devices to inventory.csv")
 
     def action_refresh(self) -> None:
+        if self._input_focused():
+            return
         self.inventory = load_inventory()
         self._populate_table()
         count = len(self.inventory.get("devices", {}))
@@ -648,6 +667,8 @@ Press Escape to close this help.
         self.notify(f"Refreshed: {count} devices")
 
     def action_search(self) -> None:
+        if self._input_focused():
+            return
         search = self.query_one("#search-input", Input)
         if search.has_focus:
             search.value = ""
@@ -665,6 +686,8 @@ Press Escape to close this help.
         self.query_one("#device-table", DataTable).focus()
 
     def action_delete(self) -> None:
+        if self._input_focused():
+            return
         table = self.query_one("#device-table", DataTable)
         if table.cursor_row is not None:
             row_key = table.get_row_at(table.cursor_row)
