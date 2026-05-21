@@ -790,6 +790,10 @@ def _parse_version_generic(output: str, vendor: str) -> dict:
 
         # --- Model/platform ---
         if result["model"] is None:
+            # Brocade: "HW: Stackable ICX6450-48P" or "HW: ICX7150-48ZP"
+            brocade_hw = re.search(r"HW:\s+(?:Stackable\s+)?(\S+)", stripped)
+            if brocade_hw:
+                result["model"] = brocade_hw.group(1)
             # Cisco: "cisco WS-C3750X-48P (PowerPC405) processor"
             plat = re.match(r"^[Cc]isco\s+(\S+)\s+.*processor", line)
             if plat:
@@ -831,6 +835,10 @@ def _parse_version_generic(output: str, vendor: str) -> dict:
 
         # --- Serial ---
         if result["serial"] is None:
+            # Brocade: "Serial  #: CYR3444L01F" or "Serial #:CYR3444L01F"
+            brocade_sn = re.search(r"Serial\s*#\s*:\s*(\S+)", stripped)
+            if brocade_sn:
+                result["serial"] = brocade_sn.group(1)
             bid = re.search(r"Processor [Bb]oard ID\s+(\S+)", line)
             if bid:
                 result["serial"] = bid.group(1)
@@ -903,6 +911,13 @@ def _parse_version_generic(output: str, vendor: str) -> dict:
             amem = re.search(r"Total memory:\s+(.+)", stripped, re.IGNORECASE)
             if amem:
                 result["total_memory"] = amem.group(1)
+            # Brocade: "Memory - Total: 256MB, Free: 128MB"
+            bmem = re.search(r"Memory\s*-\s*Total:\s*(\S+)", stripped)
+            if bmem:
+                result["total_memory"] = bmem.group(1).rstrip(",")
+                bfree = re.search(r"Free:\s*(\S+)", stripped)
+                if bfree and result.get("free_memory") is None:
+                    result["free_memory"] = bfree.group(1)
 
         if result["free_memory"] is None:
             fmem = re.search(r"Free memory:\s+(.+)", stripped, re.IGNORECASE)
@@ -926,6 +941,10 @@ def _parse_version_generic(output: str, vendor: str) -> dict:
             mac2 = re.search(r"MAC [Aa]ddress\s*:\s*([0-9a-fA-F.:]+)", stripped)
             if mac2:
                 result["mac_address"] = mac2.group(1)
+            # Brocade: "The stack MAC is 609c.9f01.a000"
+            bmac = re.search(r"stack MAC is\s+([0-9a-fA-F.]+)", stripped)
+            if bmac:
+                result["mac_address"] = bmac.group(1)
 
         # --- Config register (Cisco) ---
         if result["config_register"] is None:
@@ -1144,6 +1163,8 @@ def _deep_scan_host(
     else:
         try:
             from netmiko import SSHDetect
+            import signal
+            import threading
 
             logger.debug(f"  {host}: attempting SSHDetect auto-detection...")
             detect_kwargs = dict(
@@ -1151,14 +1172,34 @@ def _deep_scan_host(
                 host=host,
                 username=username,
                 password=password,
-                timeout=timeout,
+                timeout=min(timeout, 8),
             )
             if port:
                 detect_kwargs["port"] = port
-            detect = SSHDetect(**detect_kwargs)
-            best = detect.autodetect()
-            detect.connection.disconnect()
-            if best and best != "autodetect":
+
+            # Run SSHDetect with a hard timeout — it can hang on non-standard devices
+            best = None
+            detect_exc = None
+
+            def _run_detect():
+                nonlocal best, detect_exc
+                try:
+                    detect = SSHDetect(**detect_kwargs)
+                    best = detect.autodetect()
+                    detect.connection.disconnect()
+                except Exception as e:
+                    detect_exc = e
+
+            t = threading.Thread(target=_run_detect, daemon=True)
+            t.start()
+            t.join(timeout=timeout)  # Hard wall-clock timeout
+
+            if t.is_alive():
+                logger.warning(f"  {host}: SSHDetect timed out after {timeout}s, falling back to probe order")
+                vendors_to_try = list(_VENDOR_PROBE_ORDER)
+            elif detect_exc:
+                raise detect_exc
+            elif best and best != "autodetect":
                 vendors_to_try = [best]
                 result["vendor"] = best
                 logger.info(f"  {host}: auto-detected vendor={best}")
@@ -1171,7 +1212,9 @@ def _deep_scan_host(
             vendors_to_try = list(_VENDOR_PROBE_ORDER)
 
     # --- Step 2: Connect, then try all vendor command sets in the family ---
-    logger.debug(f"  {host}: will try login with vendors: {vendors_to_try}")
+    # If we're in probe mode (SSHDetect failed), try ALL command sets on first connection
+    probing = len(vendors_to_try) > 1 and not (known_vendor and known_vendor != "unknown")
+    logger.debug(f"  {host}: will try login with vendors: {vendors_to_try} (probing={probing})")
     for login_vendor in vendors_to_try:
         logger.debug(f"  {host}: attempting SSH connection as '{login_vendor}'...")
         try:
@@ -1186,11 +1229,16 @@ def _deep_scan_host(
             with DeviceConnection(params) as conn:
                 logger.info(f"  {host}: connected as {login_vendor}")
 
-                family_vendors = _get_family_vendors(login_vendor)
+                # If probing (SSHDetect failed), try ALL vendor command sets
+                # to find the best match. Otherwise just try the family.
+                if probing:
+                    cmd_vendors_to_try = list(_VENDOR_PROBE_ORDER)
+                else:
+                    cmd_vendors_to_try = _get_family_vendors(login_vendor)
                 best_result = None
                 best_score = -1
 
-                for cmd_vendor in family_vendors:
+                for cmd_vendor in cmd_vendors_to_try:
                     logger.debug(f"  {host}: trying command set for {cmd_vendor}")
                     try:
                         candidate = _try_vendor_commands(conn, cmd_vendor)
@@ -1203,7 +1251,7 @@ def _deep_scan_host(
                         if score > best_score:
                             best_score = score
                             best_result = candidate
-                        if score == 3:
+                        if score >= 5:
                             break
                     except Exception as e:
                         logger.debug(f"  {host}: command set {cmd_vendor} error: {e}")
@@ -1517,6 +1565,7 @@ def main() -> None:
         help="Skip SNMP identification — perform a ping sweep only",
     )
     parser.add_argument("--verbose", "-v", action="store_true", help="Enable debug logging")
+    parser.add_argument("--deep", action="store_true", help=argparse.SUPPRESS)  # Legacy no-op, kept for compat
     parser.add_argument("--user", "-u", help="SSH username (triggers full device info collection)")
     parser.add_argument(
         "--password", help="SSH password (or set NETOPS_PASSWORD env var)"
