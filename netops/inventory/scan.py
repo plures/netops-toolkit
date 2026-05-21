@@ -1578,7 +1578,8 @@ def main() -> None:
         fragment = results_to_inventory_fragment(results)
 
     # Deep scan enrichment (SSH login for vendor/version/serial/model)
-    if args.deep:
+    # If user provided SSH creds, always collect device info — no separate --deep flag needed
+    if args.deep or args.user:
         import os as _os
 
         deep_user = args.user
@@ -1586,7 +1587,7 @@ def main() -> None:
         if not deep_user:
             parser.error("--deep requires --user (SSH username)")
         if not deep_pass:
-            parser.error("--deep requires --password or NETOPS_PASSWORD env var")
+            parser.error("SSH enrichment requires --password or NETOPS_PASSWORD env var")
         reachable_n = sum(1 for r in results if r.reachable)
         print(
             f"🔬 Starting deep scan of {reachable_n} hosts "

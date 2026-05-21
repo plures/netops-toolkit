@@ -52,6 +52,7 @@ docs = [
 ]
 
 [project.scripts]
+netops = "netops.__main__:main"
 netops-tui = "netops.tui.__main__:main"
 
 [tool.setuptools.packages.find]
