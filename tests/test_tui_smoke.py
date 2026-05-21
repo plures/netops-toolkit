@@ -42,3 +42,50 @@ async def test_typing_in_input_doesnt_trigger_bindings():
         assert search.value == "pshb"
         # No modals pushed
         assert len(app.screen_stack) == 1
+
+
+@pytest.mark.asyncio
+async def test_paste_works_in_scan_modal():
+    """Pasting text into scan modal Input fields must work."""
+    from textual.events import Paste
+    from textual.widgets import Input
+    from netops.tui import NetopsTUI, ScanScreen
+
+    app = NetopsTUI()
+    async with app.run_test(size=(120, 40)) as pilot:
+        app.push_screen(ScanScreen())
+        await pilot.pause()
+        screen = app.screen
+        subnet_input = screen.query_one("#scan-subnet", Input)
+        subnet_input.focus()
+        await pilot.pause()
+        app.post_message(Paste("10.0.0.0/24"))
+        await pilot.pause()
+        await pilot.pause()
+        assert subnet_input.value == "10.0.0.0/24"
+
+
+@pytest.mark.asyncio
+async def test_paste_works_in_all_scan_fields():
+    """Paste must work in every Input field in the scan modal."""
+    from textual.events import Paste
+    from textual.widgets import Input
+    from netops.tui import NetopsTUI, ScanScreen
+
+    app = NetopsTUI()
+    async with app.run_test(size=(120, 40)) as pilot:
+        app.push_screen(ScanScreen())
+        await pilot.pause()
+        screen = app.screen
+
+        fields = ["#scan-subnet", "#scan-hosts-file", "#scan-community",
+                  "#scan-user", "#scan-password"]
+        for field_id in fields:
+            inp = screen.query_one(field_id, Input)
+            inp.focus()
+            await pilot.pause()
+            app.post_message(Paste(f"test-{field_id}"))
+            await pilot.pause()
+            await pilot.pause()
+            assert inp.value == f"test-{field_id}", f"Paste failed for {field_id}: got '{inp.value}'"
+            inp.value = ""  # clear for next

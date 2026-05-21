@@ -92,6 +92,19 @@ class ScanScreen(ModalScreen):
 
     BINDINGS = [Binding("escape", "dismiss", "Close")]
 
+    def on_paste(self, event: "Paste") -> None:
+        """Route paste events to the focused input widget in this modal."""
+        from textual.widgets import Input, TextArea
+        focused = self.app.focused
+        if isinstance(focused, Input):
+            focused.insert_text_at_cursor(event.text)
+            event.prevent_default()
+            event.stop()
+        elif isinstance(focused, TextArea):
+            focused.insert(event.text)
+            event.prevent_default()
+            event.stop()
+
     def compose(self) -> ComposeResult:
         with Vertical(id="scan-modal"):
             yield Label("🔍 Inventory Scan", id="scan-title")
@@ -635,6 +648,20 @@ class NetopsTUI(App):
         if event.input.id == "search-input":
             self._populate_table(event.value)
 
+
+
+    def on_paste(self, event: "Paste") -> None:
+        """Route paste events to the focused input widget."""
+        from textual.widgets import Input, TextArea
+        focused = self.focused
+        if isinstance(focused, Input):
+            focused.insert_text_at_cursor(event.text)
+            event.prevent_default()
+            event.stop()
+        elif isinstance(focused, TextArea):
+            focused.insert(event.text)
+            event.prevent_default()
+            event.stop()
 
     def _input_focused(self) -> bool:
         """Return True if an Input or TextArea widget currently has focus."""
