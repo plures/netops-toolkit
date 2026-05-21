@@ -4,8 +4,8 @@ Usage:
     python -m netops.inventory.scan --subnet 10.0.0.0/24 --community public
     python -m netops.inventory.scan --subnet 10.0.0.0/24 --output fragment.json
     python -m netops.inventory.scan --subnet 10.0.0.0/24 --merge existing.yaml
-    python -m netops.inventory.scan --csv hosts.csv --deep --user admin
-    python -m netops.inventory.scan --hosts-file ips.txt --deep --user admin
+    python -m netops.inventory.scan --csv hosts.csv --user admin
+    python -m netops.inventory.scan --hosts-file ips.txt --user admin
 """
 
 from __future__ import annotations
@@ -72,7 +72,7 @@ class ScanResult:
     cdp_neighbors: list[dict] = field(default_factory=list)
     lldp_neighbors: list[dict] = field(default_factory=list)
     error: str | None = None
-    # Deep-scan fields (populated via SSH when --deep is used)
+    # Deep-scan fields (populated via SSH when --user is provided)
     version: str | None = None
     model: str | None = None
     serial: str | None = None
@@ -1464,8 +1464,8 @@ def main() -> None:
         epilog="""Examples:
   python -m netops.inventory.scan --subnet 10.0.0.0/24
   python -m netops.inventory.scan --subnet 10.0.0.0/24 --community public
-  python -m netops.inventory.scan --csv hosts.csv --deep --user admin
-  python -m netops.inventory.scan --hosts-file ips.txt --deep --user admin
+  python -m netops.inventory.scan --csv hosts.csv --user admin
+  python -m netops.inventory.scan --hosts-file ips.txt --user admin
   python -m netops.inventory.scan --subnet 10.0.0.0/24 --output fragment.json
   python -m netops.inventory.scan --subnet 10.0.0.0/24 --merge existing.yaml
 """,
@@ -1517,14 +1517,9 @@ def main() -> None:
         help="Skip SNMP identification — perform a ping sweep only",
     )
     parser.add_argument("--verbose", "-v", action="store_true", help="Enable debug logging")
+    parser.add_argument("--user", "-u", help="SSH username (triggers full device info collection)")
     parser.add_argument(
-        "--deep",
-        action="store_true",
-        help="SSH into discovered hosts to detect vendor, version, model, and serial number",
-    )
-    parser.add_argument("--user", "-u", help="SSH username for deep scan")
-    parser.add_argument(
-        "--password", help="SSH password for deep scan (or set NETOPS_PASSWORD env var)"
+        "--password", help="SSH password (or set NETOPS_PASSWORD env var)"
     )
     parser.add_argument(
         "--ssh-timeout",
@@ -1577,17 +1572,16 @@ def main() -> None:
         )
         fragment = results_to_inventory_fragment(results)
 
-    # Deep scan enrichment (SSH login for vendor/version/serial/model)
-    # If user provided SSH creds, always collect device info — no separate --deep flag needed
-    if args.deep or args.user:
+    # Collect full device info when SSH creds are provided
+    if args.user:
         import os as _os
 
         deep_user = args.user
         deep_pass = args.password or _os.environ.get("NETOPS_PASSWORD")
         if not deep_user:
-            parser.error("--deep requires --user (SSH username)")
+            parser.error("--user is required for SSH device info collection")
         if not deep_pass:
-            parser.error("SSH enrichment requires --password or NETOPS_PASSWORD env var")
+            parser.error("SSH requires --password or NETOPS_PASSWORD env var")
         reachable_n = sum(1 for r in results if r.reachable)
         print(
             f"🔬 Starting deep scan of {reachable_n} hosts "
