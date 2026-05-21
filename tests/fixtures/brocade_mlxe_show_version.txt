@@ -1,0 +1,89 @@
+System Mode: XMR
+Chassis: MLXe 4-slot (Serial #: BGD3830M026, Part #: 40-1001086-01)
+NI-X-HSF Switch Fabric Module 1 (Serial #: BEW3230M00X, Part #: 60-1003267-01)
+FE 1: Type fe600, Version 1
+Switch Fabric Module 1 Up Time is 572 days 20 hours 29 minutes 56 seconds
+NI-X-HSF Switch Fabric Module 2 (Serial #: BEW3230M00W, Part #: 60-1003267-01)
+FE 1: Type fe600, Version 1
+Switch Fabric Module 2 Up Time is 572 days 20 hours 29 minutes 56 seconds
+NI-X-HSF Switch Fabric Module 3 (Serial #: BEW3228M01W, Part #: 60-1003267-01)
+FE 1: Type fe600, Version 1
+Switch Fabric Module 3 Up Time is 572 days 20 hours 29 minutes 56 seconds
+==========================================================================
+SL M1: BR-MLX-MR2-X Management Module Active (Serial #: BVR3830M01C, Part #: 60-1003269-01):
+Boot : Version 5.9.0T165 Copyright (c) 2017-2019 Extreme Networks, Inc.
+Compiled on Mar 19 2015 at 03:16:46 labeled as xmprm05900
+(521771 bytes) from boot flash
+Monitor : Version 6.2.0T165 Copyright (c) 2017-2019 Extreme Networks, Inc.
+Compiled on Feb 11 2021 at 08:07:34 labeled as xmb06200
+(547993 bytes) from code flash
+IronWare : Version 6.3.0eT163 Copyright (c) 2017-2019 Extreme Networks, Inc.
+Compiled on Nov 11 2021 at 23:11:18 labeled as xmr06300e
+(10706616 bytes) from Primary
+Board ID : 00 MBRIDGE Revision : 37
+1666 MHz Power PC processor 7448 (version 8004/0202) 166 MHz bus
+512 KB Boot Flash (MX29LV040C), 128 MB Code Flash (MT28F256J3)
+4096 MB DRAM INSTALLED
+4096 MB DRAM ADDRESSABLE
+Active Management uptime is 572 days 20 hours 29 minutes 56 seconds
+==========================================================================
+SL M2: BR-MLX-MR2-X Management Module Standby (Serial #: BVR3808M009, Part #: 60-1003269-01):
+Boot : Version 5.9.0T165 Copyright (c) 2017-2019 Extreme Networks, Inc.
+Compiled on Mar 19 2015 at 03:16:46 labeled as xmprm05900
+(521771 bytes) from boot flash
+Monitor : Version 6.2.0T165 Copyright (c) 2017-2019 Extreme Networks, Inc.
+Compiled on Feb 11 2021 at 08:07:34 labeled as xmb06200
+(547993 bytes) from code flash
+IronWare : Version 6.3.0eT163 Copyright (c) 2017-2019 Extreme Networks, Inc.
+Compiled on Nov 11 2021 at 23:11:18 labeled as xmr06300e
+(10706616 bytes) from Primary
+Board ID : 00 MBRIDGE Revision : 37
+1666 MHz Power PC processor 7448 (version 8004/0202) 166 MHz bus
+512 KB Boot Flash (MX29LV040C), 128 MB Code Flash (MT28F256J3)
+4096 MB DRAM INSTALLED
+4096 MB DRAM ADDRESSABLE
+Standby Management uptime is 572 days 20 hours 28 minutes 57 seconds
+==========================================================================
+SL 1: BR-MLX-10Gx20 20-port 1/10GbE Module (Serial #: CWB3204M004, Part #: 60-1002946-12)
+License: (LID: eydIHFJoFFJ)
+Boot : Version 5.9.0T175 Copyright (c) 2017-2019 Extreme Networks, Inc.
+Compiled on Mar 19 2015 at 03:17:00 labeled as xmlprm05900
+(449576 bytes) from boot flash
+Monitor : Version 6.2.0T175 Copyright (c) 2017-2019 Extreme Networks, Inc.
+Compiled on Feb 11 2021 at 08:11:50 labeled as xmlb06200
+(574086 bytes) from code flash
+IronWare : Version 6.3.0eT177 Copyright (c) 2017-2019 Extreme Networks, Inc.
+Compiled on Nov 11 2021 at 23:21:54 labeled as xmlp06300e
+(9588754 bytes) from Primary
+FPGA versions:
+Valid PBIF Version = 2.11, Build Time = 8/19/2016 14:54:00
+Valid XPP Version = 0.01, Build Time = 3/29/2021 7:08:00
+MACXPP100G 0
+MACXPP100G 1
+1199 MHz MPC P2010 (version 8021/1051) 599 MHz bus
+512 KB Boot Flash (MX29LV040C), 66846720 Bytes (~64 MB) Code Flash (MT28F256J3)
+3072 MB DRAM, 8 KB SRAM
+LP Slot 1 uptime is 572 days 20 hours 29 minutes 1 seconds
+==========================================================================
+SL 2: BR-MLX-10Gx20 20-port 1/10GbE Module (Serial #: CWB3204M028, Part #: 60-1002946-12)
+License: (LID: eydIHFJoFHN)
+Boot : Version 5.9.0T175 Copyright (c) 2017-2019 Extreme Networks, Inc.
+Compiled on Mar 19 2015 at 03:17:00 labeled as xmlprm05900
+(449576 bytes) from boot flash
+Monitor : Version 6.2.0T175 Copyright (c) 2017-2019 Extreme Networks, Inc.
+Compiled on Feb 11 2021 at 08:11:50 labeled as xmlb06200
+(574086 bytes) from code flash
+IronWare : Version 6.3.0eT177 Copyright (c) 2017-2019 Extreme Networks, Inc.
+Compiled on Nov 11 2021 at 23:21:54 labeled as xmlp06300e
+(9588754 bytes) from Primary
+FPGA versions:
+Valid PBIF Version = 2.11, Build Time = 8/19/2016 14:54:00
+Valid XPP Version = 0.01, Build Time = 3/29/2021 7:08:00
+MACXPP100G 0
+MACXPP100G 1
+1199 MHz MPC P2010 (version 8021/1051) 599 MHz bus
+512 KB Boot Flash (MX29LV040C), 66846720 Bytes (~64 MB) Code Flash (MT28F256J3)
+3072 MB DRAM, 8 KB SRAM
+LP Slot 2 uptime is 572 days 20 hours 29 minutes 2 seconds
+==========================================================================
+All show version done

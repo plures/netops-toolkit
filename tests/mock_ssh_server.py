@@ -44,12 +44,25 @@ PERSONALITIES: dict[str, dict[str, str]] = {
         "skip-page-display": "",
         "terminal length": "",
     },
+    "brocade_mlxe": {
+        "show version": _load_fixture("brocade_mlxe_show_version.txt"),
+        "show inventory": "Chassis: MLXe 4-slot (Serial #: BGD3830M026, Part #: 40-1001086-01)",
+        "show running-config | include snmp-server community": "snmp-server community public ro",
+        "skip-page-display": "",
+        "terminal length": "",
+    },
     "cisco_ios": {
         "show version": _load_fixture("cisco_ios_show_version.txt"),
         "show inventory": _load_fixture("cisco_ios_show_inventory.txt"),
         "show running-config | include snmp-server community": _load_fixture(
             "cisco_ios_show_run_snmp.txt"
         ),
+        "terminal length 0": "",
+        "terminal width 511": "",
+    },
+    "cisco_me3600x": {
+        "show version": _load_fixture("cisco_me3600x_show_version.txt"),
+        "show inventory": 'NAME: "Chassis", DESCR: "ME-3600X-24FS-M"\nPID: ME-3600X-24FS-M, VID: V01, SN: FOC1842R0PL',
         "terminal length 0": "",
         "terminal width 511": "",
     },

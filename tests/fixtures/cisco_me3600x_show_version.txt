@@ -1,0 +1,22 @@
+Cisco IOS Software, ME3600X Software (ME3600X-UNIVERSALK9-M), Version 15.6(1)S2, RELEASE SOFTWARE (fc2)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2016 by Cisco Systems, Inc.
+Compiled Wed 26-Oct-16 10:49 by mcpre
+
+ROM: IOS-XE ROMMON
+
+router-01 uptime is 247 days, 14 hours, 22 minutes
+Uptime for this control processor is 247 days, 14 hours, 23 minutes
+System returned to ROM by reload
+System image file is "flash:me3600x-universalk9-mz.SPA.156-1.S2.bin"
+Last reload reason: Reload Command
+
+cisco ME-3600X-24FS-M (MPC8540) processor with 524288K bytes of memory.
+Processor board ID FOC1842R0PL
+2 Virtual Ethernet interfaces
+24 Gigabit Ethernet interfaces
+4 Ten Gigabit Ethernet interfaces
+1024K bytes of non-volatile configuration memory.
+256M bytes of Compact Flash at bootflash:.
+
+Configuration register is 0x2102
