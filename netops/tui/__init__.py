@@ -283,8 +283,6 @@ class HealthScreen(ModalScreen):
             yield Input(placeholder="Hostname or IP", id="health-host")
             yield Input(placeholder="SSH user", id="health-user")
             yield Input(placeholder="SSH password", password=True, id="health-pass")
-            yield Label("[dim]Device family: auto-detected from inventory (or specify below)[/dim]")
-            yield Input(placeholder="Device family (leave blank for auto-detect)", id="health-vendor")
             with Horizontal():
                 yield Button("Check", variant="primary", id="btn-health-run")
                 yield Button("Close", id="btn-health-close")
@@ -294,18 +292,7 @@ class HealthScreen(ModalScreen):
         """Pre-populate vendor field if host is in inventory."""
         pass
 
-    def on_input_changed(self, event: Input.Changed) -> None:
-        """When host changes, show the detected vendor from inventory."""
-        if event.input.id == "health-host":
-            host = event.value.strip()
-            inv = load_inventory()
-            device_info = inv.get("devices", {}).get(host, {})
-            vendor = device_info.get("vendor", "")
-            vendor_input = self.query_one("#health-vendor", Input)
-            if vendor and vendor != "unknown":
-                vendor_input.placeholder = f"Auto-detected: {friendly_vendor_name(vendor)}"
-            else:
-                vendor_input.placeholder = "Device family (leave blank for auto-detect)"
+
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "btn-health-close":
@@ -314,18 +301,15 @@ class HealthScreen(ModalScreen):
             host = self.query_one("#health-host", Input).value.strip()
             user = self.query_one("#health-user", Input).value.strip()
             password = self.query_one("#health-pass", Input).value.strip()
-            vendor_override = self.query_one("#health-vendor", Input).value.strip()
             log = self.query_one("#health-log", Log)
             if not all([host, user, password]):
                 log.write_line("❌ Host, user, and password required")
                 return
 
-            # Resolve vendor: explicit override > inventory > auto-detect
+            # Auto-resolve vendor from inventory or auto-detect
             inv = load_inventory()
             device_info = inv.get("devices", {}).get(host, {})
-            if vendor_override:
-                vendor = vendor_override
-            elif device_info.get("vendor") and device_info["vendor"] != "unknown":
+            if device_info.get("vendor") and device_info["vendor"] != "unknown":
                 vendor = device_info["vendor"]
             else:
                 vendor = "autodetect"
