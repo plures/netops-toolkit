@@ -1,0 +1,14 @@
+Hostname: mx240-edge01
+Model: MX240
+Junos: 21.4R3-S5.4
+JUNOS OS Kernel 64-bit  [20230714.182334_builder_stable_12]
+JUNOS OS libs [20230714.182334_builder_stable_12]
+JUNOS OS runtime [20230714.182334_builder_stable_12]
+JUNOS OS time zone information [20230714.182334_builder_stable_12]
+JUNOS network stack and utilities [20230921.143653_builder_junos_214_r3]
+JUNOS libs [20230921.143653_builder_junos_214_r3]
+JUNOS OS libs compat32 [20230714.182334_builder_stable_12]
+JUNOS libs compat32 [20230921.143653_builder_junos_214_r3]
+JUNOS runtime [20230921.143653_builder_junos_214_r3]
+JUNOS Web Management Platform Package [20230921.143653_builder_junos_214_r3]
+JUNOS Routing Software Suite [20230921.143653_builder_junos_214_r3]

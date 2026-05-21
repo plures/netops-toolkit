@@ -1,0 +1,4 @@
+snmp-server community Br0cad3Pub RO
+snmp-server community Br0cad3Priv RW
+snmp-server contact NOC-Team
+snmp-server location DC1-Rack42

@@ -1,0 +1,5 @@
+snmp-server community C1sc0RO RO
+snmp-server community C1sc0RW RW
+snmp-server location DC2-Row3-Rack15
+snmp-server contact noc@example.com
+snmp-server enable traps

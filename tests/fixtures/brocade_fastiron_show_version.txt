@@ -1,0 +1,21 @@
+  Copyright (c) 1996-2018 Brocade Communications Systems, Inc. All rights reserved.
+    UNIT 1: compiled on Apr 26 2018 at 09:56:33 labeled as ICX64S08095
+                (29974016 bytes) from Primary ICX64S08095.bin
+        SW: Version 08.0.95T213 
+  Boot-PROM: Version 10.1.14T215 
+  HW: Stackable ICX6450-48P
+==========================================================================
+UNIT 1: SL 1: ICX6450-48P 48-port Management Module
+      Serial  #: CYR3444L01F
+      Software Package: ICX64XX-PREM-LIC-SW 
+      Current Time is 14:23:11 Pacific Tue May 20 2026
+  Start Time was 10:05:33 Pacific Mon Jan 06 2025
+  The system : started=warm start  
+  My stack unit ID = 1, bootup role = active
+==========================================================================
+  The stack MAC is 609c.9f01.a000
+
+  The system uptime is 500 days 4 hours 17 minutes 38 seconds 
+  The system : started=warm start  
+
+  Memory - Total: 256MB, Free: 128MB

@@ -1,0 +1,21 @@
+Cisco IOS XE Software, Version 16.09.05
+Cisco IOS Software [Fuji], ISR Software (X86_64_LINUX_IOSD-UNIVERSALK9-M), Version 16.9.5, RELEASE SOFTWARE (fc1)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2020 by Cisco Systems, Inc.
+Compiled Thu 30-Jan-20 18:48 by mcpre
+
+Cisco ISR4451-X/K9 (2RU) processor with 1687137K/6147K bytes of memory.
+Processor board ID FJC2144D0GQ
+3 Gigabit Ethernet interfaces
+2 Ten Gigabit Ethernet interfaces
+32768K bytes of non-volatile configuration memory.
+16777216K bytes of physical memory.
+7341807K bytes of flash memory at bootflash:.
+
+Configuration register is 0x2102
+
+router-01 uptime is 142 days, 7 hours, 33 minutes
+System returned to ROM by reload
+System image file is "bootflash:isr4400-universalk9.16.09.05.SPA.bin"
+
+Last reload reason: Reload Command

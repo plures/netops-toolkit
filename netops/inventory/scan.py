@@ -1103,6 +1103,7 @@ def _deep_scan_host(
     password: str,
     known_vendor: str | None = None,
     timeout: int = 15,
+    port: int | None = None,
 ) -> dict:
     """SSH into a host, auto-detect vendor if needed, pull version+serial.
 
@@ -1145,13 +1146,16 @@ def _deep_scan_host(
             from netmiko import SSHDetect
 
             logger.debug(f"  {host}: attempting SSHDetect auto-detection...")
-            detect = SSHDetect(
+            detect_kwargs = dict(
                 device_type="autodetect",
                 host=host,
                 username=username,
                 password=password,
                 timeout=timeout,
             )
+            if port:
+                detect_kwargs["port"] = port
+            detect = SSHDetect(**detect_kwargs)
             best = detect.autodetect()
             detect.connection.disconnect()
             if best and best != "autodetect":
@@ -1177,6 +1181,7 @@ def _deep_scan_host(
                 password=password,
                 device_type=login_vendor,
                 timeout=timeout,
+                port=port,
             )
             with DeviceConnection(params) as conn:
                 logger.info(f"  {host}: connected as {login_vendor}")
@@ -1231,6 +1236,7 @@ def deep_enrich(
     password: str,
     concurrency: int = 5,
     timeout: int = 15,
+    port: int | None = None,
 ) -> dict:
     """Enrich an inventory fragment with SSH-gathered details.
 
@@ -1264,7 +1270,7 @@ def deep_enrich(
             known_vendor = info.get("vendor")
             if known_vendor == "unknown":
                 known_vendor = None
-            fut = pool.submit(_deep_scan_host, host, username, password, known_vendor, timeout)
+            fut = pool.submit(_deep_scan_host, host, username, password, known_vendor, timeout, port)
             futures[fut] = (name, info)
 
         for fut in concurrent.futures.as_completed(futures):

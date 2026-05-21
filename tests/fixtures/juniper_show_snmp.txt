@@ -1,0 +1,4 @@
+set snmp community juniRO authorization read-only
+set snmp community juniRW authorization read-write
+set snmp location "DC3-Floor2"
+set snmp contact "netops@example.com"

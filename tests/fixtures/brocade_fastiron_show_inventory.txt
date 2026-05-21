@@ -1,0 +1,11 @@
+
+UNIT 1: SL 1: ICX6450-48P 48-port Management Module
+      Serial  #: CYR3444L01F
+      License: ICX64XX-PREM-LIC-SW
+      License Package: ICX6450_PREM_ROUTER_SOFT_PACKAGE  (different memory different calculation)
+      P-ASIC 0: sobgillmain sobillmain sobillmain sobillmain sobillmain sobillmain sobillmain
+      MEMORY Size: 256 MBytes
+      MEMORY DRAM Type: DDR3
+
+UNIT 1: SL 2: ICX6450-SFP-Plus 4-port 40G Module
+      Serial  #: CYQ3333M02A

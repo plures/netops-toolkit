@@ -1,0 +1,15 @@
+Hardware inventory:
+Item             Version  Part number  Serial number     Description
+Chassis                                JN123456          MX240
+Midplane         REV 06   710-024804   ABCD1234          MX240 Midplane
+PEM 0            Rev 05   740-024283   QCS2111R01L       DC 2520W Power Supply
+PEM 1            Rev 05   740-024283   QCS2111R01M       DC 2520W Power Supply
+Routing Engine 0 REV 12   750-054654   9009222123        RE-S-X6-128G
+Routing Engine 1 REV 12   750-054654   9009222124        RE-S-X6-128G
+CB 0             REV 11   750-062572   CAFF6666          Enhanced MX SCB 2
+CB 1             REV 11   750-062572   CAFF6667          Enhanced MX SCB 2
+FPC 0            REV 28   750-028467   ZR0001            MPC 3D 16x 10GE
+  CPU            REV 11   711-029089   ZR0002            MPC PMB 2G
+  PIC 0                   BUILTIN      BUILTIN           4x 10GE(LAN) SFP+
+    Xcvr 0       REV 01   740-021308   AGA1234567        SFP+-10G-SR
+    Xcvr 1       REV 01   740-021308   AGA1234568        SFP+-10G-SR
