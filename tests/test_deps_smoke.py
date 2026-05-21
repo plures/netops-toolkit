@@ -30,3 +30,18 @@ def test_scan_subnet_async_callable():
     """scan_subnet_async must be importable and callable (not just exist)."""
     from netops.inventory.scan import scan_subnet_async
     assert callable(scan_subnet_async)
+
+
+def test_health_check_imports_without_error():
+    """Health check module must import cleanly (not CiscoHealthCheck which doesn't exist)."""
+    from netops.check.health import run_health_check
+    from netops.core.connection import ConnectionParams
+    assert callable(run_health_check)
+    assert ConnectionParams is not None
+
+
+def test_no_cisco_health_check_class():
+    """CiscoHealthCheck class does NOT exist — verify TUI doesn't reference it."""
+    import importlib
+    mod = importlib.import_module("netops.check.cisco")
+    assert not hasattr(mod, "CiscoHealthCheck"), "CiscoHealthCheck class should not exist"

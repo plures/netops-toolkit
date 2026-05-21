@@ -235,25 +235,28 @@ class HealthScreen(ModalScreen):
 
             async def _check():
                 try:
-                    from netops.check.cisco import CiscoHealthCheck
-                    from netops.core.connection import DeviceConnection
+                    from netops.check.health import run_health_check
+                    from netops.core.connection import ConnectionParams
 
                     inv = load_inventory()
                     device_info = inv.get("devices", {}).get(host, {})
-                    vendor = device_info.get("vendor", "cisco_ios")
+                    vendor = device_info.get("vendor", "autodetect")
 
-                    conn = DeviceConnection(
+                    params = ConnectionParams(
                         host=host,
                         username=user,
                         password=password,
                         device_type=vendor,
                     )
-                    conn.connect()
-                    checker = CiscoHealthCheck(conn)
-                    result = checker.run_all()
-                    conn.disconnect()
+                    result = await asyncio.get_event_loop().run_in_executor(
+                        None, lambda: run_health_check(params)
+                    )
 
-                    for check_name, status in result.items():
+                    if not result.get("success"):
+                        log.write_line(f"  X Connection failed: {result.get('error', 'unknown')}")
+                        return
+
+                    for check_name, status in result.get("checks", {}).items():
                         icon = "✅" if status.get("ok") else "⚠️"
                         log.write_line(f"  {icon} {check_name}: {status.get('summary', '')}")
 
