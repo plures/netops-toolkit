@@ -1180,6 +1180,8 @@ def _deep_scan_host(
                 username=username,
                 password=password,
                 timeout=min(timeout, 8),
+                use_keys=False,
+                allow_agent=False,
             )
             if port:
                 detect_kwargs["port"] = port

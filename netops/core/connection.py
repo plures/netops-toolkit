@@ -109,6 +109,11 @@ class DeviceConnection:
             device_params["secret"] = self.params.enable_password
         if self.params.key_file:
             device_params["key_file"] = self.params.key_file
+        else:
+            # Disable key-based auth when no key file is specified
+            # Prevents netmiko from searching for ~/.ssh/id_rsa (fails on Windows)
+            device_params["use_keys"] = False
+            device_params["allow_agent"] = False
 
         # Telnet override
         if self.params.transport == Transport.TELNET:
