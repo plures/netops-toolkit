@@ -130,7 +130,7 @@ class ScanScreen(ModalScreen):
         """Run scan in background."""
         async def _scan():
             try:
-                from netops.inventory.scan import scan_subnet, results_to_inventory_fragment, deep_enrich
+                from netops.inventory.scan import scan_subnet_async, results_to_inventory_fragment, deep_enrich
 
                 all_results = []
 
@@ -159,7 +159,7 @@ class ScanScreen(ModalScreen):
                 # Scan each subnet
                 for i, subnet in enumerate(subnets):
                     log.write_line(f"  [{i+1}/{len(subnets)}] Scanning {subnet}...")
-                    results = scan_subnet(
+                    results = await scan_subnet_async(
                         subnet=subnet,
                         community=community,
                         skip_snmp=skip_snmp,
@@ -172,10 +172,14 @@ class ScanScreen(ModalScreen):
 
                 if user and password and not skip_snmp:
                     log.write_line(f"  🔬 Deep scan with SSH ({user})...")
-                    fragment = deep_enrich(
-                        fragment,
-                        username=user,
-                        password=password,
+                    import asyncio
+                    fragment = await asyncio.get_event_loop().run_in_executor(
+                        None,
+                        lambda: deep_enrich(
+                            fragment,
+                            username=user,
+                            password=password,
+                        ),
                     )
 
                 # Merge with existing

@@ -430,14 +430,16 @@ async def _scan_host_async(
 # ---------------------------------------------------------------------------
 
 
-async def _scan_subnet_async(
+async def scan_subnet_async(
     subnet: str,
-    community: str,
-    snmp_port: int,
-    snmp_timeout: int,
-    ping_workers: int,
-    ping_timeout: int,
-    snmp_concurrency: int,
+    community: str = "public",
+    snmp_port: int = 161,
+    snmp_timeout: int = 2,
+    ping_workers: int = 50,
+    ping_timeout: int = 1,
+    snmp_concurrency: int = 10,
+    skip_ping: bool = False,
+    skip_snmp: bool = False,
     skip_ping: bool,
     skip_snmp: bool,
 ) -> list[ScanResult]:
@@ -547,7 +549,7 @@ def scan_subnet(
 
     """
     return asyncio.run(
-        _scan_subnet_async(
+        scan_subnet_async(
             subnet=subnet,
             community=community,
             snmp_port=snmp_port,
