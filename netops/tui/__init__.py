@@ -293,6 +293,25 @@ class HealthScreen(ModalScreen):
                 yield Button("Close", id="btn-health-close")
             yield Log(id="health-log", highlight=True)
 
+    def on_error(self, event) -> None:
+        """Global error handler — display errors, never crash."""
+        import traceback
+        logger = logging.getLogger("netops.tui")
+        logger.error(f"Unhandled error: {event}", exc_info=True)
+        # Try to show in status bar if possible
+        try:
+            from textual.widgets import Static
+            status = self.query_one(".status-bar", Static)
+            status.update(f"  ⚠️ Error (see logs): {str(event)[:60]}")
+        except Exception:
+            pass
+
+    def on_exception(self, error: Exception) -> None:
+        """Catch exceptions from workers/tasks — log, don't crash."""
+        import traceback
+        logger = logging.getLogger("netops.tui")
+        logger.error(f"Background task error: {error}", exc_info=True)
+
     def on_mount(self) -> None:
         """Pre-populate vendor field if host is in inventory."""
         pass
@@ -646,6 +665,25 @@ class NetopsTUI(App):
         )
         yield Footer()
 
+    def on_error(self, event) -> None:
+        """Global error handler — display errors, never crash."""
+        import traceback
+        logger = logging.getLogger("netops.tui")
+        logger.error(f"Unhandled error: {event}", exc_info=True)
+        # Try to show in status bar if possible
+        try:
+            from textual.widgets import Static
+            status = self.query_one(".status-bar", Static)
+            status.update(f"  ⚠️ Error (see logs): {str(event)[:60]}")
+        except Exception:
+            pass
+
+    def on_exception(self, error: Exception) -> None:
+        """Catch exceptions from workers/tasks — log, don't crash."""
+        import traceback
+        logger = logging.getLogger("netops.tui")
+        logger.error(f"Background task error: {error}", exc_info=True)
+
     def on_mount(self) -> None:
         table = self.query_one("#device-table", DataTable)
         table.add_columns("Hostname", "Host", "Vendor", "Model", "Version", "Serial", "Site")
@@ -674,21 +712,24 @@ class NetopsTUI(App):
             )
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        if event.row_key is None or event.row_key.value is None:
-            return
-        hostname = str(event.row_key.value)
-        info = self.inventory.get("devices", {}).get(hostname, {})
-        detail = f"[bold]{hostname}[/bold]\n\n"
-        if isinstance(info, dict):
-            for k, v in sorted(info.items()):
-                if k == "tags" and isinstance(v, dict):
-                    detail += f"[dim]{k}:[/dim]\n"
-                    for tk, tv in v.items():
-                        detail += f"  {tk}: {tv}\n"
-                else:
-                    detail += f"[dim]{k}:[/dim] {v}\n"
-        self._selected_host = hostname
-        self.query_one("#detail-content", Static).update(detail)
+        try:
+            if event.row_key is None or event.row_key.value is None:
+                return
+            hostname = str(event.row_key.value)
+            info = self.inventory.get("devices", {}).get(hostname, {})
+            detail = f"[bold]{hostname}[/bold]\n\n"
+            if isinstance(info, dict):
+                for k, v in sorted(info.items()):
+                    if k == "tags" and isinstance(v, dict):
+                        detail += f"[dim]{k}:[/dim]\n"
+                        for tk, tv in v.items():
+                            detail += f"  {tk}: {tv}\n"
+                    else:
+                        detail += f"[dim]{k}:[/dim] {v}\n"
+            self._selected_host = hostname
+            self.query_one("#detail-content", Static).update(detail)
+        except Exception as e:
+            logging.getLogger("netops.tui").error(f"Row selection error: {e}")
 
     def on_input_changed(self, event: Input.Changed) -> None:
         if event.input.id == "search-input":
