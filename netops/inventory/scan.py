@@ -440,8 +440,6 @@ async def scan_subnet_async(
     snmp_concurrency: int = 10,
     skip_ping: bool = False,
     skip_snmp: bool = False,
-    skip_ping: bool,
-    skip_snmp: bool,
 ) -> list[ScanResult]:
     """Async implementation of the full subnet scan pipeline."""
     # Ping sweep (blocking subprocess calls) runs in a thread pool
