@@ -11,7 +11,7 @@ license = {text = "MIT"}
 
 dependencies = [
     "netmiko>=4.3.0,<4.5.0",
-    "paramiko>=3.4.0",
+    "paramiko>=3.4.0,<5.0.0",
     "pyyaml>=6.0",
     "cryptography>=46.0.5",
 ]
