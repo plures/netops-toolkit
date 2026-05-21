@@ -772,10 +772,41 @@ def _parse_version_generic(output: str, vendor: str) -> dict:
         "interface_count": None,
         "cpu_type": None,
         "flash_size": None,
+        "modules": [],
     }
 
     for line in output.splitlines():
         stripped = line.strip()
+
+        # --- Module/Line card detection (Brocade MLX/ICX) ---
+        # Matches: "SL 1: BR-MLX-10Gx20 20-port 1/10GbE Module (Serial #: CWB3204M004, Part #: 60-1002946-12)"
+        # Matches: "SL M1: BR-MLX-MR2-X Management Module Active (Serial #: BVR3830M01C, ...)"
+        # Matches: "NI-X-HSF Switch Fabric Module 1 (Serial #: BEW3230M00X, ...)"
+        import re as _re
+        slot_match = _re.search(
+            r"SL\s+(\S+):\s+(\S+)\s+(.+?)\s*\(Serial #:\s*(\S+?),?\s*(?:Part #:\s*(\S+?),?)?\s*\)",
+            stripped,
+        )
+        if slot_match:
+            result["modules"].append({
+                "slot": slot_match.group(1),
+                "part": slot_match.group(2),
+                "description": slot_match.group(3).strip(),
+                "serial": slot_match.group(4).rstrip(","),
+                "part_number": slot_match.group(5).rstrip(",") if slot_match.group(5) else None,
+            })
+        fabric_match = _re.search(
+            r"(NI-\S+)\s+(.+?)\s+(\d+)\s*\(Serial #:\s*(\S+?),?\s*(?:Part #:\s*(\S+?),?)?\s*\)",
+            stripped,
+        )
+        if fabric_match:
+            result["modules"].append({
+                "slot": f"SF{fabric_match.group(3)}",
+                "part": fabric_match.group(1),
+                "description": f"{fabric_match.group(2)} {fabric_match.group(3)}",
+                "serial": fabric_match.group(4).rstrip(","),
+                "part_number": fabric_match.group(5).rstrip(",") if fabric_match.group(5) else None,
+            })
 
         # --- Version ---
         # IronWare/Extreme: always override if found (takes priority)
@@ -1385,6 +1416,7 @@ def deep_enrich(
                     "flash_size",
                     "domain_name",
                     "interface_count",
+                    "modules",
                 )
                 for fld in _DEEP_FIELDS:
                     val = result.get(fld)
