@@ -1586,10 +1586,13 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    logging.basicConfig(
-        level=logging.DEBUG if args.verbose else logging.INFO,
-        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-    )
+    # Set up console logging (verbose shows debug, normal shows warnings+)
+    console_level = logging.DEBUG if args.verbose else logging.WARNING
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(console_level)
+    console_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
+    logging.getLogger("netops").addHandler(console_handler)
+    logging.getLogger("netops").setLevel(logging.DEBUG)
 
     # Determine scan targets: --subnet, --csv, or --hosts-file
     hosts_file = args.hosts_file_csv or args.hosts_file
@@ -1644,6 +1647,24 @@ def main() -> None:
             concurrency=args.ssh_concurrency,
             timeout=args.ssh_timeout,
         )
+        # Report device collection results
+        devices = fragment.get("devices", {})
+        identified = sum(1 for d in devices.values()
+                         if isinstance(d, dict) and d.get("vendor", "unknown") != "unknown")
+        with_version = sum(1 for d in devices.values()
+                          if isinstance(d, dict) and d.get("version"))
+        still_unknown = sum(1 for d in devices.values()
+                           if isinstance(d, dict) and d.get("vendor", "unknown") == "unknown")
+        print(
+            f"🔬 Device info: {identified} identified, {with_version} with version, "
+            f"{still_unknown} still unknown",
+            file=sys.stderr,
+        )
+        if still_unknown and not args.verbose:
+            print(
+                "   Tip: run with --verbose to see why detection failed",
+                file=sys.stderr,
+            )
 
     reachable_count = sum(1 for r in results if r.reachable)
     snmp_count = sum(1 for r in results if r.sys_descr)
