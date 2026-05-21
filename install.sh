@@ -13,7 +13,13 @@ set -euo pipefail
 
 VENV_DIR="$HOME/.venv/netops"
 REPO="https://github.com/plures/netops-toolkit"
-TAG="${NETOPS_VERSION:-v0.38.1}"
+
+# Resolve version: env override, or fetch latest release tag from GitHub
+if [ -n "${NETOPS_VERSION:-}" ]; then
+  TAG="$NETOPS_VERSION"
+else
+  TAG=$(curl -sSL "https://api.github.com/repos/plures/netops-toolkit/releases/latest" 2>/dev/null | grep -oP '"tag_name":\s*"\K[^"]+' || echo "main")
+fi
 
 echo "╔══════════════════════════════════════╗"
 echo "║  netops-toolkit installer            ║"
