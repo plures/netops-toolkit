@@ -114,7 +114,7 @@ class ScanScreen(ModalScreen):
             yield Input(placeholder="Subnets (e.g. 10.0.0.0/24, 192.168.1.0/24)", id="scan-subnet")
             yield Input(placeholder="Or path to hosts file (hosts.csv or ips.txt)", id="scan-hosts-file")
             yield Input(placeholder="SNMP communities (comma-sep, or leave blank for registry)", id="scan-community")
-            yield Input(placeholder="SSH user (for deep scan, optional)", id="scan-user")
+            yield Input(placeholder="SSH user (collects full device info)", id="scan-user")
             yield Input(placeholder="SSH password", password=True, id="scan-password")
             with Horizontal():
                 yield Button("Scan", variant="primary", id="btn-scan")
@@ -196,12 +196,10 @@ class ScanScreen(ModalScreen):
                     all_results.extend(results)
 
                 fragment = results_to_inventory_fragment(all_results)
-                # Always attempt deep enrichment for unknown devices
-                unknowns = sum(1 for d in fragment.get("devices", {}).values()
-                               if isinstance(d, dict) and d.get("vendor", "unknown") == "unknown")
-
-                if unknowns > 0 and user and password:
-                    log.write_line(f"  🔬 Deep scan: {unknowns} unknown device(s), trying SSH + auto-detect...")
+                # Always collect full device info when creds are available
+                if user and password:
+                    device_count = len(fragment.get("devices", {}))
+                    log.write_line(f"  🔬 Collecting device info via SSH ({device_count} device(s))...")
                     fragment = await asyncio.get_event_loop().run_in_executor(
                         None,
                         lambda: deep_enrich(
@@ -210,7 +208,7 @@ class ScanScreen(ModalScreen):
                             password=password,
                         ),
                     )
-                    # Extract community strings from identified devices (learn for future)
+                    # Learn community strings from identified devices
                     try:
                         from netops.core.community import CommunityRegistry, extract_communities_via_ssh
                         reg = CommunityRegistry()
@@ -231,24 +229,9 @@ class ScanScreen(ModalScreen):
                     except Exception as e:
                         log.write_line(f"    ⚠️ Community extraction: {e}")
 
-                    still_unknown = sum(1 for d in fragment.get("devices", {}).values()
-                                       if isinstance(d, dict) and d.get("vendor", "unknown") == "unknown")
-                    if still_unknown:
-                        log.write_line(f"    ℹ️ {still_unknown} device(s) still unidentified")
-                    else:
-                        log.write_line(f"    ✅ All devices identified")
-                elif unknowns > 0:
-                    log.write_line(f"  ℹ️ {unknowns} unknown device(s) — provide SSH creds for auto-detection")
-                elif user and password:
-                    log.write_line(f"  🔬 Deep scan for additional device details...")
-                    fragment = await asyncio.get_event_loop().run_in_executor(
-                        None,
-                        lambda: deep_enrich(
-                            fragment,
-                            username=user,
-                            password=password,
-                        ),
-                    )
+                    identified = sum(1 for d in fragment.get("devices", {}).values()
+                                     if isinstance(d, dict) and d.get("vendor", "unknown") != "unknown")
+                    log.write_line(f"    ✅ {identified}/{device_count} device(s) fully identified")
 
                 # Merge with existing
                 existing = load_inventory()
