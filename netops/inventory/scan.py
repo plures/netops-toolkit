@@ -1568,7 +1568,7 @@ def main() -> None:
     )
     parser.add_argument("--verbose", "-v", action="store_true", help="Enable debug logging")
     parser.add_argument("--deep", action="store_true", help=argparse.SUPPRESS)  # Legacy no-op, kept for compat
-    parser.add_argument("--user", "-u", help="SSH username (triggers full device info collection)")
+    parser.add_argument("--user", "-u", help="SSH username (or set NETOPS_USER env var)")
     parser.add_argument(
         "--password", help="SSH password (or set NETOPS_PASSWORD env var)"
     )
@@ -1623,14 +1623,12 @@ def main() -> None:
         )
         fragment = results_to_inventory_fragment(results)
 
-    # Collect full device info when SSH creds are provided
-    if args.user:
-        import os as _os
+    # Collect full device info when SSH creds are provided (CLI args or env vars)
+    import os as _os
+    deep_user = args.user or _os.environ.get("NETOPS_USER")
+    deep_pass = args.password or _os.environ.get("NETOPS_PASSWORD")
 
-        deep_user = args.user
-        deep_pass = args.password or _os.environ.get("NETOPS_PASSWORD")
-        if not deep_user:
-            parser.error("--user is required for SSH device info collection")
+    if deep_user:
         if not deep_pass:
             parser.error("SSH requires --password or NETOPS_PASSWORD env var")
         reachable_n = sum(1 for r in results if r.reachable)
