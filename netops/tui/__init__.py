@@ -524,7 +524,7 @@ class NetopsTUI(App):
         with Horizontal():
             with Vertical(id="main-panel"):
                 yield Input(placeholder="🔍 Search devices...", id="search-input")
-                yield DataTable(id="device-table")
+                yield DataTable(id="device-table", cursor_type="row")
             with Vertical(id="detail-panel"):
                 yield Static("Select a device", id="detail-content")
         yield Static(
@@ -561,6 +561,8 @@ class NetopsTUI(App):
             )
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        if event.row_key is None or event.row_key.value is None:
+            return
         hostname = str(event.row_key.value)
         info = self.inventory.get("devices", {}).get(hostname, {})
         detail = f"[bold]{hostname}[/bold]\n\n"
