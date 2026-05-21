@@ -58,11 +58,11 @@ install_package() {
   # If we're running from inside an extracted tarball, install local
   if [ -f "pyproject.toml" ] && grep -q "netops-toolkit" pyproject.toml 2>/dev/null; then
     echo "→ Installing from local source..."
-    $UV pip install --python "$VENV_DIR/bin/python" ".[tui]" --quiet
+    $UV pip install --python "$VENV_DIR/bin/python" ".[tui,snmp,report]" --quiet
   else
     echo "→ Installing netops-toolkit@${TAG} from GitHub..."
     $UV pip install --python "$VENV_DIR/bin/python" \
-      "netops-toolkit[tui] @ git+${REPO}@${TAG}" --quiet
+      "netops-toolkit[tui,snmp,report] @ git+${REPO}@${TAG}" --quiet
   fi
 }
 
