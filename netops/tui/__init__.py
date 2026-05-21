@@ -97,7 +97,7 @@ class ScanScreen(ModalScreen):
             yield Label("🔍 Inventory Scan", id="scan-title")
             yield Input(placeholder="Subnets (e.g. 10.0.0.0/24, 192.168.1.0/24)", id="scan-subnet")
             yield Input(placeholder="Or path to hosts file (hosts.csv or ips.txt)", id="scan-hosts-file")
-            yield Input(placeholder="SNMP community (default: public)", id="scan-community")
+            yield Input(placeholder="SNMP communities (comma-sep, or leave blank for registry)", id="scan-community")
             yield Input(placeholder="SSH user (for deep scan, optional)", id="scan-user")
             yield Input(placeholder="SSH password", password=True, id="scan-password")
             with Horizontal():
@@ -117,7 +117,18 @@ class ScanScreen(ModalScreen):
             if not subnet_text and not hosts_file:
                 self.query_one("#scan-log", Log).write_line("❌ Enter subnet(s) or a hosts file path")
                 return
-            community = self.query_one("#scan-community", Input).value.strip() or "public"
+            community_input = self.query_one("#scan-community", Input).value.strip()
+            # Parse comma-separated communities or use registry
+            if community_input:
+                communities = [c.strip() for c in community_input.split(",") if c.strip()]
+                # Add to registry for future use
+                from netops.core.community import CommunityRegistry
+                reg = CommunityRegistry()
+                for c in communities:
+                    reg.add_string(c)
+                community = communities[0]  # Primary for initial scan
+            else:
+                community = "public"
             user = self.query_one("#scan-user", Input).value.strip()
             password = self.query_one("#scan-password", Input).value.strip()
             log = self.query_one("#scan-log", Log)
@@ -183,6 +194,27 @@ class ScanScreen(ModalScreen):
                             password=password,
                         ),
                     )
+                    # Extract community strings from identified devices (learn for future)
+                    try:
+                        from netops.core.community import CommunityRegistry, extract_communities_via_ssh
+                        reg = CommunityRegistry()
+                        for dname, dinfo in fragment.get("devices", {}).items():
+                            if isinstance(dinfo, dict) and dinfo.get("vendor", "unknown") != "unknown":
+                                host_ip = dinfo.get("host", dname)
+                                comms, _ = await asyncio.get_event_loop().run_in_executor(
+                                    None,
+                                    lambda h=host_ip, v=dinfo.get("vendor"): extract_communities_via_ssh(
+                                        h, user, password, known_vendor=v
+                                    ),
+                                )
+                                if comms:
+                                    for c in comms:
+                                        reg.add_string(c)
+                                    reg.set_device(host_ip, comms[0], dinfo.get("vendor"))
+                                    log.write_line(f"    🔑 {dname}: learned {len(comms)} community string(s)")
+                    except Exception as e:
+                        log.write_line(f"    ⚠️ Community extraction: {e}")
+
                     still_unknown = sum(1 for d in fragment.get("devices", {}).values()
                                        if isinstance(d, dict) and d.get("vendor", "unknown") == "unknown")
                     if still_unknown:
