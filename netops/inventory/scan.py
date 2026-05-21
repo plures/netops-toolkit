@@ -1326,6 +1326,29 @@ def _deep_scan_host(
                 if best_result:
                     for k, v in best_result.items():
                         result[k] = v
+                    # Extract SNMP community string while still connected
+                    try:
+                        vendor = result.get("vendor", login_vendor)
+                        snmp_cmds = {
+                            "cisco_ios": "show running-config | include snmp-server community",
+                            "cisco_xe": "show running-config | include snmp-server community",
+                            "cisco_xr": "show running-config | include snmp-server community",
+                            "cisco_nxos": "show running-config | include snmp-server community",
+                            "brocade_fastiron": "show running-config | include snmp-server community",
+                            "brocade_nos": "show running-config | include snmp-server community",
+                            "juniper_junos": "show configuration snmp | display set | match community",
+                            "arista_eos": "show running-config section snmp | include community",
+                            "nokia_sros": "admin display-config | match community",
+                        }
+                        snmp_cmd = snmp_cmds.get(vendor)
+                        if snmp_cmd:
+                            snmp_output = conn.send(snmp_cmd)
+                            import re as _re
+                            communities = _re.findall(r"community\s+(\S+)", snmp_output)
+                            if communities:
+                                result["communities"] = communities
+                    except Exception:
+                        pass
                     print(
                         f"    📊 {host}: vendor={result['vendor']}, version={result.get('version')}, "
                         f"model={result.get('model')}, serial={result.get('serial')}",
@@ -1417,6 +1440,7 @@ def deep_enrich(
                     "domain_name",
                     "interface_count",
                     "modules",
+                    "communities",
                 )
                 for fld in _DEEP_FIELDS:
                     val = result.get(fld)
