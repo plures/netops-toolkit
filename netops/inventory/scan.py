@@ -898,10 +898,20 @@ def _parse_version_generic(output: str, vendor: str) -> dict:
             aser = re.search(r"Serial number:\s+(\S+)", line, re.IGNORECASE)
             if aser:
                 result["serial"] = aser.group(1)
-            # Juniper chassis serial
-            jser = re.search(r"Chassis\s+\S+\s+\S+\s+\S+\s+(\S+)", line)
-            if jser and "juniper" in vendor.lower():
-                result["serial"] = jser.group(1)
+            # Juniper chassis serial — handles both standard and Virtual Chassis
+            # Standard with REV: "Chassis   REV 04  750-031089  JN11B1234ABC  MX480"
+            # Virtual Chassis:   "Chassis                       JW3620320230  Virtual Chassis"
+            if "juniper" in vendor.lower() and stripped.startswith("Chassis"):
+                fields = stripped.split()[1:]  # everything after "Chassis"
+                # Skip REV + revision number if present
+                if len(fields) >= 2 and fields[0].upper() == "REV":
+                    fields = fields[2:]
+                # Skip part number (contains a dash, e.g. 750-031089)
+                if fields and re.match(r"^\d{3}-\d+$", fields[0]):
+                    fields = fields[1:]
+                # First remaining field should be the serial
+                if fields and fields[0] not in ("BUILTIN",):
+                    result["serial"] = fields[0]
 
         # --- Hostname ---
         if result["hostname"] is None:
@@ -1047,13 +1057,56 @@ def _parse_serial_from_inventory(output: str, vendor: str) -> str | None:
         if nokia_sn:
             return nokia_sn.group(1)
 
-    # Juniper: "Chassis  ... REV ... <serial>"
+    # Juniper: handles both standard and Virtual Chassis formats
+    # Standard with REV: "Chassis   REV 04  750-031089  JN11B1234ABC  MX480"
+    # Standard no REV:   "Chassis   750-031089  AB1234567890  MX480"
+    # Virtual Chassis:   "Chassis                       JW3620320230  Virtual Chassis"
     for line in output.splitlines():
-        jun_sn = re.search(r"^Chassis\s+\S+\s+\S+\s+\S+\s+(\S+)", line)
-        if jun_sn:
-            return jun_sn.group(1)
+        stripped = line.strip()
+        if stripped.startswith("Chassis"):
+            fields = stripped.split()[1:]  # everything after "Chassis"
+            # Skip REV + revision number if present
+            if len(fields) >= 2 and fields[0].upper() == "REV":
+                fields = fields[2:]
+            # Skip part number (contains a dash, e.g. 750-031089)
+            if fields and re.match(r"^\d{3}-\d+$", fields[0]):
+                fields = fields[1:]
+            # First remaining field should be the serial
+            if fields and fields[0] not in ("BUILTIN",):
+                return fields[0]
 
     return None
+
+
+def _parse_juniper_modules(output: str) -> list[dict]:
+    """Parse FPC line cards from Juniper ``show chassis hardware`` output.
+
+    Matches top-level FPC lines (not indented sub-components like PIC, Xcvr, etc.).
+
+    Example input::
+
+        FPC 0            REV 20   650-059961   JW3620320460      EX2300-48P
+        FPC 1            REV 20   650-059961   JW3620320230      EX2300-48P
+
+    Returns list of module dicts compatible with the Brocade module format.
+    """
+    import re
+    modules = []
+    for line in output.splitlines():
+        # Only match top-level FPC lines (start of line, not indented)
+        m = re.match(
+            r"^FPC\s+(\d+)\s+(REV\s+\S+|\S+)\s+(\S+)\s+(\S+)\s+(.*)",
+            line,
+        )
+        if m:
+            modules.append({
+                "slot": f"FPC {m.group(1)}",
+                "part": m.group(5).strip(),       # description as part (e.g. EX2300-48P)
+                "description": m.group(5).strip(),
+                "serial": m.group(4),
+                "part_number": m.group(3),
+            })
+    return modules
 
 
 def _score_result(r: dict) -> int:
@@ -1123,6 +1176,11 @@ def _try_vendor_commands(conn: DeviceConnection, vendor: str) -> dict:
             sn = _parse_serial_from_inventory(inv_output, vendor)
             if sn:
                 r["serial"] = sn
+            # Juniper: parse FPC line cards from "show chassis hardware"
+            if "juniper" in vendor:
+                juniper_modules = _parse_juniper_modules(inv_output)
+                if juniper_modules:
+                    r.setdefault("modules", []).extend(juniper_modules)
             # Also parse model/mac from chassis output for Nokia
             if "nokia" in vendor or "sros" in vendor:
                 parsed_inv = _parse_version_generic(inv_output, vendor)
