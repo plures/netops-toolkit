@@ -28,7 +28,7 @@ from pathlib import Path
 
 from netops.collect.config import collect_config
 from netops.core import Inventory
-from netops.core.connection import ConnectionParams, Transport
+from netops.core.connection import ConnectionParams, Transport, jump_host_from_inventory
 
 logger = logging.getLogger(__name__)
 
@@ -356,6 +356,7 @@ def main() -> None:
             username=d.username or args.user,
             password=d.password or password,
             device_type=d.vendor,
+            jump_host=jump_host_from_inventory(d),
             transport=Transport(d.transport),
             port=d.port,
         )

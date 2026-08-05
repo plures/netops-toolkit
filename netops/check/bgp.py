@@ -29,7 +29,7 @@ import sys
 from datetime import datetime, timezone
 
 from netops.core import DeviceConnection
-from netops.core.connection import ConnectionParams, Transport
+from netops.core.connection import ConnectionParams, Transport, jump_host_from_inventory
 from netops.core.inventory import Inventory
 from netops.parsers.bgp import parse_bgp_summary_cisco, updown_to_seconds
 from netops.parsers.nokia_sros import parse_bgp_summary as parse_bgp_summary_nokia
@@ -406,6 +406,7 @@ def main() -> None:
                     username=args.user or dev.username,
                     password=password or dev.password,
                     device_type=dev.vendor,
+                    jump_host=jump_host_from_inventory(dev),
                     transport=Transport(dev.transport) if dev.transport else Transport.SSH,
                     port=dev.port,
                     enable_password=dev.enable_password,

@@ -39,7 +39,7 @@ from datetime import datetime, timezone
 import yaml
 
 from netops.core import DeviceConnection
-from netops.core.connection import ConnectionParams, Transport
+from netops.core.connection import ConnectionParams, Transport, jump_host_from_inventory
 from netops.core.inventory import Inventory
 from netops.parsers.vlan import expand_vlan_range, parse_interfaces_trunk, parse_vlan_brief
 
@@ -448,6 +448,7 @@ def main() -> None:
                     username=args.user or dev.username,
                     password=password or dev.password,
                     device_type=dev.vendor,
+                    jump_host=jump_host_from_inventory(dev),
                     transport=Transport(dev.transport) if dev.transport else Transport.SSH,
                     port=dev.port,
                     enable_password=dev.enable_password,

@@ -36,6 +36,15 @@ class Device:
     # Location/metadata
     site: str | None = None
     role: str | None = None  # core, distribution, access, edge
+    # Optional SSH jump-host / bastion tunnel (pure network transport, see
+    # docs/guides/jump-host-tunnel.md). Credentials are resolved through the
+    # same vault lookup path used for device credentials, keyed by jump_host.
+    jump_host: str | None = None
+    jump_port: int = 22
+    jump_username: str | None = None
+    jump_password: str | None = None
+    jump_key_file: str | None = None
+    jump_key_passphrase: str | None = None
 
     def to_dict(self) -> dict:
         """Return a dict representation of the device, omitting ``None`` fields."""
@@ -126,6 +135,12 @@ class Inventory:
                 tags=merged.get("tags", {}),
                 site=merged.get("site"),
                 role=merged.get("role"),
+                jump_host=merged.get("jump_host"),
+                jump_port=merged.get("jump_port", 22),
+                jump_username=merged.get("jump_username"),
+                jump_password=merged.get("jump_password"),
+                jump_key_file=merged.get("jump_key_file"),
+                jump_key_passphrase=merged.get("jump_key_passphrase"),
             )
             inv.add(device)
 
