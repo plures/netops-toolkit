@@ -442,9 +442,9 @@ class ConfigPushScreen(ModalScreen):
 
         hosts = [h.strip() for h in hosts_text.replace(',', ' ').split() if h.strip()]
         commands = [
-            line.strip()
+            stripped
             for line in commands_text.splitlines()
-            if line.strip() and not line.startswith("!")
+            if (stripped := line.strip()) and not stripped.startswith("!")
         ]
 
         mode = "COMMIT" if commit else "DRY RUN"
