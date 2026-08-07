@@ -41,10 +41,14 @@ __all__ = [
     "parse_mlag_eos",
     "parse_mlag_config_sanity_eos",
     "parse_environment_eos",
+    "parse_lldp_neighbors_eos",
+    "parse_vlan_eos",
     # CLI text parsers (fallback)
     "parse_bgp_summary_eos_text",
     "parse_ospf_neighbors_eos_text",
     "parse_mlag_eos_text",
+    "parse_lldp_neighbors_eos_text",
+    "parse_vlan_eos_text",
 ]
 
 
@@ -824,3 +828,210 @@ def parse_mlag_eos_text(output: str) -> dict:
             result["config_sanity"] = val
 
     return result
+
+
+# ---------------------------------------------------------------------------
+# LLDP Neighbors  (show lldp neighbors JSON)
+# ---------------------------------------------------------------------------
+
+
+def parse_lldp_neighbors_eos(data: dict) -> list[dict]:
+    """Parse ``show lldp neighbors`` eAPI JSON response.
+
+    Returns
+    -------
+    list
+        List of LLDP neighbor dicts:
+
+        * ``local_interface`` – local interface name (str)
+        * ``chassis_id``     – remote chassis ID (str)
+        * ``port_id``        – remote port identifier (str)
+        * ``system_name``    – remote system name (str or ``None``)
+        * ``ttl``            – time-to-live in seconds (int) or ``None``
+
+    """
+    neighbors: list[dict] = []
+    entries = data.get("lldpNeighbors", [])
+    if not isinstance(entries, list):
+        return neighbors
+
+    for entry in entries:
+        neighbors.append(
+            {
+                "local_interface": entry.get("port", ""),
+                "chassis_id": entry.get("chassisId", ""),
+                "port_id": entry.get("neighborPort", entry.get("portId", "")),
+                "system_name": entry.get("neighborDevice", None) or entry.get("systemName", None),
+                "ttl": entry.get("ttl"),
+            }
+        )
+
+    return neighbors
+
+
+# ---------------------------------------------------------------------------
+# LLDP Neighbors  (show lldp neighbors text fallback)
+# ---------------------------------------------------------------------------
+
+
+def parse_lldp_neighbors_eos_text(output: str) -> list[dict]:
+    """Parse ``show lldp neighbors`` plain-text output from Arista EOS.
+
+    Handles output similar to::
+
+        Last table change time   : 0:05:23 ago
+        Number of table inserts  : 3
+        Number of table deletes  : 0
+        Number of table drops    : 0
+        Number of table age-outs : 0
+
+        Port          Neighbor Device ID       Neighbor Port ID    TTL
+        ------------- ------------------------ ------------------- ----
+        Ethernet1     switch-1                 Ethernet1           120
+        Ethernet2     switch-2.example.com     Ethernet3           120
+        Ethernet49    router-3                 ge-0/0/0            120
+
+    Returns
+    -------
+    list
+        Same structure as :func:`parse_lldp_neighbors_eos`.
+
+    """
+    neighbors: list[dict] = []
+    in_table = False
+
+    for line in output.splitlines():
+        stripped = line.strip()
+        if re.match(r"^-{5,}", stripped):
+            in_table = True
+            continue
+        if not in_table:
+            if "Port" in line and "Neighbor" in line and "TTL" in line:
+                continue
+            continue
+        if not stripped:
+            continue
+
+        parts = stripped.split()
+        if len(parts) >= 4:
+            ttl_str = parts[-1]
+            ttl = int(ttl_str) if ttl_str.isdigit() else None
+            neighbors.append(
+                {
+                    "local_interface": parts[0],
+                    "chassis_id": "",
+                    "port_id": parts[-2],
+                    "system_name": " ".join(parts[1:-2]),
+                    "ttl": ttl,
+                }
+            )
+
+    return neighbors
+
+
+# ---------------------------------------------------------------------------
+# VLANs  (show vlan JSON)
+# ---------------------------------------------------------------------------
+
+
+def parse_vlan_eos(data: dict) -> list[dict]:
+    """Parse ``show vlan`` eAPI JSON response.
+
+    Returns
+    -------
+    list
+        List of VLAN dicts:
+
+        * ``vlan_id``    – VLAN identifier (int)
+        * ``name``       – VLAN name (str)
+        * ``status``     – VLAN status (``'active'`` / ``'suspended'`` / …)
+        * ``interfaces`` – list of interface names in this VLAN
+        * ``dynamic``    – ``True`` when VLAN is dynamically created
+
+    """
+    vlans: list[dict] = []
+    vlan_data = data.get("vlans", {})
+    if not isinstance(vlan_data, dict):
+        return vlans
+
+    for vlan_id_str, vdata in vlan_data.items():
+        try:
+            vlan_id = int(vlan_id_str)
+        except (ValueError, TypeError):
+            continue
+
+        interfaces = []
+        for iface_name in vdata.get("interfaces", {}):
+            interfaces.append(iface_name)
+
+        vlans.append(
+            {
+                "vlan_id": vlan_id,
+                "name": vdata.get("name", ""),
+                "status": vdata.get("status", ""),
+                "interfaces": interfaces,
+                "dynamic": vdata.get("dynamic", False),
+            }
+        )
+
+    return vlans
+
+
+# ---------------------------------------------------------------------------
+# VLANs  (show vlan text fallback)
+# ---------------------------------------------------------------------------
+
+
+def parse_vlan_eos_text(output: str) -> list[dict]:
+    """Parse ``show vlan`` plain-text output from Arista EOS.
+
+    Handles output similar to::
+
+        VLAN  Name                             Status    Ports
+        ----- -------------------------------- --------- -------------------------------
+        1     default                          active    Et1, Et2, Et3
+        10    management                       active    Et49, Et50
+        100   servers                          suspended
+        200   guests                           active    Et10, Et11
+
+    Returns
+    -------
+    list
+        Same structure as :func:`parse_vlan_eos`.
+
+    """
+    vlans: list[dict] = []
+    in_table = False
+
+    for line in output.splitlines():
+        stripped = line.strip()
+        if re.match(r"^-{5,}", stripped):
+            in_table = True
+            continue
+        if not in_table:
+            continue
+        if not stripped:
+            continue
+
+        # VLAN  Name  Status  Ports
+        m = re.match(
+            r"^(\d+)\s+(\S+(?:\s+\S+)*?)\s+(active|suspended|act/lshut|act/unsup)\s*(.*?)\s*$",
+            stripped,
+            re.IGNORECASE,
+        )
+        if m:
+            ports_str = m.group(4).strip()
+            interfaces = []
+            if ports_str:
+                interfaces = [p.strip() for p in ports_str.split(",") if p.strip()]
+            vlans.append(
+                {
+                    "vlan_id": int(m.group(1)),
+                    "name": m.group(2).strip(),
+                    "status": m.group(3).lower(),
+                    "interfaces": interfaces,
+                    "dynamic": False,
+                }
+            )
+
+    return vlans

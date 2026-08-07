@@ -29,6 +29,8 @@ __all__ = [
     "parse_chassis_alarms",
     "parse_chassis_environment",
     "parse_route_summary",
+    "parse_lldp_neighbors_junos",
+    "parse_lacp_interfaces_junos",
 ]
 
 
@@ -664,3 +666,200 @@ def parse_route_summary(output: str) -> list[dict]:
             current_table = None  # Reset until next "Routing table:" line
 
     return tables
+
+
+# ---------------------------------------------------------------------------
+# LLDP Neighbors
+# ---------------------------------------------------------------------------
+
+
+def parse_lldp_neighbors_junos(output: str) -> list[dict]:
+    """Parse ``show lldp neighbors`` output from JunOS.
+
+    Returns
+    -------
+    list
+        List of LLDP neighbor dicts. Returns an empty list when the output
+        cannot be parsed.
+
+    Each returned dict contains:
+
+    * ``local_interface`` – local interface name (e.g. ``'ge-0/0/0'``)
+    * ``parent_interface`` – parent interface (e.g. ``'ae0'``, or ``'-'``)
+    * ``chassis_id``     – remote chassis ID (MAC address)
+    * ``port_id``        – remote port identifier or description
+    * ``system_name``    – remote system name
+
+    Example input::
+
+        Local Interface    Parent Interface    Chassis Id          Port info          System Name
+        ge-0/0/0           -                   00:11:22:33:44:55   Ethernet1          switch-1
+        ge-0/0/1           ae0                 00:11:22:33:44:66   ge-0/0/0           router-2
+        xe-0/1/0           -                   aa:bb:cc:dd:ee:ff   1/1/1              nokia-3
+
+    """
+    neighbors: list[dict] = []
+    header_re = re.compile(r"Local Interface\s+Parent Interface", re.IGNORECASE)
+    in_table = False
+
+    for line in output.splitlines():
+        if header_re.search(line):
+            in_table = True
+            continue
+        if not in_table:
+            continue
+        stripped = line.strip()
+        if not stripped or stripped.startswith("{"):
+            continue
+
+        parts = stripped.split()
+        if len(parts) >= 5:
+            neighbors.append(
+                {
+                    "local_interface": parts[0],
+                    "parent_interface": parts[1],
+                    "chassis_id": parts[2],
+                    "port_id": parts[3],
+                    "system_name": " ".join(parts[4:]),
+                }
+            )
+        elif len(parts) == 4:
+            neighbors.append(
+                {
+                    "local_interface": parts[0],
+                    "parent_interface": parts[1],
+                    "chassis_id": parts[2],
+                    "port_id": parts[3],
+                    "system_name": None,
+                }
+            )
+
+    return neighbors
+
+
+# ---------------------------------------------------------------------------
+# LACP Interfaces
+# ---------------------------------------------------------------------------
+
+
+def parse_lacp_interfaces_junos(output: str) -> list[dict]:
+    """Parse ``show lacp interfaces`` output from JunOS.
+
+    Returns
+    -------
+    list
+        List of LACP interface dicts. Returns an empty list when the output
+        cannot be parsed.
+
+    Each returned dict contains:
+
+    * ``name``           – aggregated interface name (e.g. ``'ae0'``)
+    * ``protocol``       – LACP protocol state (``'Up'`` / ``'Down'``)
+    * ``member_count``   – number of member links (``int``)
+    * ``members``        – list of member dicts, each with:
+      * ``interface``    – member interface name
+      * ``activity``     – ``'Active'`` or ``'Passive'``
+      * ``state``        – LACP state flags string (e.g. ``'Collecting Distributing'``)
+      * ``mux_state``    – MUX machine state (e.g. ``'Collecting distributing'``)
+
+    Example input::
+
+        Aggregated interface: ae0
+            LACP state:       Role     Exp   Def  Dist  Col  Syn  Aggr  Timeout  Activity
+              ge-0/0/0       Actor      No    No   Yes  Yes  Yes   Yes     Fast    Active
+              ge-0/0/0     Partner      No    No   Yes  Yes  Yes   Yes     Fast    Active
+              ge-0/0/1       Actor      No    No   Yes  Yes  Yes   Yes     Fast    Active
+              ge-0/0/1     Partner      No    No   Yes  Yes  Yes   Yes     Fast    Active
+            LACP protocol:        Receive State  Transmit State          Mux State
+              ge-0/0/0                  Current   Fast periodic Collecting distributing
+              ge-0/0/1                  Current   Fast periodic Collecting distributing
+
+    """
+    interfaces: list[dict] = []
+    current: dict | None = None
+
+    agg_re = re.compile(r"^Aggregated interface:\s+(\S+)", re.IGNORECASE)
+    lacp_proto_re = re.compile(r"LACP protocol:", re.IGNORECASE)
+    lacp_state_re = re.compile(r"LACP state:", re.IGNORECASE)
+    member_state_re = re.compile(
+        r"^\s+(\S+)\s+Actor\s+(No|Yes)\s+(No|Yes)\s+(No|Yes)\s+(No|Yes)\s+(No|Yes)\s+(No|Yes)\s+(\S+)\s+(\S+)",
+    )
+    member_proto_re = re.compile(
+        r"^\s+(\S+)\s+(\S+)\s+(.+)",
+    )
+
+    in_proto_section = False
+    in_state_section = False
+
+    for line in output.splitlines():
+        m = agg_re.match(line)
+        if m:
+            if current is not None:
+                current["member_count"] = len(current["members"])
+                interfaces.append(current)
+            current = {
+                "name": m.group(1),
+                "protocol": "Up",
+                "member_count": 0,
+                "members": [],
+            }
+            in_proto_section = False
+            in_state_section = False
+            continue
+
+        if current is None:
+            continue
+
+        if lacp_proto_re.search(line):
+            in_proto_section = True
+            in_state_section = False
+            continue
+
+        if lacp_state_re.search(line):
+            in_state_section = True
+            in_proto_section = False
+            continue
+
+        if in_state_section:
+            m = member_state_re.match(line)
+            if m:
+                iface_name = m.group(1)
+                dist = m.group(4) == "Yes"
+                col = m.group(5) == "Yes"
+                activity = m.group(9)
+                # Only add Actor entries (skip Partner)
+                existing = [mb for mb in current["members"] if mb["interface"] == iface_name]
+                if not existing:
+                    state_parts = []
+                    if col:
+                        state_parts.append("Collecting")
+                    if dist:
+                        state_parts.append("Distributing")
+                    current["members"].append(
+                        {
+                            "interface": iface_name,
+                            "activity": activity,
+                            "state": " ".join(state_parts) if state_parts else "Down",
+                            "mux_state": None,
+                        }
+                    )
+            continue
+
+        if in_proto_section:
+            # Match protocol section member lines
+            stripped = line.strip()
+            if stripped and not stripped.startswith("LACP") and not stripped.startswith("Receive"):
+                parts = stripped.split(None, 2)
+                if len(parts) >= 2:
+                    iface_name = parts[0]
+                    mux_state = parts[2] if len(parts) > 2 else parts[1]
+                    for mb in current["members"]:
+                        if mb["interface"] == iface_name:
+                            mb["mux_state"] = mux_state
+                            break
+
+    if current is not None:
+        current["member_count"] = len(current["members"])
+        interfaces.append(current)
+
+    return interfaces

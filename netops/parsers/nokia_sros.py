@@ -21,6 +21,7 @@ __all__ = [
     "parse_service_summary",
     "parse_lag",
     "parse_router_interface",
+    "parse_lldp_neighbors",
 ]
 
 
@@ -859,3 +860,78 @@ def parse_router_interface(output: str) -> list[dict]:
             )
 
     return interfaces
+
+
+# ---------------------------------------------------------------------------
+# LLDP Neighbors — show system lldp neighbor
+# ---------------------------------------------------------------------------
+
+
+def parse_lldp_neighbors(output: str) -> list[dict]:
+    """Parse ``show system lldp neighbor`` output.
+
+    Returns
+    -------
+    list
+        List of dicts with:
+
+        * ``local_interface`` – local port identifier
+        * ``chassis_id``     – remote chassis ID (MAC or network address)
+        * ``port_id``        – remote port identifier
+        * ``system_name``    – remote system name (or ``None``)
+        * ``system_description`` – remote system description (or ``None``)
+
+    Example input::
+
+        ===============================================================================
+        Link Layer Discovery Protocol (LLDP) System Information
+        ===============================================================================
+        NB = nearest-bridge   NTPMR = nearest-non-tpmr   NC = nearest-customer
+
+        ===============================================================================
+        LLDP Neighbor Information
+        ===============================================================================
+        Lcl Port      Scope Remote Chassis ID  Index  Remote Port     Remote Sys Name
+        -------------------------------------------------------------------------------
+        1/1/1         NB    00:11:22:33:44:55  1      Ethernet1       switch-1
+        1/1/2         NB    00:11:22:33:44:66  2      Ethernet2       switch-2
+        1/1/c3/1      NB    00:AA:BB:CC:DD:EE  3      ge-0/0/0        router-3
+        -------------------------------------------------------------------------------
+        No. of Neighbors: 3
+        ===============================================================================
+
+    """
+    neighbors: list[dict] = []
+    in_table = False
+
+    for line in output.splitlines():
+        stripped = line.strip()
+        if re.match(r"^-{10,}", stripped):
+            in_table = True
+            continue
+        if not in_table:
+            if "Lcl Port" in line and "Remote" in line:
+                in_table = True
+            continue
+        if not stripped or stripped.startswith("=") or stripped.startswith("No."):
+            if stripped.startswith("=") or stripped.startswith("No."):
+                break
+            continue
+
+        # Lcl Port  Scope  Remote Chassis ID  Index  Remote Port  Remote Sys Name
+        m = re.match(
+            r"^\s*(\S+)\s+\S+\s+(\S+)\s+\d+\s+(\S+)\s*(.*?)\s*$",
+            stripped,
+        )
+        if m:
+            neighbors.append(
+                {
+                    "local_interface": m.group(1),
+                    "chassis_id": m.group(2),
+                    "port_id": m.group(3),
+                    "system_name": m.group(4).strip() or None,
+                    "system_description": None,
+                }
+            )
+
+    return neighbors
