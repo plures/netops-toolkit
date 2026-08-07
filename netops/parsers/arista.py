@@ -856,6 +856,8 @@ def parse_lldp_neighbors_eos(data: dict) -> list[dict]:
         return neighbors
 
     for entry in entries:
+        if not isinstance(entry, dict):
+            continue
         neighbors.append(
             {
                 "local_interface": entry.get("port", ""),
@@ -865,7 +867,6 @@ def parse_lldp_neighbors_eos(data: dict) -> list[dict]:
                 "ttl": entry.get("ttl"),
             }
         )
-
     return neighbors
 
 
