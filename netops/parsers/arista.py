@@ -956,14 +956,15 @@ def parse_vlan_eos(data: dict) -> list[dict]:
         return vlans
 
     for vlan_id_str, vdata in vlan_data.items():
+        if not isinstance(vdata, dict):
+            continue
         try:
             vlan_id = int(vlan_id_str)
         except (ValueError, TypeError):
             continue
 
-        interfaces = []
-        for iface_name in vdata.get("interfaces", {}):
-            interfaces.append(iface_name)
+        iface_data = vdata.get("interfaces", {})
+        interfaces = list(iface_data.keys()) if isinstance(iface_data, dict) else []
 
         vlans.append(
             {
