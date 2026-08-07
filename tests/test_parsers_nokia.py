@@ -720,3 +720,74 @@ class TestVendorIdentification:
 
         assert identify_vendor("TiMOS-B-23.10.R1 Nokia 7750 SR") == "nokia_sros"
         assert identify_vendor("Nokia SR Linux") == "nokia_srl"
+
+
+# ===========================================================================
+# parse_lldp_neighbors
+# ===========================================================================
+
+LLDP_NEIGHBOR_OUTPUT = """\
+===============================================================================
+Link Layer Discovery Protocol (LLDP) System Information
+===============================================================================
+NB = nearest-bridge   NTPMR = nearest-non-tpmr   NC = nearest-customer
+
+===============================================================================
+LLDP Neighbor Information
+===============================================================================
+Lcl Port      Scope Remote Chassis ID  Index  Remote Port     Remote Sys Name
+-------------------------------------------------------------------------------
+1/1/1         NB    00:11:22:33:44:55  1      Ethernet1       switch-1
+1/1/2         NB    00:11:22:33:44:66  2      Ethernet2       switch-2
+1/1/c3/1      NB    00:AA:BB:CC:DD:EE  3      ge-0/0/0        router-3
+-------------------------------------------------------------------------------
+No. of Neighbors: 3
+===============================================================================
+"""
+
+LLDP_NEIGHBOR_EMPTY = """\
+===============================================================================
+LLDP Neighbor Information
+===============================================================================
+Lcl Port      Scope Remote Chassis ID  Index  Remote Port     Remote Sys Name
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+No. of Neighbors: 0
+===============================================================================
+"""
+
+
+class TestParseLldpNeighbors:
+    def test_returns_list(self):
+        from netops.parsers.nokia_sros import parse_lldp_neighbors
+        result = parse_lldp_neighbors(LLDP_NEIGHBOR_OUTPUT)
+        assert isinstance(result, list)
+
+    def test_correct_count(self):
+        from netops.parsers.nokia_sros import parse_lldp_neighbors
+        result = parse_lldp_neighbors(LLDP_NEIGHBOR_OUTPUT)
+        assert len(result) == 3
+
+    def test_first_neighbor(self):
+        from netops.parsers.nokia_sros import parse_lldp_neighbors
+        nbr = parse_lldp_neighbors(LLDP_NEIGHBOR_OUTPUT)[0]
+        assert nbr["local_interface"] == "1/1/1"
+        assert nbr["chassis_id"] == "00:11:22:33:44:55"
+        assert nbr["port_id"] == "Ethernet1"
+        assert nbr["system_name"] == "switch-1"
+
+    def test_complex_port_name(self):
+        from netops.parsers.nokia_sros import parse_lldp_neighbors
+        nbr = parse_lldp_neighbors(LLDP_NEIGHBOR_OUTPUT)[2]
+        assert nbr["local_interface"] == "1/1/c3/1"
+        assert nbr["chassis_id"] == "00:AA:BB:CC:DD:EE"
+        assert nbr["port_id"] == "ge-0/0/0"
+        assert nbr["system_name"] == "router-3"
+
+    def test_empty_output_returns_empty_list(self):
+        from netops.parsers.nokia_sros import parse_lldp_neighbors
+        assert parse_lldp_neighbors(LLDP_NEIGHBOR_EMPTY) == []
+
+    def test_blank_string_returns_empty_list(self):
+        from netops.parsers.nokia_sros import parse_lldp_neighbors
+        assert parse_lldp_neighbors("") == []

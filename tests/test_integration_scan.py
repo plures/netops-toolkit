@@ -11,7 +11,7 @@ import time
 
 import pytest
 
-from tests.mock_ssh_server import MockSSHServerInstance, mock_ssh_server
+from tests.mock_ssh_server import mock_ssh_server
 
 logger = logging.getLogger(__name__)
 

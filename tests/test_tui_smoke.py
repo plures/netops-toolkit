@@ -9,7 +9,7 @@ async def test_tui_launches():
     from netops.tui import NetopsTUI
 
     app = NetopsTUI()
-    async with app.run_test() as pilot:
+    async with app.run_test() as _pilot:
         assert app.title == "netops-toolkit"
 
 
@@ -19,7 +19,7 @@ async def test_tui_has_scan_panel():
     from netops.tui import NetopsTUI
 
     app = NetopsTUI()
-    async with app.run_test() as pilot:
+    async with app.run_test() as _pilot:
         # The app should render without error
         # (if scan_subnet was still using asyncio.run, this wouldn't get here)
         assert app.is_running
@@ -29,6 +29,7 @@ async def test_tui_has_scan_panel():
 async def test_typing_in_input_doesnt_trigger_bindings():
     """Single-char app bindings must NOT fire when an Input has focus."""
     from textual.widgets import Input
+
     from netops.tui import NetopsTUI
 
     app = NetopsTUI()
@@ -49,6 +50,7 @@ async def test_paste_works_in_scan_modal():
     """Pasting text into scan modal Input fields must work."""
     from textual.events import Paste
     from textual.widgets import Input
+
     from netops.tui import NetopsTUI, ScanScreen
 
     app = NetopsTUI()
@@ -70,6 +72,7 @@ async def test_paste_works_in_all_scan_fields():
     """Paste must work in every Input field in the scan modal."""
     from textual.events import Paste
     from textual.widgets import Input
+
     from netops.tui import NetopsTUI, ScanScreen
 
     app = NetopsTUI()
@@ -94,7 +97,8 @@ async def test_paste_works_in_all_scan_fields():
 @pytest.mark.asyncio
 async def test_selected_device_prepopulates_health_check():
     """Selecting a device then pressing 'h' must pre-fill the host field."""
-    from textual.widgets import Input, DataTable
+    from textual.widgets import DataTable, Input
+
     from netops.tui import NetopsTUI
 
     app = NetopsTUI()
@@ -115,7 +119,8 @@ async def test_selected_device_prepopulates_health_check():
 @pytest.mark.asyncio
 async def test_selected_device_prepopulates_config_push():
     """Selecting a device then pressing 'p' must pre-fill the host field."""
-    from textual.widgets import Input, DataTable
+    from textual.widgets import DataTable, Input
+
     from netops.tui import NetopsTUI
 
     app = NetopsTUI()
@@ -135,7 +140,8 @@ async def test_selected_device_prepopulates_config_push():
 @pytest.mark.asyncio
 async def test_selected_device_prepopulates_backup():
     """Selecting a device then pressing 'b' must pre-fill the host field."""
-    from textual.widgets import Input, DataTable
+    from textual.widgets import DataTable, Input
+
     from netops.tui import NetopsTUI
 
     app = NetopsTUI()

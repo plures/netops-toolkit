@@ -156,14 +156,20 @@ def try_communities(
 
     Returns:
         (working_community, vendor) or (None, None) if none work.
+
     """
     import asyncio
 
     async def _probe(community: str) -> tuple[str | None, str | None]:
         try:
             from pysnmp.hlapi.v3arch.asyncio import (
-                CommunityData, ContextData, ObjectIdentity,
-                ObjectType, SnmpEngine, UdpTransportTarget, get_cmd,
+                CommunityData,
+                ContextData,
+                ObjectIdentity,
+                ObjectType,
+                SnmpEngine,
+                UdpTransportTarget,
+                get_cmd,
             )
             engine = SnmpEngine()
             transport = await UdpTransportTarget.create((host, snmp_port), timeout=timeout, retries=0)
@@ -216,6 +222,7 @@ def extract_communities_via_ssh(
 
     Returns:
         (list_of_communities, detected_vendor) or ([], None) on failure.
+
     """
     import re
 

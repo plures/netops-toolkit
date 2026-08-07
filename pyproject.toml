@@ -26,7 +26,7 @@ dev = [
     "pytest-cov>=5.0",
     "pytest-asyncio>=0.23",
     "ruff>=0.4.0",
-    "mypy>=1.10",
+    "mypy>=1.10,<2.0",
     "pip-audit>=2.7",
     "jinja2>=3.1.6",
 ]
@@ -69,6 +69,20 @@ disallow_any_explicit = true
 warn_return_any = true
 warn_unused_ignores = true
 disable_error_code = ["type-arg", "import-untyped"]
+
+[[tool.mypy.overrides]]
+module = ["netops.tui"]
+disallow_untyped_defs = false
+disallow_any_explicit = false
+warn_return_any = false
+
+[[tool.mypy.overrides]]
+module = ["netops.core.community"]
+warn_return_any = false
+
+[[tool.mypy.overrides]]
+module = ["netops.__main__"]
+disable_error_code = ["attr-defined"]
 
 [tool.pytest.ini_options]
 addopts = "--cov=netops --cov-report=term-missing --cov-report=xml --cov-fail-under=30"

@@ -1,6 +1,5 @@
 """Tests for the community string registry."""
 
-import json
 import tempfile
 from pathlib import Path
 

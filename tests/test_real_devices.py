@@ -177,9 +177,8 @@ class TestDeepEnrichMultiVendor:
 
     def test_enrich_mixed_mlxe_and_cisco(self, mlxe_server, me3600x_server):
         """Enrich a fragment with both Brocade MLXe and Cisco ME3600X."""
-        from netops.inventory.scan import deep_enrich
 
-        fragment = {
+        _fragment = {
             "devices": {
                 "core-mlxe-01": {
                     "host": "127.0.0.1",

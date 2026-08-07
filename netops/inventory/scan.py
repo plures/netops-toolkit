@@ -1285,9 +1285,9 @@ def _deep_scan_host(
         logger.debug(f"  {host}: using known vendor '{known_vendor}', skipping auto-detect")
     else:
         try:
-            from netmiko import SSHDetect
-            import signal
             import threading
+
+            from netmiko import SSHDetect
 
             logger.debug(f"  {host}: attempting SSHDetect auto-detection...")
             detect_kwargs = dict(
@@ -1306,7 +1306,7 @@ def _deep_scan_host(
             best = None
             detect_exc = None
 
-            def _run_detect():
+            def _run_detect() -> None:
                 nonlocal best, detect_exc
                 try:
                     detect = SSHDetect(**detect_kwargs)
@@ -1445,6 +1445,7 @@ def deep_enrich(
         password: SSH password for all devices.
         concurrency: Max parallel SSH sessions.
         timeout: Per-device connection timeout in seconds.
+        port: Optional SSH port override.
 
     Returns:
     -------
