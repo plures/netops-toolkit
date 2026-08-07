@@ -845,10 +845,10 @@ def parse_lacp_interfaces_junos(output: str) -> list[dict]:
             # Match protocol section member lines
             stripped = line.strip()
             if stripped and not stripped.startswith("LACP") and not stripped.startswith("Receive"):
-                parts = stripped.split(None, 2)
-                if len(parts) >= 2:
+                parts = stripped.split()
+                if len(parts) >= 5:
                     iface_name = parts[0]
-                    mux_state = parts[2] if len(parts) > 2 else parts[1]
+                    mux_state = " ".join(parts[4:])
                     for mb in current["members"]:
                         if mb["interface"] == iface_name:
                             mb["mux_state"] = mux_state
