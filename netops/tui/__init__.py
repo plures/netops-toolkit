@@ -19,18 +19,15 @@ from __future__ import annotations
 
 import asyncio
 import csv
-import io
 import json
 import logging
 import os
-import sys
 from pathlib import Path
-
-from netops.logging_setup import friendly_vendor_name, setup_logging
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
-from textual.containers import Container, Horizontal, Vertical, VerticalScroll
+from textual.containers import Horizontal, Vertical
+from textual.events import Paste
 from textual.screen import ModalScreen
 from textual.widgets import (
     Button,
@@ -40,13 +37,11 @@ from textual.widgets import (
     Input,
     Label,
     Log,
-    OptionList,
     Static,
-    TabbedContent,
-    TabPane,
     TextArea,
 )
 
+from netops.logging_setup import friendly_vendor_name, setup_logging
 
 # ---------------------------------------------------------------------------
 # Inventory data store (JSON file)
@@ -56,20 +51,23 @@ INVENTORY_FILE = Path(os.environ.get("NETOPS_INVENTORY", "inventory.json"))
 
 
 def load_inventory() -> dict:
+    """Load the persisted inventory, or return an empty inventory."""
     if INVENTORY_FILE.exists():
         return json.loads(INVENTORY_FILE.read_text())
     return {"devices": {}}
 
 
 def save_inventory(data: dict) -> None:
+    """Persist an inventory to disk."""
     INVENTORY_FILE.write_text(json.dumps(data, indent=2))
 
 
 def export_csv(data: dict, path: str = "inventory.csv") -> int:
+    """Export inventory devices to CSV and return the number written."""
     devices = data.get("devices", {})
     if not devices:
         return 0
-    all_keys = set()
+    all_keys: set[str] = set()
     for info in devices.values():
         if isinstance(info, dict):
             all_keys.update(info.keys())
@@ -95,7 +93,7 @@ class ScanScreen(ModalScreen):
 
     BINDINGS = [Binding("escape", "dismiss", "Close")]
 
-    def on_paste(self, event: "Paste") -> None:
+    def on_paste(self, event: Paste) -> None:
         """Route paste events to the focused input widget in this modal."""
         from textual.widgets import Input, TextArea
         focused = self.app.focused
@@ -109,6 +107,7 @@ class ScanScreen(ModalScreen):
             event.stop()
 
     def compose(self) -> ComposeResult:
+        """Compose the inventory scan modal."""
         with Vertical(id="scan-modal"):
             yield Label("🔍 Inventory Scan", id="scan-title")
             yield Input(placeholder="Subnets (e.g. 10.0.0.0/24, 192.168.1.0/24)", id="scan-subnet")
@@ -124,6 +123,7 @@ class ScanScreen(ModalScreen):
             yield Log(id="scan-log", highlight=True)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Handle scan modal button presses."""
         if event.button.id == "btn-cancel-scan":
             self.dismiss()
         elif event.button.id in ("btn-scan", "btn-ping"):
@@ -157,15 +157,20 @@ class ScanScreen(ModalScreen):
         """Run scan in background."""
         async def _scan():
             try:
-                from netops.inventory.scan import scan_subnet_async, results_to_inventory_fragment, deep_enrich
+                from netops.inventory.scan import (
+                    deep_enrich,
+                    results_to_inventory_fragment,
+                    scan_subnet_async,
+                )
 
                 all_results = []
 
                 # Scan from hosts file if provided
                 if hosts_file:
-                    from netops.inventory.scan import ScanResult
-                    from pathlib import Path
                     import csv as _csv
+                    from pathlib import Path
+
+                    from netops.inventory.scan import ScanResult
                     hosts_path = Path(hosts_file)
                     if not hosts_path.exists():
                         log.write_line(f"  ❌ File not found: {hosts_file}")
@@ -179,7 +184,11 @@ class ScanScreen(ModalScreen):
                             if h.strip():
                                 hosts.append(h.strip())
                     else:
-                        hosts = [l.strip() for l in text.splitlines() if l.strip() and not l.startswith('#')]
+                        hosts = [
+                            line.strip()
+                            for line in text.splitlines()
+                            if line.strip() and not line.startswith("#")
+                        ]
                     log.write_line(f"  📋 Loaded {len(hosts)} hosts from {hosts_file}")
                     all_results.extend([ScanResult(host=h, reachable=True) for h in hosts])
 
@@ -210,7 +219,10 @@ class ScanScreen(ModalScreen):
                     )
                     # Learn community strings from identified devices
                     try:
-                        from netops.core.community import CommunityRegistry, extract_communities_via_ssh
+                        from netops.core.community import (
+                            CommunityRegistry,
+                            extract_communities_via_ssh,
+                        )
                         reg = CommunityRegistry()
                         for dname, dinfo in fragment.get("devices", {}).items():
                             if isinstance(dinfo, dict) and dinfo.get("vendor", "unknown") != "unknown":
@@ -265,6 +277,7 @@ class HealthScreen(ModalScreen):
         self._selected_host = selected_host
 
     def compose(self) -> ComposeResult:
+        """Compose the health check modal."""
         with Vertical(id="health-modal"):
             yield Label("🏥 Health Check", id="health-title")
             yield Input(placeholder="Hostname or IP", id="health-host",
@@ -278,7 +291,6 @@ class HealthScreen(ModalScreen):
 
     def on_error(self, event) -> None:
         """Global error handler — display errors, never crash."""
-        import traceback
         logger = logging.getLogger("netops.tui")
         logger.error(f"Unhandled error: {event}", exc_info=True)
         # Try to show in status bar if possible
@@ -291,7 +303,6 @@ class HealthScreen(ModalScreen):
 
     def on_exception(self, error: Exception) -> None:
         """Catch exceptions from workers/tasks — log, don't crash."""
-        import traceback
         logger = logging.getLogger("netops.tui")
         logger.error(f"Background task error: {error}", exc_info=True)
 
@@ -302,6 +313,7 @@ class HealthScreen(ModalScreen):
 
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Handle health modal button presses."""
         if event.button.id == "btn-health-close":
             self.dismiss()
         elif event.button.id == "btn-health-run":
@@ -381,6 +393,7 @@ class ConfigPushScreen(ModalScreen):
         self._selected_host = selected_host
 
     def compose(self) -> ComposeResult:
+        """Compose the configuration push modal."""
         with Vertical(id="push-modal"):
             yield Label("⚙️ Config Push", id="push-title")
             yield Input(placeholder="Hostname or IP (comma-separated for bulk)", id="push-hosts",
@@ -398,6 +411,7 @@ class ConfigPushScreen(ModalScreen):
             yield Log(id="push-log", highlight=True)
 
     def on_key(self, event) -> None:
+        """Handle configuration editor shortcuts."""
         if event.key == "c":
             ta = self.query_one("#push-commands", TextArea)
             if not ta.text.strip():
@@ -409,6 +423,7 @@ class ConfigPushScreen(ModalScreen):
                 )
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Handle configuration push modal button presses."""
         if event.button.id == "btn-push-cancel":
             self.dismiss()
             return
@@ -426,15 +441,18 @@ class ConfigPushScreen(ModalScreen):
             return
 
         hosts = [h.strip() for h in hosts_text.replace(',', ' ').split() if h.strip()]
-        commands = [l.strip() for l in commands_text.splitlines() if l.strip() and not l.startswith('!')]
+        commands = [
+            line.strip()
+            for line in commands_text.splitlines()
+            if line.strip() and not line.startswith("!")
+        ]
 
         mode = "COMMIT" if commit else "DRY RUN"
         log.write_line(f"{'🔴' if commit else '🔵'} {mode} — {len(commands)} commands on {len(hosts)} host(s)")
 
         async def _push():
             try:
-                from netops.change.push import push_config, ChangeRecord
-                from netops.core.connection import DeviceConnection, ConnectionParams
+                from netops.core.connection import DeviceConnection
 
                 # Auto-detect vendor from inventory if not specified
                 inv = load_inventory()
@@ -455,12 +473,12 @@ class ConfigPushScreen(ModalScreen):
 
                         if commit:
                             output = conn.send_config_set(commands)
-                            log.write_line(f"    ✅ Committed")
+                            log.write_line("    ✅ Committed")
                             for line in output.splitlines()[-3:]:
                                 log.write_line(f"    {line}")
                         else:
                             log.write_line(f"    📋 Would send: {commands[0]}{'...' if len(commands) > 1 else ''}")
-                            log.write_line(f"    ℹ️ Dry run — no changes made")
+                            log.write_line("    ℹ️ Dry run — no changes made")
 
                         conn.disconnect()
                     except Exception as e:
@@ -490,6 +508,7 @@ class BackupScreen(ModalScreen):
         self._selected_host = selected_host
 
     def compose(self) -> ComposeResult:
+        """Compose the configuration backup modal."""
         with Vertical(id="backup-modal"):
             yield Label("💾 Config Backup", id="backup-title")
             yield Input(placeholder="Hostnames (comma-separated, or 'all' for inventory)", id="backup-hosts",
@@ -503,6 +522,7 @@ class BackupScreen(ModalScreen):
             yield Log(id="backup-log", highlight=True)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Handle backup modal button presses."""
         if event.button.id == "btn-backup-cancel":
             self.dismiss()
             return
@@ -528,9 +548,10 @@ class BackupScreen(ModalScreen):
 
         async def _backup():
             try:
-                from netops.core.connection import DeviceConnection
-                from pathlib import Path
                 from datetime import datetime
+                from pathlib import Path
+
+                from netops.core.connection import DeviceConnection
 
                 out = Path(backup_dir)
                 out.mkdir(parents=True, exist_ok=True)
@@ -635,6 +656,7 @@ class NetopsTUI(App):
         self._selected_host: str | None = None
 
     def compose(self) -> ComposeResult:
+        """Compose the main TUI layout."""
         yield Header()
         with Horizontal():
             with Vertical(id="main-panel"):
@@ -650,7 +672,6 @@ class NetopsTUI(App):
 
     def on_error(self, event) -> None:
         """Global error handler — display errors, never crash."""
-        import traceback
         logger = logging.getLogger("netops.tui")
         logger.error(f"Unhandled error: {event}", exc_info=True)
         # Try to show in status bar if possible
@@ -663,11 +684,11 @@ class NetopsTUI(App):
 
     def on_exception(self, error: Exception) -> None:
         """Catch exceptions from workers/tasks — log, don't crash."""
-        import traceback
         logger = logging.getLogger("netops.tui")
         logger.error(f"Background task error: {error}", exc_info=True)
 
     def on_mount(self) -> None:
+        """Initialize the device table after mounting."""
         table = self.query_one("#device-table", DataTable)
         table.add_columns("Hostname", "Host", "Vendor", "Model", "Version", "Serial", "Site")
         self._populate_table()
@@ -695,6 +716,7 @@ class NetopsTUI(App):
             )
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        """Track the device selected in the inventory table."""
         try:
             if event.row_key is None or event.row_key.value is None:
                 return
@@ -715,12 +737,13 @@ class NetopsTUI(App):
             logging.getLogger("netops.tui").error(f"Row selection error: {e}")
 
     def on_input_changed(self, event: Input.Changed) -> None:
+        """Filter the device table when the search input changes."""
         if event.input.id == "search-input":
             self._populate_table(event.value)
 
 
 
-    def on_paste(self, event: "Paste") -> None:
+    def on_paste(self, event: Paste) -> None:
         """Route paste events to the focused input widget."""
         from textual.widgets import Input, TextArea
         focused = self.focused
@@ -740,26 +763,31 @@ class NetopsTUI(App):
         return isinstance(focused, (Input, TextArea))
 
     def action_scan(self) -> None:
+        """Open the inventory scan modal."""
         if self._input_focused():
             return
         self.push_screen(ScanScreen())
 
     def action_health(self) -> None:
+        """Open the health check modal."""
         if self._input_focused():
             return
         self.push_screen(HealthScreen(self._selected_host))
 
     def action_push(self) -> None:
+        """Open the configuration push modal."""
         if self._input_focused():
             return
         self.push_screen(ConfigPushScreen(self._selected_host))
 
     def action_backup(self) -> None:
+        """Open the configuration backup modal."""
         if self._input_focused():
             return
         self.push_screen(BackupScreen(self._selected_host))
 
     def action_help_screen(self) -> None:
+        """Show the keyboard shortcut help."""
         help_text = """[bold]netops-toolkit TUI — Help[/bold]
 
 [bold]Keys:[/bold]
@@ -799,12 +827,14 @@ Press Escape to close this help.
         self.notify(help_text, timeout=30)
 
     def action_export(self) -> None:
+        """Export the inventory to CSV."""
         if self._input_focused():
             return
         count = export_csv(self.inventory)
         self.notify(f"Exported {count} devices to inventory.csv")
 
     def action_refresh(self) -> None:
+        """Refresh the device table."""
         if self._input_focused():
             return
         self.inventory = load_inventory()
@@ -816,6 +846,7 @@ Press Escape to close this help.
         self.notify(f"Refreshed: {count} devices")
 
     def action_search(self) -> None:
+        """Focus the inventory search input."""
         if self._input_focused():
             return
         search = self.query_one("#search-input", Input)
@@ -849,6 +880,7 @@ Press Escape to close this help.
         self.notify(content, timeout=30)
 
     def action_delete(self) -> None:
+        """Delete the currently selected device."""
         if self._input_focused():
             return
         table = self.query_one("#device-table", DataTable)
@@ -863,6 +895,7 @@ Press Escape to close this help.
 
 
 def main():
+    """Run the interactive netops TUI."""
     app = NetopsTUI()
     app.run()
 

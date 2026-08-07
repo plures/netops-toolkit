@@ -4,7 +4,6 @@ These test real click events through Textual's pilot — no mocking.
 Catches crashes from mouse clicks on various UI areas.
 """
 
-import asyncio
 
 import pytest
 from textual.widgets import DataTable, Footer, Header
@@ -61,7 +60,7 @@ async def test_datatable_cursor_type_is_row():
     from netops.tui import NetopsTUI
 
     app = NetopsTUI()
-    async with app.run_test(size=(120, 40)) as pilot:
+    async with app.run_test(size=(120, 40)) as _pilot:
         table = app.query_one("#device-table", DataTable)
         assert table.cursor_type == "row"
 
@@ -72,7 +71,7 @@ async def test_row_selected_with_none_key_no_crash():
     from netops.tui import NetopsTUI
 
     app = NetopsTUI()
-    async with app.run_test(size=(120, 40)) as pilot:
+    async with app.run_test(size=(120, 40)) as _pilot:
         # Simulate a RowSelected event with None key
         table = app.query_one("#device-table", DataTable)
         event = DataTable.RowSelected(table, cursor_row=0, row_key=None)

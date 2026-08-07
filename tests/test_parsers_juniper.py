@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from netops.parsers.juniper import (
-    parse_lldp_neighbors_junos,
     parse_lacp_interfaces_junos,
+    parse_lldp_neighbors_junos,
 )
 
 # ---------------------------------------------------------------------------

@@ -7,8 +7,6 @@ deep_enrich called. Period.
 from __future__ import annotations
 
 import json
-from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -27,7 +25,6 @@ def inv_file(tmp_path, monkeypatch):
 async def test_scan_enriches_ALL_devices_when_creds_provided(inv_file, monkeypatch):
     """Even devices with known vendors get deep enriched when SSH creds provided."""
     from netops.tui import NetopsTUI, ScanScreen
-    import netops.tui as tui_mod
 
     # Track whether deep_enrich was called
     enrich_called = {"called": False, "fragment": None}
@@ -150,6 +147,7 @@ def test_deep_enrich_processes_known_vendor_devices():
     SSH on ALL devices, not skip ones with known vendors.
     """
     from unittest.mock import patch as _patch
+
     from netops.inventory.scan import deep_enrich
 
     fragment = {
@@ -179,7 +177,7 @@ def test_deep_enrich_processes_known_vendor_devices():
         }
 
     with _patch("netops.inventory.scan._deep_scan_host", mock_deep_scan_host):
-        result = deep_enrich(fragment, username="admin", password="secret")
+        _result = deep_enrich(fragment, username="admin", password="secret")
 
     # ALL 3 hosts must be scanned — not just the unknown one
     assert sorted(hosts_scanned) == ["10.0.0.1", "10.0.0.2", "10.0.0.3"], (

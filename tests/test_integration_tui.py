@@ -7,8 +7,6 @@ Uses monkeypatch to set INVENTORY_FILE correctly.
 from __future__ import annotations
 
 import json
-import os
-from pathlib import Path
 
 import pytest
 
@@ -85,7 +83,7 @@ async def test_tui_scan_modal_opens(inv_file):
 @pytest.mark.asyncio
 async def test_tui_health_modal_opens(inv_file):
     """push_screen(HealthScreen()) puts health modal on stack."""
-    from netops.tui import NetopsTUI, HealthScreen
+    from netops.tui import HealthScreen, NetopsTUI
 
     app = NetopsTUI()
     async with app.run_test(size=(120, 40)) as pilot:

@@ -784,10 +784,6 @@ def parse_lacp_interfaces_junos(output: str) -> list[dict]:
     member_state_re = re.compile(
         r"^\s+(\S+)\s+Actor\s+(No|Yes)\s+(No|Yes)\s+(No|Yes)\s+(No|Yes)\s+(No|Yes)\s+(No|Yes)\s+(\S+)\s+(\S+)",
     )
-    member_proto_re = re.compile(
-        r"^\s+(\S+)\s+(\S+)\s+(.+)",
-    )
-
     in_proto_section = False
     in_state_section = False
 

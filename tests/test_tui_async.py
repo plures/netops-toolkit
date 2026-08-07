@@ -9,6 +9,8 @@ from unittest.mock import patch
 
 import pytest
 
+from netops.inventory.scan import scan_subnet_async
+
 
 @pytest.mark.asyncio
 async def test_scan_subnet_async_works_in_running_loop():
@@ -62,7 +64,3 @@ async def test_scan_subnet_async_defaults():
         # Only subnet is required
         results = await scan_subnet_async(subnet="10.0.0.0/30", skip_snmp=True)
     assert isinstance(results, list)
-
-
-# Import here for the empty-subnet test
-from netops.inventory.scan import scan_subnet_async
