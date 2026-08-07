@@ -185,9 +185,9 @@ class ScanScreen(ModalScreen):
                                 hosts.append(h.strip())
                     else:
                         hosts = [
-                            line.strip()
+                            stripped
                             for line in text.splitlines()
-                            if line.strip() and not line.startswith("#")
+                            if (stripped := line.strip()) and not stripped.startswith("#")
                         ]
                     log.write_line(f"  📋 Loaded {len(hosts)} hosts from {hosts_file}")
                     all_results.extend([ScanResult(host=h, reachable=True) for h in hosts])
