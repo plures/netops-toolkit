@@ -1,5 +1,10 @@
 # SSH Jump-Host Tunneling (Bastion)
 
+> For the normal workstation-wide experience, use [Active Bastion
+> Routing](active-bastion.md). It connects once and routes all toolkit TCP
+> device traffic automatically. This guide documents the older per-device
+> inventory override, which remains available for compatibility.
+
 ## Who this is for
 
 You have a Linux jump box (bastion) that's the only thing with network

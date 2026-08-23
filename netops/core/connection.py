@@ -96,6 +96,7 @@ class DeviceConnection:
         self.params = params
         self._connection: BaseConnection | None = None
         self._jump_client: object | None = None  # paramiko.SSHClient, kept alive for channel lifetime
+        self._active_bastion_socket: object | None = None
 
     def __enter__(self) -> DeviceConnection:
         """Connect on entering the context manager block."""
@@ -150,6 +151,21 @@ class DeviceConnection:
             # when a pre-established `sock` is supplied; drop conflicting keys.
             device_params.pop("use_keys", None)
             device_params.pop("allow_agent", None)
+        else:
+            # A selected workstation-wide bastion is authoritative for every
+            # device connection.  It deliberately lives outside inventory
+            # data, so scripts and the desktop sidecar need no per-device
+            # proxy flags or jump-host fields.
+            from netops.core.bastion import open_active_bastion_socket
+
+            active_socket = open_active_bastion_socket(
+                self.params.host, self.params.effective_port, self.params.timeout
+            )
+            if active_socket is not None:
+                device_params["sock"] = active_socket
+                self._active_bastion_socket = active_socket
+                device_params.pop("use_keys", None)
+                device_params.pop("allow_agent", None)
 
         logger.info(f"Connecting to {self.params.host} via {self.params.transport.value}")
         try:
@@ -163,6 +179,9 @@ class DeviceConnection:
             if self._jump_client is not None:
                 self._jump_client.close()  # type: ignore[attr-defined]
                 self._jump_client = None
+            if self._active_bastion_socket is not None:
+                self._active_bastion_socket.close()  # type: ignore[attr-defined]
+                self._active_bastion_socket = None
             raise
 
         logger.info(f"Connected to {self.params.host}")
@@ -239,6 +258,9 @@ class DeviceConnection:
             self._jump_client.close()  # type: ignore[attr-defined]
             self._jump_client = None
             logger.info(f"Closed jump-host tunnel for {self.params.host}")
+        if self._active_bastion_socket is not None:
+            self._active_bastion_socket.close()  # type: ignore[attr-defined]
+            self._active_bastion_socket = None
 
     def send(self, command: str, expect_string: str | None = None) -> str:
         """Send a command and return output."""

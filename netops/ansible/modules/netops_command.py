@@ -76,6 +76,8 @@ def _run_commands(params: dict) -> list[str]:
     """Open a netmiko session, run commands, return output list."""
     from netmiko import ConnectHandler
 
+    from netops.core.bastion import open_active_bastion_socket
+
     nm_params: dict = {
         "device_type": params["vendor"],
         "host": params["host"],
@@ -86,11 +88,19 @@ def _run_commands(params: dict) -> list[str]:
     if params.get("key_file"):
         nm_params["key_file"] = params["key_file"]
 
+    active_socket = open_active_bastion_socket(params["host"], params["port"], 30)
+    if active_socket is not None:
+        nm_params["sock"] = active_socket
+
     outputs: list[str] = []
-    with ConnectHandler(**nm_params) as conn:
-        for cmd in params["commands"]:
-            out = conn.send_command(cmd)
-            outputs.append(out)
+    try:
+        with ConnectHandler(**nm_params) as conn:
+            for cmd in params["commands"]:
+                out = conn.send_command(cmd)
+                outputs.append(out)
+    finally:
+        if active_socket is not None:
+            active_socket.close()
     return outputs
 
 

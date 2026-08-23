@@ -57,6 +57,7 @@ Designed for telco NOC/engineering teams moving from manual CLI work to automati
 | **Change planning** | Risk assessment, step ordering, dry-run simulation |
 | **Credential vault** | AES-256-GCM encrypted credential store with env override |
 | **Jump-host tunneling** | Reach devices behind an unmaintained Linux bastion via SSH tunnel while running the toolkit natively on Windows ([guide](docs/guides/jump-host-tunnel.md)) |
+| **Active bastion** | Connect once and route all toolkit TCP device traffic through that bastion, without inventory-specific proxy fields ([guide](docs/guides/active-bastion.md)) |
 | **Reporting** | HTML/PDF health reports, email scheduling |
 | **Ansible bridge** | Dynamic inventory, `netops_facts` module, playbook generator |
 

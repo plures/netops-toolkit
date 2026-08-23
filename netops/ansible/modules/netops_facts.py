@@ -194,6 +194,8 @@ def _collect_facts(params: dict) -> dict:
     """Open a netmiko connection and gather requested fact categories."""
     from netmiko import ConnectHandler
 
+    from netops.core.bastion import open_active_bastion_socket
+
     gather_set: set[str] = set(params["gather"])
     if "all" in gather_set:
         gather_set = _GATHER_ALL.copy()
@@ -208,16 +210,24 @@ def _collect_facts(params: dict) -> dict:
     if params.get("key_file"):
         nm_params["key_file"] = params["key_file"]
 
+    active_socket = open_active_bastion_socket(params["host"], params["port"], 30)
+    if active_socket is not None:
+        nm_params["sock"] = active_socket
+
     facts: dict = {}
-    with ConnectHandler(**nm_params) as conn:
-        if "health" in gather_set:
-            facts["health"] = _gather_health(conn)
-        if "interfaces" in gather_set:
-            facts["interfaces"] = _gather_interfaces(conn)
-        if "bgp" in gather_set:
-            facts["bgp"] = _gather_bgp(conn)
-        if "vlans" in gather_set:
-            facts["vlans"] = _gather_vlans(conn)
+    try:
+        with ConnectHandler(**nm_params) as conn:
+            if "health" in gather_set:
+                facts["health"] = _gather_health(conn)
+            if "interfaces" in gather_set:
+                facts["interfaces"] = _gather_interfaces(conn)
+            if "bgp" in gather_set:
+                facts["bgp"] = _gather_bgp(conn)
+            if "vlans" in gather_set:
+                facts["vlans"] = _gather_vlans(conn)
+    finally:
+        if active_socket is not None:
+            active_socket.close()
 
     return facts
 
