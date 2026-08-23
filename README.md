@@ -56,6 +56,8 @@ Designed for telco NOC/engineering teams moving from manual CLI work to automati
 | **Safe push** | Dry-run by default, pre/post health validation, automatic rollback |
 | **Change planning** | Risk assessment, step ordering, dry-run simulation |
 | **Credential vault** | AES-256-GCM encrypted credential store with env override |
+| **Jump-host tunneling** | Reach devices behind an unmaintained Linux bastion via SSH tunnel while running the toolkit natively on Windows ([guide](docs/guides/jump-host-tunnel.md)) |
+| **Active bastion** | Connect once and route all toolkit TCP device traffic through that bastion, without inventory-specific proxy fields ([guide](docs/guides/active-bastion.md)) |
 | **Reporting** | HTML/PDF health reports, email scheduling |
 | **Ansible bridge** | Dynamic inventory, `netops_facts` module, playbook generator |
 
@@ -381,7 +383,20 @@ devices:
     vendor: paloalto_panos
     role: edge
     site: dc1
+
+  behind-bastion-sw-01:
+    host: 10.0.3.1        # only reachable from the jump box, not directly
+    vendor: cisco_ios
+    jump_host: bastion.example.com   # tunnel through this SSH bastion
+    jump_username: netops            # optional; falls back to the vault
+    jump_port: 22                     # optional, default 22
 ```
+
+Jump-host fields (`jump_host`, `jump_port`, `jump_username`, `jump_key_file`)
+can also be set once in `defaults:` to apply to every device in the file.
+See [docs/guides/jump-host-tunnel.md](docs/guides/jump-host-tunnel.md) for the
+full SSH jump-box tunneling guide — reach switches behind an unmaintained
+Linux bastion while running netops-toolkit natively on Windows.
 
 Copy [examples/inventory.yaml](examples/inventory.yaml) as a starting point.
 

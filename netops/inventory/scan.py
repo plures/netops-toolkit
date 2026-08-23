@@ -565,6 +565,41 @@ def scan_subnet(
     )
 
 
+def scan_subnet_through_active_bastion(
+    subnet: str,
+    ssh_port: int = 22,
+    max_workers: int = 50,
+    timeout: int = 3,
+) -> list[ScanResult]:
+    """Discover SSH-reachable hosts through the selected workstation bastion.
+
+    SSH forwarding transports TCP, not local ICMP or UDP.  When a bastion is
+    active, discovery therefore probes each address's SSH port through the
+    shared SOCKS service instead of incorrectly running ping/SNMP on the
+    workstation's local network.
+    """
+    from netops.core.bastion import active_bastion, open_active_bastion_socket
+
+    if active_bastion() is None:
+        raise RuntimeError("no active bastion is connected")
+    network = ipaddress.ip_network(subnet, strict=False)
+    hosts = [str(host) for host in network.hosts()]
+
+    def probe(host: str) -> ScanResult:
+        try:
+            sock = open_active_bastion_socket(host, ssh_port, timeout)
+            if sock is None:  # guarded above; keeps the type contract explicit
+                raise RuntimeError("active bastion disconnected during scan")
+            sock.close()
+            return ScanResult(host=host, reachable=True)
+        except OSError as exc:
+            return ScanResult(host=host, reachable=False, error=str(exc))
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        results = list(executor.map(probe, hosts))
+    return [result for result in results if result.reachable]
+
+
 def results_to_inventory_fragment(results: list[ScanResult]) -> dict:
     """Convert scan results to an inventory fragment (``{"devices": {...}}`` dict).
 
@@ -1301,6 +1336,13 @@ def _deep_scan_host(
             )
             if port:
                 detect_kwargs["port"] = port
+            from netops.core.bastion import open_active_bastion_socket
+
+            active_socket = open_active_bastion_socket(host, port or 22, timeout)
+            if active_socket is not None:
+                detect_kwargs["sock"] = active_socket
+                detect_kwargs.pop("use_keys", None)
+                detect_kwargs.pop("allow_agent", None)
 
             # Run SSHDetect with a hard timeout — it can hang on non-standard devices
             best = None
@@ -1314,6 +1356,9 @@ def _deep_scan_host(
                     detect.connection.disconnect()
                 except Exception as e:
                     detect_exc = e
+                finally:
+                    if active_socket is not None:
+                        active_socket.close()
 
             t = threading.Thread(target=_run_detect, daemon=True)
             t.start()
@@ -1765,16 +1810,29 @@ def main() -> None:
         results = [ScanResult(host=h, reachable=True) for h in host_list]
         fragment = results_to_inventory_fragment(results)
     else:
-        results = scan_subnet(
-            subnet=args.subnet,
-            community=args.community,
-            snmp_port=args.snmp_port,
-            snmp_timeout=args.snmp_timeout,
-            ping_workers=args.ping_workers,
-            snmp_concurrency=args.snmp_concurrency,
-            skip_ping=args.skip_ping,
-            skip_snmp=args.skip_snmp,
-        )
+        from netops.core.bastion import active_bastion
+
+        if active_bastion() is not None:
+            print(
+                "🔐 Active bastion connected: discovering SSH endpoints through the bastion",
+                file=sys.stderr,
+            )
+            results = scan_subnet_through_active_bastion(
+                args.subnet,
+                max_workers=args.ping_workers,
+                timeout=args.ssh_timeout,
+            )
+        else:
+            results = scan_subnet(
+                subnet=args.subnet,
+                community=args.community,
+                snmp_port=args.snmp_port,
+                snmp_timeout=args.snmp_timeout,
+                ping_workers=args.ping_workers,
+                snmp_concurrency=args.snmp_concurrency,
+                skip_ping=args.skip_ping,
+                skip_snmp=args.skip_snmp,
+            )
         fragment = results_to_inventory_fragment(results)
 
     # Collect full device info when SSH creds are provided (CLI args or env vars)

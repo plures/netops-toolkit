@@ -21,6 +21,7 @@ COMMANDS = {
     "diff": "Show config differences",
     "report": "Generate network reports",
     "tui": "Launch interactive TUI (requires Python 3.10+)",
+    "bastion": "Connect or disconnect the workstation-wide SSH bastion",
 }
 
 
@@ -86,6 +87,11 @@ def main() -> int:
                 file=sys.stderr,
             )
             return 1
+
+    elif command == "bastion":
+        from netops.core.bastion import main as bastion_main
+
+        return bastion_main(sys.argv[1:])
 
     return 0
 

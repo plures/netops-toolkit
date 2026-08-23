@@ -32,7 +32,7 @@ from datetime import datetime, timezone
 from typing import cast
 
 from netops.core import DeviceConnection
-from netops.core.connection import ConnectionParams, Transport
+from netops.core.connection import ConnectionParams, Transport, jump_host_from_inventory
 from netops.core.inventory import Inventory
 from netops.parsers.arista import (
     parse_bgp_evpn_eos,
@@ -732,6 +732,7 @@ def main(argv: list[str] | None = None) -> int:
                 username=args.user or dev.username,
                 password=args.password or dev.password,
                 device_type=dev.vendor or "arista_eos",
+                jump_host=jump_host_from_inventory(dev),
                 transport=transport,
                 port=dev.port or args.port,
             )

@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from netops.core import DeviceConnection, Inventory
-from netops.core.connection import ConnectionParams, Transport
+from netops.core.connection import ConnectionParams, Transport, jump_host_from_inventory
 
 logger = logging.getLogger(__name__)
 
@@ -86,6 +86,7 @@ def main() -> None:
                 username=device.username or args.user,
                 password=device.password or password,
                 device_type=device.vendor,
+                jump_host=jump_host_from_inventory(device),
                 transport=Transport(device.transport),
                 port=device.port,
             )

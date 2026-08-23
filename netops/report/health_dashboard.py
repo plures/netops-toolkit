@@ -615,7 +615,11 @@ def _parse_thresholds(raw: str | None) -> dict[str, float]:
 def main() -> None:
     """CLI entry point: ``python -m netops.report.health_dashboard``."""
     from netops.check.health import run_health_check  # noqa: PLC0415
-    from netops.core.connection import ConnectionParams, Transport  # noqa: PLC0415
+    from netops.core.connection import (  # noqa: PLC0415
+        ConnectionParams,
+        Transport,
+        jump_host_from_inventory,
+    )
     from netops.core.inventory import Inventory  # noqa: PLC0415
 
     parser = argparse.ArgumentParser(
@@ -682,6 +686,7 @@ def main() -> None:
                 username=args.user or dev.username,
                 password=password or dev.password,
                 device_type=dev.vendor,
+                jump_host=jump_host_from_inventory(dev),
                 transport=Transport(dev.transport) if dev.transport else Transport.SSH,
                 port=dev.port,
                 enable_password=dev.enable_password,
