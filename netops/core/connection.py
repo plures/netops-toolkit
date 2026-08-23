@@ -151,6 +151,18 @@ class DeviceConnection:
             # when a pre-established `sock` is supplied; drop conflicting keys.
             device_params.pop("use_keys", None)
             device_params.pop("allow_agent", None)
+        elif self.params.transport == Transport.TELNET:
+            # Netmiko 4.4's Telnet backend ignores a pre-established `sock`
+            # (it only honors `sock_telnet`, otherwise dialing the device
+            # directly from the workstation), so a selected bastion would be
+            # silently bypassed. Reject Telnet outright while one is active.
+            from netops.core.bastion import active_bastion
+
+            if active_bastion() is not None:
+                raise ValueError(
+                    "An active bastion is selected, but Telnet connections cannot be "
+                    "routed through it; disconnect the bastion or use SSH for this device"
+                )
         else:
             # A selected workstation-wide bastion is authoritative for every
             # device connection.  It deliberately lives outside inventory
@@ -200,10 +212,21 @@ class DeviceConnection:
         except ImportError:
             raise ImportError("paramiko is required for jump-host tunneling: pip install paramiko")
 
+        from netops.core.bastion import known_hosts_path
+
         jump = self.params.jump_host
         assert jump is not None  # for type checkers; guarded by caller
 
+        known_hosts = known_hosts_path()
+        known_hosts.parent.mkdir(parents=True, exist_ok=True)
+        known_hosts.touch(exist_ok=True)
+
         client = paramiko.SSHClient()
+        client.load_system_host_keys()
+        client.load_host_keys(str(known_hosts))
+        # Trust on first use and persist the jump host's key, mirroring the
+        # active-bastion connection path. Subsequent key changes are rejected
+        # by Paramiko's known-host checking.
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         connect_kwargs: dict = {
@@ -230,6 +253,7 @@ class DeviceConnection:
         )
         try:
             client.connect(**connect_kwargs)
+            client.save_host_keys(str(known_hosts))
             transport = client.get_transport()
             if transport is None:
                 raise RuntimeError(f"Failed to establish transport to jump host {jump.host}")
@@ -250,17 +274,28 @@ class DeviceConnection:
         return channel
 
     def disconnect(self) -> None:
-        """Close the connection."""
-        if self._connection:
-            self._connection.disconnect()
-            logger.info(f"Disconnected from {self.params.host}")
-        if self._jump_client is not None:
-            self._jump_client.close()  # type: ignore[attr-defined]
-            self._jump_client = None
-            logger.info(f"Closed jump-host tunnel for {self.params.host}")
-        if self._active_bastion_socket is not None:
-            self._active_bastion_socket.close()  # type: ignore[attr-defined]
-            self._active_bastion_socket = None
+        """Close the connection.
+
+        Each resource is released in its own ``finally`` block so that an
+        exception from Netmiko's ``disconnect()`` (or from closing one
+        resource) cannot prevent the others from being cleaned up.
+        """
+        try:
+            if self._connection:
+                self._connection.disconnect()
+                logger.info(f"Disconnected from {self.params.host}")
+        finally:
+            try:
+                if self._jump_client is not None:
+                    self._jump_client.close()  # type: ignore[attr-defined]
+                    logger.info(f"Closed jump-host tunnel for {self.params.host}")
+            finally:
+                self._jump_client = None
+                try:
+                    if self._active_bastion_socket is not None:
+                        self._active_bastion_socket.close()  # type: ignore[attr-defined]
+                finally:
+                    self._active_bastion_socket = None
 
     def send(self, command: str, expect_string: str | None = None) -> str:
         """Send a command and return output."""

@@ -5,9 +5,11 @@ loopback-only SOCKS5 endpoint.  Toolkit callers do not need inventory-specific
 jump-host fields: :func:`open_active_bastion_socket` supplies a ready TCP
 socket whenever a bastion is active.
 
-Only connection metadata and a random local-session token are written to disk.
-The bastion password or key passphrase is passed to the child over stdin and
-remains only in that child process's memory.
+Only connection metadata and a random local-session token are written to disk
+(with owner-only permissions). The bastion password, key passphrase, and
+that same session token are passed to the child over stdin -- never as a
+command-line argument -- and remain only in that child process's memory in
+transit.
 """
 
 from __future__ import annotations
@@ -80,16 +82,35 @@ def _read_state(path: Path | None = None) -> ActiveBastion | None:
         return None
 
 
+class ActiveBastionUnavailableError(RuntimeError):
+    """Raised when a bastion is selected but cannot currently route traffic.
+
+    This is distinct from "no bastion selected" (``active_bastion()`` returning
+    ``None``): it signals that a bastion *is* selected but its control service
+    could not be reached or reports it is not connected, so callers should fail
+    closed instead of silently falling back to a direct device connection.
+    """
+
+
 def active_bastion() -> ActiveBastion | None:
-    """Return the live active bastion, or ``None`` when routing is disabled."""
+    """Return the live active bastion, or ``None`` when routing is disabled.
+
+    Raises :class:`ActiveBastionUnavailableError` when a bastion has been
+    selected (a state file exists) but its control endpoint is unreachable or
+    reports it is not connected.
+    """
     state = _read_state()
     if state is None:
         return None
     try:
         response = _control_request(state, "status")
-    except OSError:
-        return None
-    return state if response.get("connected") is True else None
+    except OSError as exc:
+        raise ActiveBastionUnavailableError(
+            f"active bastion {state.host} is selected but its control service is unreachable: {exc}"
+        ) from exc
+    if response.get("connected") is not True:
+        raise ActiveBastionUnavailableError(f"active bastion {state.host} is selected but not connected")
+    return state
 
 
 def open_active_bastion_socket(host: str, port: int, timeout: int | float) -> socket.socket | None:
@@ -98,6 +119,9 @@ def open_active_bastion_socket(host: str, port: int, timeout: int | float) -> so
     The returned socket is already connected to the target and is suitable for
     Netmiko's ``sock=`` argument.  ``None`` means no global bastion is active;
     callers should retain their normal direct connection behavior in that case.
+    Raises :class:`ActiveBastionUnavailableError` when a bastion is selected
+    but currently unreachable, so callers fail closed instead of silently
+    connecting directly to the device.
     """
     state = active_bastion()
     if state is None:
@@ -179,7 +203,8 @@ def _find_open_port() -> int:
         return int(probe.getsockname()[1])
 
 
-def _known_hosts_path() -> Path:
+def known_hosts_path() -> Path:
+    """Return the shared known-hosts file used for trust-on-first-use SSH bastion connections."""
     return Path(os.environ.get("NETOPS_KNOWN_HOSTS", _DEFAULT_KNOWN_HOSTS_PATH))
 
 
@@ -192,6 +217,19 @@ class _SshTransport:
         self._lock = threading.Lock()
 
     def open_channel(self, host: str, port: int, timeout: float) -> Any:
+        # Only client/transport bookkeeping happens under the lock; the
+        # network round-trip in `transport.open_channel()` runs outside it so
+        # concurrent callers (e.g. parallel scan workers) can open channels
+        # simultaneously instead of serializing on a single connection setup.
+        transport = self._get_active_transport()
+        return transport.open_channel(
+            "direct-tcpip",
+            dest_addr=(host, port),
+            src_addr=("127.0.0.1", 0),
+            timeout=timeout,
+        )
+
+    def _get_active_transport(self) -> Any:
         with self._lock:
             client = self._connect_if_needed()
             transport = client.get_transport()
@@ -201,12 +239,7 @@ class _SshTransport:
                 transport = client.get_transport()
             if transport is None:
                 raise OSError("SSH bastion transport is unavailable")
-            return transport.open_channel(
-                "direct-tcpip",
-                dest_addr=(host, port),
-                src_addr=("127.0.0.1", 0),
-                timeout=timeout,
-            )
+            return transport
 
     def _connect_if_needed(self) -> Any:
         if self._client is not None:
@@ -220,7 +253,7 @@ class _SshTransport:
         except ImportError as exc:  # pragma: no cover - a core dependency
             raise RuntimeError("paramiko is required for active bastion routing") from exc
 
-        known_hosts = _known_hosts_path()
+        known_hosts = known_hosts_path()
         known_hosts.parent.mkdir(parents=True, exist_ok=True)
         known_hosts.touch(exist_ok=True)
 
@@ -245,6 +278,7 @@ class _SshTransport:
         elif self._password:
             kwargs["password"] = self._password
         client.connect(**kwargs)
+        client.save_host_keys(str(known_hosts))
         self._client = client
         return client
 
@@ -270,6 +304,8 @@ class _ThreadingServer(socketserver.ThreadingTCPServer):
 class _SocksHandler(socketserver.BaseRequestHandler):
     def handle(self) -> None:
         service: _BastionService = self.server.service  # type: ignore[attr-defined]
+        negotiated = False
+        channel: Any | None = None
         try:
             version, methods_count = _recv_exact(self.request, 2)
             if version != 5:
@@ -299,13 +335,27 @@ class _SocksHandler(socketserver.BaseRequestHandler):
             port = int.from_bytes(_recv_exact(self.request, 2), "big")
             channel = service.transport.open_channel(host, port, timeout=30)
             self.request.sendall(b"\x05\x00\x00\x01\x00\x00\x00\x00\x00\x00")
+            # Negotiation is complete once the success reply is on the wire;
+            # from here on the byte stream belongs to the bridged channel, so
+            # a later bridge failure must not inject a second SOCKS reply.
+            negotiated = True
             self._bridge(channel)
         except Exception as exc:
             logger.debug("active bastion SOCKS request failed: %s", exc)
-            try:
-                self.request.sendall(b"\x05\x01\x00\x01\x00\x00\x00\x00\x00\x00")
-            except OSError:
-                pass
+            if not negotiated:
+                try:
+                    self.request.sendall(b"\x05\x01\x00\x01\x00\x00\x00\x00\x00\x00")
+                except OSError:
+                    pass
+        finally:
+            # `_bridge()` already closes the channel on its own way out; only
+            # close here when negotiation failed before `_bridge()` ran, so a
+            # channel opened just before a failed success reply is not leaked.
+            if channel is not None and not negotiated:
+                try:
+                    channel.close()
+                except OSError:
+                    pass
 
     def _read_target(self, atyp: int) -> str:
         if atyp == 1:
@@ -386,9 +436,26 @@ class _BastionService:
 
 
 def _write_state(state: ActiveBastion, path: Path) -> None:
+    """Atomically write the active-bastion state file with owner-only permissions.
+
+    This file carries the bearer token used to authorize both SOCKS routing
+    and service shutdown, so it must never be readable by other local
+    accounts. Creating the temporary file with an explicit mode (and then
+    ``chmod``, since ``os.open``'s mode is still masked by the process
+    umask) closes that window before the file is renamed into place.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(json.dumps(asdict(state), indent=2), encoding="utf-8")
+    fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    try:
+        os.chmod(temporary, 0o600)
+        os.write(fd, json.dumps(asdict(state), indent=2).encode("utf-8"))
+    except BaseException:
+        os.close(fd)
+        temporary.unlink(missing_ok=True)
+        raise
+    else:
+        os.close(fd)
     temporary.replace(path)
 
 
@@ -439,8 +506,6 @@ def connect_active_bastion(
         str(state.socks_port),
         "--control-port",
         str(state.control_port),
-        "--token",
-        state.token,
     ]
     if state.key_file:
         args.extend(["--key-file", state.key_file])
@@ -454,14 +519,20 @@ def connect_active_bastion(
             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
         assert child.stdin is not None
-        child.stdin.write(json.dumps({"password": password, "key_passphrase": key_passphrase}))
+        child.stdin.write(
+            json.dumps({"token": token, "password": password, "key_passphrase": key_passphrase})
+        )
         child.stdin.close()
 
     for _ in range(50):
         time.sleep(0.1)
         saved = _read_state(path)
-        if saved and active_bastion() is not None:
-            return saved
+        if saved:
+            try:
+                if active_bastion() is not None:
+                    return saved
+            except ActiveBastionUnavailableError:
+                pass
         if child.poll() is not None:
             detail = log_path.read_text(encoding="utf-8") if log_path.exists() else ""
             raise RuntimeError(f"could not connect to bastion {host}: {detail.strip()}")
@@ -486,6 +557,9 @@ def disconnect_active_bastion() -> bool:
 
 def _serve(args: argparse.Namespace) -> int:
     secret = json.loads(sys.stdin.read() or "{}")
+    token = secret.get("token")
+    if not token:
+        raise ValueError("bastion session token must be supplied over stdin")
     state = ActiveBastion(
         host=args.host,
         port=args.port,
@@ -495,7 +569,7 @@ def _serve(args: argparse.Namespace) -> int:
         socks_port=args.socks_port,
         control_host="127.0.0.1",
         control_port=args.control_port,
-        token=args.token,
+        token=str(token),
         pid=os.getpid(),
     )
     service = _BastionService(state, secret.get("password"), secret.get("key_passphrase"))
@@ -536,7 +610,6 @@ def _build_parser() -> argparse.ArgumentParser:
     serve.add_argument("--key-file")
     serve.add_argument("--socks-port", type=int, required=True)
     serve.add_argument("--control-port", type=int, required=True)
-    serve.add_argument("--token", required=True)
     return parser
 
 
@@ -564,14 +637,17 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "disconnect":
         print(json.dumps({"disconnected": disconnect_active_bastion()}))
         return 0
-    state = active_bastion()
+    try:
+        bastion_state = active_bastion()
+    except ActiveBastionUnavailableError:
+        bastion_state = None
     print(
         json.dumps(
             {
-                "connected": state is not None,
-                "host": state.host if state else None,
-                "port": state.port if state else None,
-                "username": state.username if state else None,
+                "connected": bastion_state is not None,
+                "host": bastion_state.host if bastion_state else None,
+                "port": bastion_state.port if bastion_state else None,
+                "username": bastion_state.username if bastion_state else None,
             }
         )
     )

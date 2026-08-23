@@ -186,8 +186,11 @@ jump = resolve_jump_host_params(
 ## Why this approach (design rationale)
 
 Three tunnel mechanisms were considered for the Windows→bastion→switch
-path; a fourth (single shared/multiplexed bastion connection reused across
-devices) was noted but not implemented in this pass:
+path for this document's *legacy per-device* jump-host override; a fourth
+(single shared/multiplexed bastion connection reused across devices) was
+noted here but not implemented for that per-device path. It has since been
+implemented separately as [Active Bastion Routing](active-bastion.md),
+described below.
 
 1. **Paramiko in-process `direct-tcpip` channel → Netmiko `sock=`
    (chosen).** No local port ever gets bound, nothing to clean up, no new
@@ -213,11 +216,17 @@ devices) was noted but not implemented in this pass:
 4. **Single shared/multiplexed bastion connection reused across all
    devices in a run** (open one SSH session to the bastion, open many
    `direct-tcpip` channels on it). Would reduce bastion login count for
-   large fleets. Not implemented in this pass — `DeviceConnection` is
-   scoped to a single device's lifecycle today, and sharing a `paramiko.SSHClient`
-   across concurrent `DeviceConnection` instances needs an explicit
-   pooling/lifecycle owner above `DeviceConnection` that doesn't exist yet.
-   Flagged as honest follow-up work, not implemented as a stub.
+   large fleets. Not implemented for *this* per-device, inventory-driven
+   `jump_host` mechanism — `DeviceConnection` here is scoped to a single
+   device's lifecycle, and sharing a `paramiko.SSHClient` across concurrent
+   `DeviceConnection` instances needs an explicit pooling/lifecycle owner
+   above `DeviceConnection`. That owner now exists as a separate,
+   workstation-wide mechanism: [Active Bastion Routing](active-bastion.md)
+   owns exactly one shared SSH connection to the selected bastion and
+   multiplexes a `direct-tcpip` channel per device connection over it,
+   which is this option's shared/multiplexed design. It is a distinct
+   opt-in mode from the per-device `jump_host` fields documented in this
+   guide, not a replacement for them.
 
 Option 1 was selected: it satisfies the real constraint (jump box does
 zero toolkit work, Windows does everything, no extra moving parts) with
