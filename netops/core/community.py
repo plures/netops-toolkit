@@ -7,7 +7,10 @@ per-device overrides. During scanning:
 2. When SSH is available: extract community strings from running config
 3. The command that works tells us the device family (bonus identification)
 
-Storage: JSON file at NETOPS_COMMUNITY_REGISTRY (default: communities.json)
+Storage: JSON file at ``NETOPS_COMMUNITY_REGISTRY`` (default:
+``~/.netops/communities.json``). The registry is a credential store: it is
+written atomically with owner-only permissions where the platform supports
+them, and values are never included in logs.
 
 Structure:
 {
@@ -28,7 +31,9 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-REGISTRY_FILE = Path(os.environ.get("NETOPS_COMMUNITY_REGISTRY", "communities.json"))
+REGISTRY_FILE = Path(
+    os.environ.get("NETOPS_COMMUNITY_REGISTRY", Path.home() / ".netops" / "communities.json")
+)
 
 # Commands to extract SNMP community strings from running config, by vendor.
 # The key insight: if a command works, we know the vendor family.
@@ -92,9 +97,16 @@ class CommunityRegistry:
                 logger.warning(f"Could not load community registry: {e}")
 
     def save(self) -> None:
-        """Persist registry to disk."""
+        """Persist registry atomically with owner-only file permissions."""
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(json.dumps(self._data, indent=2))
+        temporary_path = self.path.with_name(f".{self.path.name}.{os.getpid()}.tmp")
+        try:
+            fd = os.open(temporary_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            with os.fdopen(fd, "w") as handle:
+                handle.write(json.dumps(self._data, indent=2))
+            temporary_path.replace(self.path)
+        finally:
+            temporary_path.unlink(missing_ok=True)
 
     @property
     def strings(self) -> list[str]:
@@ -199,7 +211,7 @@ def try_communities(
         try:
             result = asyncio.run(_probe(community))
             if result[0]:
-                logger.info(f"  {host}: community '{community}' works → vendor={result[1]}")
+                logger.info("  %s: a registered SNMP community works → vendor=%s", host, result[1])
                 registry.set_device(host, community, result[1])
                 return result
         except Exception:
