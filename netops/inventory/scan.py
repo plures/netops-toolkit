@@ -1534,13 +1534,21 @@ def deep_enrich(
                 communities = result.get("communities")
                 if communities and community_registry:
                     vendor = result.get("vendor")
-                    for community in communities:
-                        community_registry.set_device(host, community, vendor)
-                    logger.info(
-                        "Collected %d SNMP community string(s) from %s into the privileged registry",
-                        len(communities),
-                        name,
-                    )
+                    try:
+                        for community in communities:
+                            community_registry.set_device(host, community, vendor)
+                    except OSError as e:
+                        logger.warning(
+                            "Could not persist SNMP community string(s) for %s: %s",
+                            host,
+                            e,
+                        )
+                    else:
+                        logger.info(
+                            "Collected %d SNMP community string(s) from %s into the privileged registry",
+                            len(communities),
+                            name,
+                        )
 
                 # Propagate device identity fields only. SNMP communities are
                 # credentials: keep them in the privileged registry, never in
@@ -1908,8 +1916,10 @@ def main() -> None:
     # Collect full device info when SSH creds are provided (CLI args or env vars)
     import os as _os
     deep_user = args.user or _os.environ.get("NETOPS_USER")
-    stdin_password = sys.stdin.readline().rstrip("\r\n") if args.password_stdin else None
-    deep_pass = stdin_password or args.password or _os.environ.get("NETOPS_PASSWORD")
+    if args.password_stdin:
+        deep_pass = sys.stdin.readline().rstrip("\r\n")
+    else:
+        deep_pass = args.password or _os.environ.get("NETOPS_PASSWORD")
 
     if deep_user:
         if not deep_pass:
