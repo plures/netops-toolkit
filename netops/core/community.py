@@ -101,14 +101,9 @@ class CommunityRegistry:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         temporary_path = self.path.with_name(f".{self.path.name}.{os.getpid()}.tmp")
         try:
-            temporary_path.write_text(json.dumps(self._data, indent=2))
-            try:
-                temporary_path.chmod(0o600)
-            except OSError:
-                # Some platforms do not map POSIX permission bits to their
-                # native ACL model. The atomic write still prevents partial
-                # registry files; callers should use an OS-protected location.
-                pass
+            fd = os.open(temporary_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            with os.fdopen(fd, "w") as handle:
+                handle.write(json.dumps(self._data, indent=2))
             temporary_path.replace(self.path)
         finally:
             temporary_path.unlink(missing_ok=True)

@@ -1,7 +1,10 @@
 """Tests for the community string registry."""
 
+import os
 import tempfile
 from pathlib import Path
+
+import pytest
 
 from netops.core.community import CommunityRegistry
 
@@ -83,6 +86,28 @@ def test_registry_persists_to_disk():
     assert "persisted" in reg2.strings
     assert reg2.get_device("1.2.3.4")["vendor"] == "juniper_junos"
     path.unlink(missing_ok=True)
+
+
+def test_save_does_not_follow_precreated_temporary_symlink(tmp_path):
+    """Registry writes never follow a pre-existing temporary symlink."""
+    path = tmp_path / "communities.json"
+    victim = tmp_path / "victim.txt"
+    victim.write_text("safe")
+    temporary_path = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    try:
+        temporary_path.symlink_to(victim)
+    except (NotImplementedError, OSError):
+        pytest.skip("symlinks are not supported on this platform")
+
+    reg = CommunityRegistry(path)
+    reg.strings = ["secret-community"]
+
+    with pytest.raises(FileExistsError):
+        reg.save()
+
+    assert victim.read_text() == "safe"
+    assert not path.exists()
+    assert not temporary_path.exists()
 
 
 def test_set_device_also_adds_to_global_strings():
