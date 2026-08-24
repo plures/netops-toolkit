@@ -21,6 +21,7 @@ import logging
 import platform
 import subprocess
 import sys
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import IO, TYPE_CHECKING
@@ -28,6 +29,7 @@ from typing import IO, TYPE_CHECKING
 if TYPE_CHECKING:
     from pysnmp.hlapi.v3arch.asyncio import SnmpEngine
 
+    from netops.core.community import CommunityRegistry
     from netops.core.connection import DeviceConnection
 
 from netops.parsers.nokia_sros import parse_bof as _parse_nokia_bof
@@ -1478,6 +1480,7 @@ def deep_enrich(
     concurrency: int = 5,
     timeout: int = 15,
     port: int | None = None,
+    community_registry: CommunityRegistry | None = None,
 ) -> dict:
     """Enrich an inventory fragment with SSH-gathered details.
 
@@ -1491,6 +1494,8 @@ def deep_enrich(
         concurrency: Max parallel SSH sessions.
         timeout: Per-device connection timeout in seconds.
         port: Optional SSH port override.
+        community_registry: Optional privileged registry for discovered SNMP
+            communities. Values are never copied into the inventory fragment.
 
     Returns:
     -------
@@ -1517,6 +1522,7 @@ def deep_enrich(
 
         for fut in concurrent.futures.as_completed(futures):
             name, info = futures[fut]
+            host = str(info.get("host", name))
             try:
                 result = fut.result()
                 updated = False
@@ -1525,7 +1531,20 @@ def deep_enrich(
                     info["vendor"] = result["vendor"]
                     updated = True
 
-                # Propagate all deep-scan fields as top-level inventory keys
+                communities = result.get("communities")
+                if communities and community_registry:
+                    vendor = result.get("vendor")
+                    for community in communities:
+                        community_registry.set_device(host, community, vendor)
+                    logger.info(
+                        "Collected %d SNMP community string(s) from %s into the privileged registry",
+                        len(communities),
+                        name,
+                    )
+
+                # Propagate device identity fields only. SNMP communities are
+                # credentials: keep them in the privileged registry, never in
+                # the inventory artifact or a log message.
                 _DEEP_FIELDS = (
                     "version",
                     "model",
@@ -1544,7 +1563,6 @@ def deep_enrich(
                     "domain_name",
                     "interface_count",
                     "modules",
-                    "communities",
                 )
                 for fld in _DEEP_FIELDS:
                     val = result.get(fld)
@@ -1554,7 +1572,7 @@ def deep_enrich(
 
                 if updated:
                     enriched += 1
-                    logger.info(f"Enriched {name}: {result}")
+                    logger.info("Enriched %s with device identity fields", name)
                 if result.get("error"):
                     failed += 1
 
@@ -1698,6 +1716,41 @@ def _fragment_to_csv(fragment: dict, dest: IO[str] | str | Path) -> int:
             dest.close()
 
 
+def _emit_event_stream(fragment: dict, duration_ms: int) -> None:
+    """Write the app-facing JSONL scan contract to standard output.
+
+    This keeps command-line JSON artifacts separate from the incremental event
+    stream consumed by the desktop application.
+    """
+    devices = fragment.get("devices", {})
+    for name, device in devices.items():
+        if not isinstance(device, dict):
+            continue
+        event = {
+            "type": "device",
+            "hostname": device.get("hostname") or name,
+            "ip": device.get("host") or "",
+            "vendor": device.get("vendor") or "unknown",
+            "version": device.get("version") or "",
+            "model": device.get("model"),
+            "serial_number": device.get("serial"),
+        }
+        print(json.dumps(event), flush=True)
+
+    total = len(devices)
+    print(json.dumps({"type": "progress", "scanned": total, "total": total}), flush=True)
+    print(
+        json.dumps(
+            {
+                "type": "complete",
+                "total_devices": total,
+                "duration_ms": duration_ms,
+            }
+        ),
+        flush=True,
+    )
+
+
 def main() -> None:
     """CLI entry point for the network device discovery scanner."""
     from netops import __version__
@@ -1769,6 +1822,11 @@ def main() -> None:
         "--password", help="SSH password (or set NETOPS_PASSWORD env var)"
     )
     parser.add_argument(
+        "--password-stdin",
+        action="store_true",
+        help="Read the SSH password from standard input instead of the command line",
+    )
+    parser.add_argument(
         "--ssh-timeout",
         type=int,
         default=15,
@@ -1780,7 +1838,19 @@ def main() -> None:
         default=5,
         help="Max parallel SSH sessions for deep scan (default: 5)",
     )
+    parser.add_argument(
+        "--event-stream",
+        action="store_true",
+        help="Write app-facing JSONL device events to standard output",
+    )
     args = parser.parse_args()
+
+    if args.password and args.password_stdin:
+        parser.error("--password and --password-stdin cannot be combined")
+    if args.event_stream and (args.output or args.merge):
+        parser.error("--event-stream cannot be combined with --output or --merge")
+
+    scan_started = time.monotonic()
 
     # Set up console logging (verbose shows debug, normal shows warnings+)
     console_level = logging.DEBUG if args.verbose else logging.WARNING
@@ -1838,23 +1908,27 @@ def main() -> None:
     # Collect full device info when SSH creds are provided (CLI args or env vars)
     import os as _os
     deep_user = args.user or _os.environ.get("NETOPS_USER")
-    deep_pass = args.password or _os.environ.get("NETOPS_PASSWORD")
+    stdin_password = sys.stdin.readline().rstrip("\r\n") if args.password_stdin else None
+    deep_pass = stdin_password or args.password or _os.environ.get("NETOPS_PASSWORD")
 
     if deep_user:
         if not deep_pass:
-            parser.error("SSH requires --password or NETOPS_PASSWORD env var")
+            parser.error("SSH requires --password-stdin, --password, or NETOPS_PASSWORD env var")
         reachable_n = sum(1 for r in results if r.reachable)
         print(
             f"🔬 Starting deep scan of {reachable_n} hosts "
             f"({args.ssh_concurrency} parallel sessions)...",
             file=sys.stderr,
         )
+        from netops.core.community import CommunityRegistry
+
         fragment = deep_enrich(
             fragment,
             username=deep_user,
             password=deep_pass,
             concurrency=args.ssh_concurrency,
             timeout=args.ssh_timeout,
+            community_registry=CommunityRegistry(),
         )
         # Report device collection results
         devices = fragment.get("devices", {})
@@ -1886,7 +1960,9 @@ def main() -> None:
         file=sys.stderr,
     )
 
-    if args.merge:
+    if args.event_stream:
+        _emit_event_stream(fragment, int((time.monotonic() - scan_started) * 1000))
+    elif args.merge:
         merged = merge_inventory(args.merge, fragment)
         merge_path = Path(args.merge)
         if merge_path.suffix in (".yaml", ".yml"):
