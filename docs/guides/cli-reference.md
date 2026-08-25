@@ -29,7 +29,7 @@ netops <command> [options]
 netops scan --subnet 10.0.0.0/24 --community 'community-string' --output discovered.json
 ```
 
-Exactly one target source is required: `--subnet`, `--csv`, or `--hosts-file`.
+At least one target source is required. `--subnet` cannot be combined with `--csv` or `--hosts-file`; if both file options are supplied, `--csv` takes precedence.
 
 | Flag | Meaning |
 | --- | --- |
