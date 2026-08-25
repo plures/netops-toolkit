@@ -38,6 +38,10 @@ def read_versions(root: Path) -> dict[Path, str]:
 def check_versions(root: Path) -> int:
     """Return zero only when the package and runtime versions agree."""
     versions = read_versions(root)
+    invalid = [(path, actual) for path, actual in versions.items() if not SEMVER_RE.fullmatch(actual)]
+    if invalid:
+        details = ", ".join(f"{path.as_posix()}: {actual}" for path, actual in invalid)
+        raise ValueError(f"invalid semantic version metadata: {details}")
     expected = versions[Path("pyproject.toml")]
     mismatches = [(path, actual) for path, actual in versions.items() if actual != expected]
     if mismatches:
