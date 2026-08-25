@@ -21,7 +21,7 @@ netops <command> [options]
 | `bastion` | Active bastion management |
 
 `netops report` is currently not a working command-line entry point. Use the
-[report Python API](../api/report.md) or `netops.report.health_dashboard`.
+[report Python API](../api/report.md) or `python -m netops.report.health_dashboard`.
 
 ## Discovery
 
