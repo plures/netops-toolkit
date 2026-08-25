@@ -153,17 +153,22 @@ python -m netops.inventory.scan --help
 
 | Option | Default | What It Does |
 |--------|---------|-------------|
-| `--subnet` | *(required)* | Subnet in CIDR notation, e.g. `10.0.0.0/24` |
+| `--subnet` | one target source required | Subnet in CIDR notation, e.g. `10.0.0.0/24` |
+| `--csv` | — | CSV source with an `ip`, `host`, `hostname`, or `address` column |
+| `--hosts-file` | — | One IP/hostname per line; CSV is also accepted |
 | `--community` | `public` | SNMPv2c community string |
 | `--snmp-port` | `161` | SNMP UDP port |
 | `--snmp-timeout` | `2` | Per-host SNMP timeout in seconds |
 | `--ping-workers` | `50` | Thread pool size for concurrent pings |
 | `--snmp-concurrency` | `10` | Max simultaneous SNMP sessions |
-| `--output` / `-o` | stdout | Write JSON inventory fragment to this file |
+| `--output` / `-o` | — | Write an inventory fragment to this file |
+| `--format` | `json` | Output format: `json` or `csv` |
 | `--merge` / `-m` | — | Merge scan results into an existing inventory file |
 | `--skip-ping` | false | Skip ping sweep — probe every address in the subnet |
 | `--skip-snmp` | false | Skip SNMP — perform a ping sweep only |
 | `--verbose` / `-v` | false | Enable debug logging |
+| `--user` / `--password` / `--password-stdin` | — | Enable deep SSH enrichment after discovery |
+| `--event-stream` | false | Emit JSON Lines to stdout; cannot be combined with `--output` or `--merge` |
 
 ### Tuning for large subnets
 

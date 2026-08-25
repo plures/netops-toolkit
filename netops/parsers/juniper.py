@@ -757,10 +757,10 @@ def parse_lacp_interfaces_junos(output: str) -> list[dict]:
     * ``protocol``       – LACP protocol state (``'Up'`` / ``'Down'``)
     * ``member_count``   – number of member links (``int``)
     * ``members``        – list of member dicts, each with:
-      * ``interface``    – member interface name
-      * ``activity``     – ``'Active'`` or ``'Passive'``
-      * ``state``        – LACP state flags string (e.g. ``'Collecting Distributing'``)
-      * ``mux_state``    – MUX machine state (e.g. ``'Collecting distributing'``)
+        * ``interface``    – member interface name
+        * ``activity``     – ``'Active'`` or ``'Passive'``
+        * ``state``        – LACP state flags string (e.g. ``'Collecting Distributing'``)
+        * ``mux_state``    – MUX machine state (e.g. ``'Collecting distributing'``)
 
     Example input::
 

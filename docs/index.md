@@ -1,98 +1,51 @@
 # netops-toolkit
 
-Modular network automation utilities for telco operations.
+`netops-toolkit` is a Python network-automation toolkit for device discovery,
+inventory, operational checks, configuration collection, and controlled
+changes. The core works on Python 3.9+; the optional Textual TUI needs Python
+3.10+.
 
-A collection of small, composable Python tools for common network engineering tasks.
-Each utility does one thing well and can be combined with others to build workflows.
-Designed for telco NOC/engineering teams moving from manual CLI work to automation.
+## Start here
 
----
+1. Follow [Getting Started](guides/getting-started.md) to install locally and
+   create an inventory.
+2. Use [CLI Reference](guides/cli-reference.md) for the exact public command
+   names and flags.
+3. If devices are reachable only through a jump host, start with [Active
+   Bastion Routing](guides/active-bastion.md).
 
-## Features
+## Capabilities
 
-| Area | Capability |
-|------|------------|
-| **Discovery** | Ping sweep + SNMP fingerprint → auto-populated inventory |
-| **Config backup** | Bulk collection with timestamped snapshots |
-| **Health checks** | CPU, memory, interface errors, log analysis across vendors |
-| **BGP monitor** | Peer up/down, prefix deviation, flap detection |
-| **VLAN audit** | Trunk/access consistency, orphan VLAN detection |
-| **Config diff** | Semantic-aware diff (unified / tree / JSON) with security highlighting |
-| **Safe push** | Dry-run by default, pre/post health validation, automatic rollback |
-| **Change planning** | Risk assessment, step ordering, dry-run simulation |
-| **Credential vault** | AES-256-GCM encrypted credential store with env override |
-| **Reporting** | HTML/PDF health reports, email scheduling |
-| **Ansible bridge** | Dynamic inventory, `netops_facts` module, playbook generator |
+| Area | Primary interfaces |
+| --- | --- |
+| Discovery | `netops scan`, `python -m netops.inventory.scan` |
+| Inventory | YAML/JSON files and `python -m netops.core.inventory export` |
+| Operational checks | `netops health`, plus BGP/VLAN/interface and vendor-specific modules |
+| Collection | `netops backup`, `python -m netops.collect.config` |
+| Change safety | `netops diff`, `netops push`, `netops.change.plan`, `netops.change.rollback` |
+| Bastion access | `netops bastion connect/status/disconnect` |
+| Reports | Python API and `python -m netops.report.health_dashboard` |
 
----
-
-## Quick Start
-
-```bash
-pip install netops-toolkit
-```
-
-```python
-from netops.core.inventory import Inventory
-from netops.check.health import run_health_check
-
-inventory = Inventory.from_yaml("inventory.yaml")
-for device in inventory.devices:
-    result = run_health_check(device.connection_params())
-    print(result)
-```
-
-See the [Getting Started](guides/getting-started.md) guide for a full walkthrough.
-
----
-
-## Documentation
-
-- **[Guides](guides/getting-started.md)** — Step-by-step tutorials for every feature
-- **[API Reference](api/README.md)** — Complete Python API documentation
-- **[CLI Reference](guides/cli-reference.md)** — All command-line flags and options
-
----
-
-## Installation
+## Install from source
 
 ```bash
-# Core
-pip install netops-toolkit
-
-# With report generation (HTML/PDF)
-pip install "netops-toolkit[report]"
-pip install "netops-toolkit[report-pdf]"
-
-# With SNMP support
-pip install "netops-toolkit[snmp]"
-
-# With Ansible modules
-pip install "netops-toolkit[ansible]"
-
-# Development
-pip install "netops-toolkit[dev]"
-
-# Documentation site
-pip install "netops-toolkit[docs]"
+git clone https://github.com/plures/netops-toolkit.git
+cd netops-toolkit
+python -m venv .venv
+# Activate .venv for your shell, then:
+python -m pip install -e ".[tui,snmp,report]"
 ```
 
----
+For Linux and macOS, the repository also supplies `install.sh`, which creates
+a user-local install at `~/.venv/netops`. See the repository
+[README](https://github.com/plures/netops-toolkit#netops-toolkit) for
+platform-specific commands and optional extras.
 
-## Supported Equipment
+## Documentation map
 
-| Vendor | Platforms | Status |
-|--------|-----------|--------|
-| Cisco | IOS, IOS-XE, IOS-XR, NX-OS | ✅ Core |
-| Nokia | SR OS (SROS), SRL | ✅ Core |
-| Brocade | FastIron/ICX, Network OS/VDX | ✅ Core |
-| Palo Alto | PAN-OS | ✅ Core |
-| Juniper | Junos | ✅ Core |
-| Arista | EOS | ✅ Core |
-| Generic | Any CLI-based device | ✅ Via raw transport |
-
----
-
-## License
-
-MIT — see [LICENSE](https://github.com/plures/netops-toolkit/blob/main/LICENSE).
+- [Guides](guides/README.md) — task-oriented documentation
+- [CLI Reference](guides/cli-reference.md) — verified command examples
+- [API Reference](api/README.md) — public Python modules
+- [Scanner](guides/scan.md) — SNMP discovery, file-based inputs, and safe output
+- [Configuration changes](api/change.md) — plan, diff, push, and rollback
+- [Reports](api/report.md) — API and health-dashboard usage
