@@ -52,6 +52,7 @@ nav:
     - Interface Checker: guides/interface-checker.md
     - Inventory Management: guides/inventory-management.md
     - Auto-Inventory Pipeline: guides/auto-inventory.md
+    - Vendor Support Profiles: guides/vendor-support.md
     - Network Scanner: guides/scan.md
     - Config Diff Engine: guides/config-diff.md
     - Cisco Health Checks: guides/cisco-health.md

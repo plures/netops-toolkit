@@ -33,6 +33,12 @@ if TYPE_CHECKING:
     from netops.core.connection import DeviceConnection
 
 from netops.parsers.nokia_sros import parse_bof as _parse_nokia_bof
+from netops.vendor_profiles import (
+    deep_commands_for,
+    family_members,
+    probe_order,
+)
+from netops.vendor_profiles import identify_vendor as _identify_vendor
 
 logger = logging.getLogger(__name__)
 
@@ -286,51 +292,7 @@ def identify_vendor(sys_descr: str, sys_obj_id: str = "") -> str:
     ``nokia_sros``, ``nokia_srl``, ``juniper_junos``, ``arista_eos``,
     ``brocade_fastiron``, ``brocade_nos``, or ``"unknown"``.
     """
-    descr_lower = sys_descr.lower()
-
-    if "ios xe" in descr_lower or "ios-xe" in descr_lower:
-        return "cisco_xe"
-    if "ios xr" in descr_lower:
-        return "cisco_xr"
-    if "nx-os" in descr_lower or "nxos" in descr_lower:
-        return "cisco_nxos"
-    if "cisco ios" in descr_lower:
-        return "cisco_ios"
-    if "nokia" in descr_lower and ("srl" in descr_lower or "sr linux" in descr_lower):
-        return "nokia_srl"
-    if "nokia" in descr_lower or "timos" in descr_lower or "alcatel" in descr_lower:
-        return "nokia_sros"
-    if "juniper" in descr_lower or "junos" in descr_lower:
-        return "juniper_junos"
-    if "arista" in descr_lower:
-        return "arista_eos"
-    if "brocade network os" in descr_lower or "network os" in descr_lower:
-        return "brocade_nos"
-    if "brocade" in descr_lower or "foundry" in descr_lower or "fastiron" in descr_lower:
-        return "brocade_fastiron"
-    if "icx" in descr_lower or "ruckus" in descr_lower or "commscope" in descr_lower:
-        return "brocade_fastiron"
-    if "ironware" in descr_lower or "extreme networks" in descr_lower or "mlx" in descr_lower:
-        return "brocade_fastiron"
-    if "cisco" in descr_lower:
-        return "cisco_ios"
-
-    # Fall back to enterprise OID prefix
-    if sys_obj_id:
-        if ".1.3.6.1.4.1.9." in sys_obj_id:  # Cisco
-            return "cisco_ios"
-        if ".1.3.6.1.4.1.6527." in sys_obj_id:  # Nokia / Alcatel-Lucent SR OS
-            return "nokia_sros"
-        if ".1.3.6.1.4.1.2636." in sys_obj_id:  # Juniper
-            return "juniper_junos"
-        if ".1.3.6.1.4.1.30065." in sys_obj_id:  # Arista
-            return "arista_eos"
-        if ".1.3.6.1.4.1.1991." in sys_obj_id:  # Foundry Networks / Brocade FastIron
-            return "brocade_fastiron"
-        if ".1.3.6.1.4.1.1588." in sys_obj_id:  # Brocade Communications (NOS/FOS)
-            return "brocade_nos"
-
-    return "unknown"
+    return _identify_vendor(sys_descr, sys_obj_id)
 
 
 # ---------------------------------------------------------------------------
@@ -722,68 +684,6 @@ def merge_inventory(existing_path: str, fragment: dict) -> dict:
 # Deep scan — SSH login to enrich inventory with vendor, version, serial, model
 # ---------------------------------------------------------------------------
 
-# Vendor-specific show commands for deep scan enrichment
-_DEEP_COMMANDS: dict[str, dict[str, str]] = {
-    "cisco_ios": {
-        "version": "show version",
-        "inventory": "show inventory",
-    },
-    "cisco_nxos": {
-        "version": "show version",
-        "inventory": "show inventory",
-    },
-    "cisco_xe": {
-        "version": "show version",
-        "inventory": "show inventory",
-    },
-    "cisco_xr": {
-        "version": "show version",
-        "inventory": "show inventory",
-    },
-    "nokia_sros": {
-        "version": "show version",
-        "inventory": "show chassis detail",
-        "system_info": "show system information",
-        "card": "show card",
-        "bof": "show bof",
-    },
-    "nokia_srl": {
-        "version": "info from state /system/information",
-        "inventory": "info from state /platform/chassis",
-    },
-    "juniper_junos": {
-        "version": "show version",
-        "inventory": "show chassis hardware",
-    },
-    "arista_eos": {
-        "version": "show version",
-        "inventory": "show inventory",
-    },
-    "brocade_fastiron": {
-        "version": "show version",
-        "inventory": "show inventory",
-    },
-    "brocade_nos": {
-        "version": "show version",
-        "inventory": "show inventory",
-    },
-}
-
-# Vendor types to try during auto-detection (most common first)
-_VENDOR_PROBE_ORDER: list[str] = [
-    "cisco_ios",
-    "cisco_nxos",
-    "nokia_sros",
-    "juniper_junos",
-    "arista_eos",
-    "cisco_xe",
-    "cisco_xr",
-    "nokia_srl",
-    "brocade_fastiron",
-    "brocade_nos",
-]
-
-
 def _parse_version_generic(output: str, vendor: str) -> dict:
     """Extract device info from show version (and related) output.
 
@@ -1164,7 +1064,7 @@ def _score_result(r: dict) -> int:
 
 def _try_vendor_commands(conn: DeviceConnection, vendor: str) -> dict:
     """Run a vendor's command set on an existing connection, return parsed results."""
-    commands = _DEEP_COMMANDS.get(vendor, _DEEP_COMMANDS["cisco_ios"])
+    commands = deep_commands_for(vendor)
     r: dict = {"vendor": vendor}
     # Initialize all fields to None
     for fld in (
@@ -1257,23 +1157,9 @@ def _try_vendor_commands(conn: DeviceConnection, vendor: str) -> dict:
     return r
 
 
-# Group vendors into families — once logged in with one, try all in the family
-_VENDOR_FAMILIES: dict[str, list[str]] = {
-    "cisco": ["cisco_ios", "cisco_xe", "cisco_xr", "cisco_nxos"],
-    "nokia": ["nokia_sros", "nokia_srl"],
-    "juniper": ["juniper_junos"],
-    "arista": ["arista_eos"],
-    "brocade": ["brocade_fastiron", "brocade_nos"],
-}
-
-
 def _get_family_vendors(vendor: str) -> list[str]:
     """Return all vendors in the same family, with *vendor* first."""
-    for family_vendors in _VENDOR_FAMILIES.values():
-        if vendor in family_vendors:
-            others = [v for v in family_vendors if v != vendor]
-            return [vendor] + others
-    return [vendor]
+    return family_members(vendor)
 
 
 def _deep_scan_host(
@@ -1368,7 +1254,7 @@ def _deep_scan_host(
 
             if t.is_alive():
                 print(f"    ⏱️  {host}: SSHDetect timed out, falling back to probe order", file=sys.stderr)
-                vendors_to_try = list(_VENDOR_PROBE_ORDER)
+                vendors_to_try = list(probe_order())
             elif detect_exc:
                 raise detect_exc
             elif best and best != "autodetect":
@@ -1377,10 +1263,10 @@ def _deep_scan_host(
                 print(f"    ✅ {host}: auto-detected vendor={best}", file=sys.stderr)
             else:
                 print(f"    ❓ {host}: SSHDetect returned '{best}', trying all vendors", file=sys.stderr)
-                vendors_to_try = list(_VENDOR_PROBE_ORDER)
+                vendors_to_try = list(probe_order())
         except Exception as e:
             print(f"    ❌ {host}: autodetect failed: {type(e).__name__}: {e}", file=sys.stderr)
-            vendors_to_try = list(_VENDOR_PROBE_ORDER)
+            vendors_to_try = list(probe_order())
 
     # --- Step 2: Connect, then try all vendor command sets in the family ---
     # If we're in probe mode (SSHDetect failed), try ALL command sets on first connection
@@ -1403,7 +1289,7 @@ def _deep_scan_host(
                 # If probing (SSHDetect failed), try ALL vendor command sets
                 # to find the best match. Otherwise just try the family.
                 if probing:
-                    cmd_vendors_to_try = list(_VENDOR_PROBE_ORDER)
+                    cmd_vendors_to_try = list(probe_order())
                 else:
                     cmd_vendors_to_try = _get_family_vendors(login_vendor)
                 best_result = None
