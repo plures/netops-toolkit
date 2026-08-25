@@ -28,6 +28,9 @@ jobs:
           python-version: "3.12"
           cache: pip
 
+      - name: Verify release version metadata
+        run: python scripts/sync_version.py --check
+
       - name: Install dependencies
         run: pip install -e ".[dev,report,tui]"
 
