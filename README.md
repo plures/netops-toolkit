@@ -1,8 +1,11 @@
 # netops-toolkit
 
-[![Latest release](https://img.shields.io/github/v/release/plures/netops-toolkit?display_name=tag)](https://github.com/plures/netops-toolkit/releases)
+[![Version](https://img.shields.io/github/v/release/plures/netops-toolkit?display_name=tag&sort=semver)](https://github.com/plures/netops-toolkit/releases)
 [![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/downloads/)
+[![License: BSL-1.1](https://img.shields.io/badge/License-BSL--1.1-blue.svg)](LICENSE) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE-MIT)
 [![CI](https://github.com/plures/netops-toolkit/actions/workflows/release.yml/badge.svg)](https://github.com/plures/netops-toolkit/actions/workflows/release.yml)
+[![interrogate](https://img.shields.io/badge/interrogate-100%25-brightgreen.svg)](https://interrogate.readthedocs.io)
+[![docs](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://plures.github.io/netops-toolkit/)
 
 Network automation utilities for discovery, inventory, configuration collection,
 health checks, safe configuration changes, and vendor-aware parsing. The core
@@ -55,10 +58,22 @@ python -m pip install -e ".[tui,snmp,report]"
 netops --help
 ```
 
-Install only the extras you need:
+### Windows
+
+Download the ZIP from [Releases](https://github.com/plures/netops-toolkit/releases), extract it, then run in PowerShell:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\netops-toolkit-<version>\install.ps1"
+```
+
+The installer needs Python 3.9 or newer, creates a virtual environment under `%LOCALAPPDATA%\netops-toolkit`, and adds a per-user Start menu shortcut. It does not require administrator rights.
+
+### Manual install from source (if you prefer)
 
 ```bash
-pip install -e ".[tui]"          # Textual terminal UI (Python 3.10+)
+python3 -m venv ~/.venv/netops
+source ~/.venv/netops/bin/activate
+pip install -e ".[tui]"          # Textual terminal UI
 pip install -e ".[snmp]"         # SNMP discovery
 pip install -e ".[report]"       # HTML report API
 pip install -e ".[report-pdf]"   # HTML and PDF report API
