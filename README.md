@@ -132,7 +132,7 @@ cd netops-toolkit-<version>
 Download the ZIP from [Releases](https://github.com/plures/netops-toolkit/releases), extract it, then run in PowerShell:
 
 ```powershell
-.\netops-toolkit-<version>\install.ps1
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\netops-toolkit-<version>\install.ps1"
 ```
 
 The installer needs Python 3.9 or newer, creates a virtual environment under `%LOCALAPPDATA%\netops-toolkit`, and adds a per-user Start menu shortcut. It does not require administrator rights.
