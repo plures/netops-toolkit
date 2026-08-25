@@ -58,11 +58,15 @@ def sync_versions(root: Path, version: str) -> None:
     if not SEMVER_RE.fullmatch(version):
         raise ValueError(f"version must be MAJOR.MINOR.PATCH, got: {version}")
 
+    updates: list[tuple[Path, str]] = []
     for relative, pattern in VERSION_FILES:
         path = root / relative
         updated, replacements = pattern.subn(rf"\g<1>{version}\g<3>", path.read_text(encoding="utf-8"))
         if replacements != 1:
             raise ValueError(f"expected one version declaration in {path}, found {replacements}")
+        updates.append((path, updated))
+
+    for path, updated in updates:
         path.write_text(updated, encoding="utf-8")
 
 
