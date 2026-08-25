@@ -11,6 +11,10 @@ on:
         default: 'patch'
         type: choice
         options: [patch, minor, major]
+      target_version:
+        description: 'Exact version (MAJOR.MINOR.PATCH). Overrides bump logic.'
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -46,25 +50,36 @@ jobs:
             fi
           fi
 
-      - name: Bump version in pyproject.toml
+      - name: Calculate and synchronize release version
         id: version
+        env:
+          BUMP_TYPE: ${{ steps.bump.outputs.type }}
+          TARGET_VERSION: ${{ github.event.inputs.target_version }}
         run: |
-          CURRENT=$(grep '^version' pyproject.toml | head -1 | sed 's/.*"\(.*\)"/\1/')
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+          python scripts/sync_version.py --check
+          CURRENT=$(python scripts/sync_version.py --current)
 
-          case "${{ steps.bump.outputs.type }}" in
-            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
-            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
-            patch) PATCH=$((PATCH + 1)) ;;
-          esac
+          if [ -n "$TARGET_VERSION" ]; then
+            NEW="$TARGET_VERSION"
+          else
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
 
-          NEW="${MAJOR}.${MINOR}.${PATCH}"
+            case "$BUMP_TYPE" in
+              major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+              minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+              patch) PATCH=$((PATCH + 1)) ;;
+              *) echo "Unsupported bump type: $BUMP_TYPE" >&2; exit 1 ;;
+            esac
+
+            NEW="${MAJOR}.${MINOR}.${PATCH}"
+          fi
+
+          python scripts/sync_version.py --version "$NEW"
+          python scripts/sync_version.py --check
           echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
           echo "new=$NEW" >> "$GITHUB_OUTPUT"
           echo "tag=v${NEW}" >> "$GITHUB_OUTPUT"
-          echo "Bump: ${{ steps.bump.outputs.type }} ($CURRENT → $NEW)"
-
-          sed -i "s/^version = \".*\"/version = \"$NEW\"/" pyproject.toml
+          echo "Bump: ${BUMP_TYPE} ($CURRENT → $NEW)"
 
       - name: Build release archives
         run: |
@@ -103,7 +118,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add pyproject.toml
+          git add pyproject.toml netops/__init__.py
           git commit -m "chore(release): v${{ steps.version.outputs.new }} [skip-release]"
           git tag -a "v${{ steps.version.outputs.new }}" -m "Release v${{ steps.version.outputs.new }}"
           git push origin main --follow-tags

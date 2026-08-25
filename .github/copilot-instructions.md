@@ -90,7 +90,14 @@ You are working in the **plures** organization. Before making changes, understan
 
 ### Release Pipeline
 
-Reusable release workflow from `plures/.github`:
+This repository currently owns its release workflow in
+`.github/workflows/release.yml`. The workflow computes a conventional-commit
+bump (or accepts a milestone-driven `target_version`), then invokes
+`scripts/sync_version.py` to update and verify every tracked version source
+before it commits and tags the release. Normal CI runs the same tool in
+`--check` mode, so version drift cannot merge.
+
+The intended reusable-workflow contract is:
 
 ```yaml
 name: Release
@@ -115,7 +122,9 @@ jobs:
     secrets: inherit
 ```
 
-The pipeline auto-detects project type, syncs ALL version files (Cargo.toml, package.json, tauri.conf.json, deno.json), and publishes to registries.
+For this Python project, the tracked sources are `pyproject.toml` and
+`netops/__init__.py`. Add a source to `scripts/sync_version.py` before relying
+on it for a release; do not edit individual version declarations by hand.
 
 Version bumps are automatic from conventional commits. Milestone-driven releases use `target_version`.
 
