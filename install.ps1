@@ -85,8 +85,11 @@ try {
 
     Write-Host "Creating a user-local virtual environment at $venv"
     & $python @pythonArguments -m venv $venv --clear
+    if ($LASTEXITCODE -ne 0) { throw "Failed to create the virtual environment." }
     & $venvPython -m pip install --upgrade pip
+    if ($LASTEXITCODE -ne 0) { throw "Failed to upgrade pip in the virtual environment." }
     & $venvPython -m pip install "$SourcePath[tui,snmp,report]"
+    if ($LASTEXITCODE -ne 0) { throw "Failed to install netops-toolkit and its TUI dependencies." }
     if (-not (Test-Path $tuiExecutable)) {
         throw "Installation completed without netops-tui.exe."
     }
