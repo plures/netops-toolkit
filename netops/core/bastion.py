@@ -32,7 +32,8 @@ import threading
 import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any
+from types import FrameType
+from typing import Protocol, cast
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +56,54 @@ class ActiveBastion:
     control_port: int
     token: str
     pid: int
+
+
+class _SshChannel(Protocol):
+    def close(self) -> None: ...
+
+    def fileno(self) -> int: ...
+
+    def recv(self, nbytes: int) -> bytes: ...
+
+    def sendall(self, data: bytes) -> None: ...
+
+
+class _SshTransportConnection(Protocol):
+    def is_active(self) -> bool: ...
+
+    def open_channel(
+        self,
+        kind: str,
+        dest_addr: tuple[str, int],
+        src_addr: tuple[str, int],
+        timeout: float,
+    ) -> _SshChannel: ...
+
+
+class _SshClient(Protocol):
+    def close(self) -> None: ...
+
+    def connect(self, **kwargs: object) -> None: ...
+
+    def get_transport(self) -> _SshTransportConnection | None: ...
+
+    def load_host_keys(self, filename: str) -> None: ...
+
+    def load_system_host_keys(self) -> None: ...
+
+    def save_host_keys(self, filename: str) -> None: ...
+
+    def set_missing_host_key_policy(self, policy: object) -> None: ...
+
+
+def _is_json_object(value: object) -> bool:
+    """Return whether *value* is a JSON object with string keys."""
+    return isinstance(value, dict) and all(isinstance(key, str) for key in value)
+
+
+def _optional_string(value: object) -> str | None:
+    """Return *value* when it is a string, otherwise ``None``."""
+    return value if isinstance(value, str) else None
 
 
 def state_path() -> Path:
@@ -176,25 +225,25 @@ def _socks_connect(sock: socket.socket, host: str, port: int) -> None:
         atyp = b"\x01" if address.version == 4 else b"\x04"
         request = b"\x05\x01\x00" + atyp + address.packed
     sock.sendall(request + port.to_bytes(2, "big"))
-    version, reply, _reserved, atyp = _recv_exact(sock, 4)
+    version, reply, _reserved, response_atyp = _recv_exact(sock, 4)
     if version != 5 or reply != 0:
         raise OSError(f"active bastion could not connect to {host}:{port} (SOCKS {reply})")
-    address_length = {1: 4, 4: 16}.get(atyp)
-    if atyp == 3:
+    address_length = {1: 4, 4: 16}.get(response_atyp)
+    if response_atyp == 3:
         address_length = _recv_exact(sock, 1)[0]
     if address_length is None:
         raise OSError("active bastion returned an invalid SOCKS response")
     _recv_exact(sock, address_length + 2)
 
 
-def _control_request(state: ActiveBastion, command: str) -> dict[str, Any]:
+def _control_request(state: ActiveBastion, command: str) -> dict[str, object]:
     with socket.create_connection((state.control_host, state.control_port), timeout=2) as control:
         control.sendall((json.dumps({"token": state.token, "command": command}) + "\n").encode("utf-8"))
         response = control.makefile("r", encoding="utf-8").readline()
-    parsed = json.loads(response)
-    if not isinstance(parsed, dict):
+    parsed: object = json.loads(response)
+    if not _is_json_object(parsed):
         raise OSError("invalid active-bastion control response")
-    return parsed
+    return cast(dict[str, object], parsed)
 
 
 def _find_open_port() -> int:
@@ -213,10 +262,10 @@ class _SshTransport:
         self._profile = profile
         self._password = password
         self._key_passphrase = key_passphrase
-        self._client: Any | None = None
+        self._client: _SshClient | None = None
         self._lock = threading.Lock()
 
-    def open_channel(self, host: str, port: int, timeout: float) -> Any:
+    def open_channel(self, host: str, port: int, timeout: float) -> _SshChannel:
         # Only client/transport bookkeeping happens under the lock; the
         # network round-trip in `transport.open_channel()` runs outside it so
         # concurrent callers (e.g. parallel scan workers) can open channels
@@ -229,7 +278,7 @@ class _SshTransport:
             timeout=timeout,
         )
 
-    def _get_active_transport(self) -> Any:
+    def _get_active_transport(self) -> _SshTransportConnection:
         with self._lock:
             client = self._connect_if_needed()
             transport = client.get_transport()
@@ -241,7 +290,7 @@ class _SshTransport:
                 raise OSError("SSH bastion transport is unavailable")
             return transport
 
-    def _connect_if_needed(self) -> Any:
+    def _connect_if_needed(self) -> _SshClient:
         if self._client is not None:
             transport = self._client.get_transport()
             if transport is not None and transport.is_active():
@@ -257,13 +306,13 @@ class _SshTransport:
         known_hosts.parent.mkdir(parents=True, exist_ok=True)
         known_hosts.touch(exist_ok=True)
 
-        client = paramiko.SSHClient()
+        client: _SshClient = paramiko.SSHClient()
         client.load_system_host_keys()
         client.load_host_keys(str(known_hosts))
         # Trust on first use and persist the selected bastion's key. Subsequent
         # key changes are rejected by Paramiko's known-host checking.
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        kwargs: dict[str, Any] = {
+        kwargs: dict[str, object] = {
             "hostname": self._profile.host,
             "port": self._profile.port,
             "username": self._profile.username,
@@ -305,7 +354,7 @@ class _SocksHandler(socketserver.BaseRequestHandler):
     def handle(self) -> None:
         service: _BastionService = self.server.service  # type: ignore[attr-defined]
         negotiated = False
-        channel: Any | None = None
+        channel: _SshChannel | None = None
         try:
             version, methods_count = _recv_exact(self.request, 2)
             if version != 5:
@@ -367,7 +416,7 @@ class _SocksHandler(socketserver.BaseRequestHandler):
             return _recv_exact(self.request, length).decode("idna")
         raise OSError("unsupported SOCKS address type")
 
-    def _bridge(self, channel: Any) -> None:
+    def _bridge(self, channel: _SshChannel) -> None:
         try:
             while True:
                 readable, _, _ = select.select([self.request, channel], [], [])
@@ -389,11 +438,14 @@ class _ControlHandler(socketserver.StreamRequestHandler):
     def handle(self) -> None:
         service: _BastionService = self.server.service  # type: ignore[attr-defined]
         try:
-            request = json.loads(self.rfile.readline().decode("utf-8"))
+            request: object = json.loads(self.rfile.readline().decode("utf-8"))
+            if not _is_json_object(request):
+                raise ValueError("invalid request")
+            request = cast(dict[str, object], request)
             token = str(request.get("token", ""))
             command = request.get("command")
             if not secrets.compare_digest(token, service.state.token):
-                response: dict[str, Any] = {"ok": False, "error": "unauthorized"}
+                response: dict[str, object] = {"ok": False, "error": "unauthorized"}
             elif command == "status":
                 response = {"ok": True, "connected": service.transport.is_connected()}
             elif command == "disconnect":
@@ -556,7 +608,10 @@ def disconnect_active_bastion() -> bool:
 
 
 def _serve(args: argparse.Namespace) -> int:
-    secret = json.loads(sys.stdin.read() or "{}")
+    secret: object = json.loads(sys.stdin.read() or "{}")
+    if not _is_json_object(secret):
+        raise ValueError("bastion session secret must be a JSON object")
+    secret = cast(dict[str, object], secret)
     token = secret.get("token")
     if not token:
         raise ValueError("bastion session token must be supplied over stdin")
@@ -572,9 +627,13 @@ def _serve(args: argparse.Namespace) -> int:
         token=str(token),
         pid=os.getpid(),
     )
-    service = _BastionService(state, secret.get("password"), secret.get("key_passphrase"))
+    service = _BastionService(
+        state,
+        _optional_string(secret.get("password")),
+        _optional_string(secret.get("key_passphrase")),
+    )
 
-    def stop(_signum: int, _frame: Any) -> None:
+    def stop(_signum: int, _frame: FrameType | None) -> None:
         service.stop()
 
     signal.signal(signal.SIGTERM, stop)

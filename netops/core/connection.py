@@ -119,7 +119,7 @@ class DeviceConnection:
         except ImportError:
             raise ImportError("netmiko is required: pip install netmiko")
 
-        device_params = {
+        device_params: dict[str, object] = {
             "device_type": self._resolve_device_type(),
             "host": self.params.host,
             "username": self.params.username,
