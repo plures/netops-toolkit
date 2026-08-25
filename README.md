@@ -1,6 +1,6 @@
 # netops-toolkit
 
-[![Version](https://img.shields.io/badge/version-0.30.3-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/github/v/release/plures/netops-toolkit?display_name=tag&sort=semver)](https://github.com/plures/netops-toolkit/releases)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: BSL-1.1](https://img.shields.io/badge/License-BSL--1.1-blue.svg)](LICENSE) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE-MIT)
 [![CI](https://github.com/plures/netops-toolkit/actions/workflows/release.yml/badge.svg)](https://github.com/plures/netops-toolkit/actions)
@@ -127,11 +127,21 @@ cd netops-toolkit-<version>
 ./install.sh
 ```
 
+### Windows
+
+Download the ZIP from [Releases](https://github.com/plures/netops-toolkit/releases), extract it, then run in PowerShell:
+
+```powershell
+.\netops-toolkit-<version>\install.ps1
+```
+
+The installer needs Python 3.9 or newer, creates a virtual environment under `%LOCALAPPDATA%\netops-toolkit`, and adds a per-user Start menu shortcut. It does not require administrator rights.
+
 ### Manual install (if you prefer)
 
 ```bash
 # With TUI:
-pip install --user "netops-toolkit[tui] @ git+https://github.com/plures/netops-toolkit@v0.38.1"
+pip install --user "netops-toolkit[tui] @ git+https://github.com/plures/netops-toolkit@main"
 
 # Or in a venv:
 python3 -m venv ~/.venv/netops
