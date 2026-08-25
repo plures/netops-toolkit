@@ -9,6 +9,7 @@ from netops.logging_setup import (
     friendly_vendor_name,
     get_log_dir,
     setup_logging,
+    shutdown_logging,
 )
 
 
@@ -81,5 +82,6 @@ def test_setup_logging_creates_file():
             content = log_file.read_text()
             assert "session started" in content
         finally:
+            shutdown_logging()
             del os.environ["NETOPS_LOG_DIR"]
-            mod._LOG_CONFIGURED = False
+            assert mod._FILE_HANDLER is None

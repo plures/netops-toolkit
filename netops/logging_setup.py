@@ -11,33 +11,28 @@ import os
 from datetime import datetime
 from pathlib import Path
 
+from netops.vendor_profiles import PROFILES, friendly_name
+
 # ---------------------------------------------------------------------------
 # Friendly vendor name mapping
 # ---------------------------------------------------------------------------
 
 VENDOR_FRIENDLY_NAMES: dict[str, str] = {
-    "cisco_ios": "Cisco IOS",
-    "cisco_xe": "Cisco IOS-XE",
-    "cisco_xr": "Cisco IOS-XR",
-    "cisco_nxos": "Cisco NX-OS",
-    "nokia_sros": "Nokia SR-OS",
-    "nokia_srl": "Nokia SR Linux",
-    "juniper_junos": "Juniper Junos",
-    "arista_eos": "Arista EOS",
-    "brocade_fastiron": "Brocade FastIron",
-    "brocade_nos": "Brocade Network OS",
+    profile.id: profile.display_name for profile in PROFILES.values()
+}
+VENDOR_FRIENDLY_NAMES.update({
     "paloalto_panos": "Palo Alto PAN-OS",
     "vyatta_vyos": "VyOS",
     "yamaha": "Yamaha",
     "huawei": "Huawei VRP",
     "autodetect": "Auto-detect",
     "unknown": "Unknown",
-}
+})
 
 
 def friendly_vendor_name(device_type: str) -> str:
     """Return a human-friendly display name for a netmiko device_type string."""
-    return VENDOR_FRIENDLY_NAMES.get(device_type, device_type)
+    return VENDOR_FRIENDLY_NAMES.get(device_type, friendly_name(device_type))
 
 
 # ---------------------------------------------------------------------------
@@ -45,6 +40,7 @@ def friendly_vendor_name(device_type: str) -> str:
 # ---------------------------------------------------------------------------
 
 _LOG_CONFIGURED = False
+_FILE_HANDLER: logging.FileHandler | None = None
 
 
 def get_log_dir() -> Path:
@@ -61,7 +57,7 @@ def setup_logging(level: int = logging.DEBUG) -> Path:
     Call this once at application startup. Subsequent calls are no-ops.
     Logs go to ~/.netops/logs/netops-YYYY-MM-DD.log (or NETOPS_LOG_DIR env var).
     """
-    global _LOG_CONFIGURED
+    global _FILE_HANDLER, _LOG_CONFIGURED
     if _LOG_CONFIGURED:
         return _get_current_log_path()
 
@@ -84,6 +80,7 @@ def setup_logging(level: int = logging.DEBUG) -> Path:
     # Add to root logger so all netops.* loggers are captured
     root_logger = logging.getLogger()
     root_logger.addHandler(file_handler)
+    _FILE_HANDLER = file_handler
     # Ensure root logger level allows DEBUG messages through to the handler
     if root_logger.level == logging.WARNING or root_logger.level == 0:
         root_logger.setLevel(logging.DEBUG)
@@ -98,6 +95,21 @@ def setup_logging(level: int = logging.DEBUG) -> Path:
     netops_logger.info("Log file: %s", log_file)
 
     return log_file
+
+
+def shutdown_logging() -> None:
+    """Detach and close the handler created by :func:`setup_logging`.
+
+    This is safe to call repeatedly.  Closing the handler explicitly matters
+    on Windows, where an open file handle prevents a log directory from being
+    removed during tests or short-lived embedded runs.
+    """
+    global _FILE_HANDLER, _LOG_CONFIGURED
+    if _FILE_HANDLER is not None:
+        logging.getLogger().removeHandler(_FILE_HANDLER)
+        _FILE_HANDLER.close()
+        _FILE_HANDLER = None
+    _LOG_CONFIGURED = False
 
 
 def _get_current_log_path() -> Path:
