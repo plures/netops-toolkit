@@ -44,9 +44,11 @@ def test_md_cli_requires_an_explicit_capability_even_on_a_new_version():
     """An SR OS version alone cannot silently switch the command dialect."""
     profile = PROFILES["nokia_sros"]
     classic = profile.commands_for("show", version="24.10.R1")
+    too_old = profile.commands_for("show", version="19.9.R1", capabilities={"md-cli"})
     md_cli = profile.commands_for("show", version="24.10.R1", capabilities={"md-cli"})
 
     assert classic["version"] == "show version"
+    assert too_old["version"] == "show version"
     assert md_cli["version"] == "/show version"
 
 
