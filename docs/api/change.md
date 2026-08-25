@@ -38,7 +38,7 @@ Change planning — risk assessment, step ordering, and dry-run simulation.
 
 **CLI usage:**
 ```
-python -m netops.change.plan plan --steps steps.yaml --dry-run
+python -m netops.change.plan plan --host 10.0.0.1 --desired desired.cfg --export plan.json
 python -m netops.change.plan apply --plan plan.json --approve
 ```
 
@@ -52,10 +52,10 @@ Safe configuration push — pre/post health validation with automatic rollback.
 
 **CLI usage:**
 ```
-python -m netops.change.push --host 10.0.0.1 --vendor cisco_ios --config changes.txt
-python -m netops.change.push --host 10.0.0.1 --vendor cisco_ios --config changes.txt --commit
-python -m netops.change.push --host 10.0.0.1 --vendor cisco_ios --config changes.txt \
-    --commit --rollback-on-failure
+python -m netops.change.push --host 10.0.0.1 --vendor cisco_ios --commands changes.txt
+python -m netops.change.push --host 10.0.0.1 --vendor cisco_ios --commands changes.txt --commit
+python -m netops.change.rollback --host 10.0.0.1 --vendor cisco_ios --commands changes.txt \
+    --commit --rollback-on-failure --validate-health
 ```
 
 ::: netops.change.push
@@ -68,7 +68,7 @@ Automated rollback — pre-snapshot + health monitoring with rollback on degrada
 
 **CLI usage:**
 ```
-python -m netops.change.rollback --host 10.0.0.1 --vendor cisco_ios --config changes.txt \
+python -m netops.change.rollback --host 10.0.0.1 --vendor cisco_ios --commands changes.txt \
     --commit --rollback-on-failure --validate-health
 ```
 

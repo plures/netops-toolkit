@@ -1,9 +1,8 @@
 # Active Bastion Routing
 
 Select a bastion once and netops-toolkit routes subsequent TCP device
-connections through it automatically. This applies to CLI commands, Python
-callers using `DeviceConnection`, and the desktop application's Python
-sidecar. It does not require an inventory entry, a `jump_host` field, a local
+connections through it automatically. This applies to CLI commands and Python
+callers using `DeviceConnection`. It does not require an inventory entry, a `jump_host` field, a local
 forwarded port, or command-specific proxy arguments.
 
 ```powershell
@@ -39,9 +38,8 @@ but the active bastion is the recommended workstation-wide mode.
 
 `netops scan --subnet 10.0.3.0/24` also detects the active bastion. It probes
 each address's SSH port through the bastion and then performs normal deep SSH
-collection when credentials are supplied. SSH forwarding is TCP-only, so it
-does not incorrectly run local ICMP or UDP/SNMP probes against a remote
-network.
+collection when credentials are supplied. SSH forwarding is TCP-only, so the
+scanner does not run local ICMP or UDP/SNMP probes against the remote network.
 
 ## Host keys
 

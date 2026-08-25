@@ -25,10 +25,10 @@ diff tracking, and optional git commit.
 
 **CLI usage:**
 ```
-python -m netops.collect.backup --inventory inventory.yaml --output-dir ./backups
-python -m netops.collect.backup --inventory inventory.yaml --output-dir ./backups --git
-python -m netops.collect.backup --inventory inventory.yaml --output-dir ./backups \
-    --workers 10 --alert-on-change
+python -m netops.collect.backup --inventory inventory.yaml --output ./backups
+python -m netops.collect.backup --inventory inventory.yaml --output ./backups --git
+python -m netops.collect.backup --inventory inventory.yaml --output ./backups \
+    --workers 10
 ```
 
 ::: netops.collect.backup

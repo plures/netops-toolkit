@@ -53,4 +53,20 @@ python -m netops.core.vault get --device HOSTNAME            [--vault VAULT_FILE
 python -m netops.core.vault delete --device HOSTNAME         [--vault VAULT_FILE]
 ```
 
+The global `--vault FILE` option must appear before the vault subcommand, for
+example `python -m netops.core.vault --vault secrets.yaml set --default --user admin`.
+
+## `netops.core.bastion`
+
+The active-bastion CLI is exposed through the dispatcher:
+
+```
+netops bastion connect --host BASTION --username USER [--password-stdin]
+netops bastion status
+netops bastion disconnect
+```
+
+See [Active Bastion Routing](../guides/active-bastion.md) for the operational
+model and protocol limitations.
+
 ::: netops.core.vault
