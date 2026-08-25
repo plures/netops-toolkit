@@ -134,7 +134,7 @@ jobs:
             Download `netops-toolkit-${{ steps.version.outputs.new }}.zip`, extract it, then run:
 
             ```powershell
-            .\netops-toolkit-${{ steps.version.outputs.new }}\install.ps1
+            powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\netops-toolkit-${{ steps.version.outputs.new }}\install.ps1"
             ```
 
             The installer creates a per-user virtual environment under `%LOCALAPPDATA%\netops-toolkit` and adds a Start menu shortcut for `netops-tui`.
