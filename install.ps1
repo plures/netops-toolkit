@@ -40,7 +40,7 @@ function Get-ReleaseSource([string]$RequestedVersion) {
         "https://api.github.com/repos/plures/netops-toolkit/releases/latest"
     }
     $release = Invoke-RestMethod -Uri $releaseEndpoint -Headers @{ Accept = "application/vnd.github+json" }
-    $asset = @($release.assets | Where-Object { $_.name -match "^netops-toolkit-.+\\.zip$" }) | Select-Object -First 1
+    $asset = @($release.assets | Where-Object { $_.name -match '^netops-toolkit-.+\.zip$' }) | Select-Object -First 1
     if ($null -eq $asset) {
         throw "The selected release has no Windows ZIP asset. Download the release ZIP manually from https://github.com/plures/netops-toolkit/releases."
     }
