@@ -98,10 +98,9 @@ $env:NETOPS_PASSWORD = 'replace-me'
 
 ## Command map
 
-`netops --help` lists the convenience commands below. `netops report` is not
-documented as a usable command because report generation is currently exposed
-through the Python API and `netops.report.health_dashboard`, not a dispatcher
-subcommand.
+`netops --help` currently lists `netops report`, but that dispatcher command is not
+usable because `netops.report.generator` has no CLI entry point. Use the report
+Python API or `python -m netops.report.health_dashboard` instead.
 
 | Command | What it does |
 | --- | --- |
