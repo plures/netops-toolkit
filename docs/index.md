@@ -22,7 +22,7 @@ changes. The core works on Python 3.9+; the optional Textual TUI needs Python
 | Inventory | YAML/JSON files and `python -m netops.core.inventory export` |
 | Operational checks | `netops health`, plus BGP/VLAN/interface and vendor-specific modules |
 | Collection | `netops backup`, `python -m netops.collect.config` |
-| Change safety | `netops diff`, `netops push`, `netops.change.plan`, `netops.change.rollback` |
+| Change safety | `netops diff`, `netops push`, `python -m netops.change.plan`, `python -m netops.change.rollback` |
 | Bastion access | `netops bastion connect/status/disconnect` |
 | Reports | Python API and `python -m netops.report.health_dashboard` |
 
