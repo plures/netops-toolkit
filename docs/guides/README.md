@@ -11,5 +11,7 @@ Step-by-step guides for each utility. Start with [Getting Started](getting-start
 | [Inventory Management](inventory-management.md) | Build and manage your device inventory |
 | [Auto-Inventory Pipeline](auto-inventory.md) | How scanned devices become managed inventory — vendor detection, deduplication, vault integration, and Ansible bridge |
 | [Network Scanner](scan.md) | Auto-discover devices via ping sweep and SNMP/CDP/LLDP |
+| [Active Bastion Routing](active-bastion.md) | Select a bastion once and route toolkit TCP connections through it |
+| [SSH Jump-Host Tunneling](jump-host-tunnel.md) | Legacy per-device jump-host inventory compatibility mode |
 | [Brocade Router Support](brocade.md) | Templates, parsers, health checks, and SNMP detection for Brocade FastIron/ICX and NOS devices |
 | [Palo Alto Firewall Support](paloalto.md) | Templates, parsers, security policy audit, and health checks for PAN-OS devices |

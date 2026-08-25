@@ -43,8 +43,8 @@ Interface status and error checking.
 
 **CLI usage:**
 ```
-python -m netops.check.interfaces --inventory inv.yaml --down-only
 python -m netops.check.interfaces --host 10.0.0.1 --vendor cisco_ios --json
+python -m netops.check.interfaces --host 10.0.0.1 --vendor cisco_ios --down-only
 ```
 
 ::: netops.check.interfaces
@@ -57,8 +57,8 @@ VLAN consistency audit across switching infrastructure.
 
 **CLI usage:**
 ```
-python -m netops.check.vlan --inventory inv.yaml --orphans
-python -m netops.check.vlan --inventory inv.yaml --json
+python -m netops.check.vlan --inventory inv.yaml --expected-vlans 10,20,30-50
+python -m netops.check.vlan --inventory inv.yaml --vlan-db vlans.yaml --json
 ```
 
 ::: netops.check.vlan

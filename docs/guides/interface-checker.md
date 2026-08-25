@@ -143,4 +143,4 @@ chmod +x check-all-core.sh
 |---------|-----|
 | No interfaces shown | Wrong vendor type — check `--vendor` matches your device |
 | Parse error | Device output format may differ. Open an issue with the raw output. |
-| Timeout | Device is slow to respond. Increase timeout in inventory. |
+| Timeout | Device is slow to respond; this single-host CLI does not expose a timeout flag. Use a programmatic caller when connection tuning is required. |
