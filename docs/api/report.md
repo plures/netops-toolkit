@@ -9,10 +9,15 @@ report scheduling.
 
 Generate HTML (and optionally PDF) health reports from check results.
 
-**CLI usage:**
-```
-python -m netops.report.generator --results results.json --output report.html
-python -m netops.report.generator --results results.json --output report.pdf --pdf
+`netops.report.generator` is a Python API; it does not define a command-line
+interface. Build a report from structured check results, then render it:
+
+```python
+from netops.report import ReportGenerator
+
+report = ReportGenerator()
+data = report.build_report(title="Network Health", sections=[])
+report.generate_html(data, output_path="report.html")
 ```
 
 ::: netops.report.generator
@@ -27,9 +32,9 @@ Supports table (terminal), JSON, and HTML output formats.
 
 **CLI usage:**
 ```
-python -m netops.report.health_dashboard --results results.json
-python -m netops.report.health_dashboard --results results.json --format json
-python -m netops.report.health_dashboard --results results.json --format html \
+python -m netops.report.health_dashboard --inventory inventory.yaml
+python -m netops.report.health_dashboard --inventory inventory.yaml --format json
+python -m netops.report.health_dashboard --inventory inventory.yaml --format html \
     --output dashboard.html
 ```
 

@@ -53,6 +53,8 @@ nav:
     - Inventory Management: guides/inventory-management.md
     - Auto-Inventory Pipeline: guides/auto-inventory.md
     - Network Scanner: guides/scan.md
+    - Active Bastion Routing: guides/active-bastion.md
+    - SSH Jump-Host Tunneling: guides/jump-host-tunnel.md
     - Config Diff Engine: guides/config-diff.md
     - Cisco Health Checks: guides/cisco-health.md
     - Brocade Support: guides/brocade.md

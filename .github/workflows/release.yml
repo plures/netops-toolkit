@@ -95,15 +95,22 @@ jobs:
           cp README.md      "/tmp/${NAME}/"
           cp pyproject.toml "/tmp/${NAME}/"
           cp install.sh     "/tmp/${NAME}/"
+          cp install.ps1    "/tmp/${NAME}/"
           cp LICENSE        "/tmp/${NAME}/" 2>/dev/null || true
 
           # tar.gz (primary — for air-gapped/jumpbox install)
           cd /tmp
           tar czf "${GITHUB_WORKSPACE}/${NAME}.tar.gz" "${NAME}/"
-          tar tzf "${GITHUB_WORKSPACE}/${NAME}.tar.gz" >/dev/null
+          zip -qr "${GITHUB_WORKSPACE}/${NAME}.zip" "${NAME}/"
+          cd "${GITHUB_WORKSPACE}"
+          sha256sum "${NAME}.tar.gz" > "${NAME}.tar.gz.sha256"
+          sha256sum "${NAME}.zip" > "${NAME}.zip.sha256"
+          tar tzf "${NAME}.tar.gz" | grep -F "${NAME}/install.sh"
+          unzip -l "${NAME}.zip" | grep -F "${NAME}/install.ps1"
 
           echo "### 📦 Release archive" >> "$GITHUB_STEP_SUMMARY"
           echo "- \`${NAME}.tar.gz\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- \`${NAME}.zip\`" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "Contents: netops/ (with TUI), docs/, examples/, tests/, README, pyproject.toml" >> "$GITHUB_STEP_SUMMARY"
 
@@ -137,6 +144,16 @@ jobs:
             netops-tui
             ```
 
+            ### Windows (no administrator rights)
+
+            Download `netops-toolkit-${{ steps.version.outputs.new }}.zip`, extract it, then run:
+
+            ```powershell
+            powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\netops-toolkit-${{ steps.version.outputs.new }}\install.ps1"
+            ```
+
+            The installer creates a per-user virtual environment under `%LOCALAPPDATA%\netops-toolkit` and adds a Start menu shortcut for `netops-tui`.
+
             ### 📥 Air-gapped / offline
 
             ```bash
@@ -154,3 +171,6 @@ jobs:
             **Full Changelog**: https://github.com/plures/netops-toolkit/compare/v${{ steps.version.outputs.current }}...v${{ steps.version.outputs.new }}
           files: |
             netops-toolkit-${{ steps.version.outputs.new }}.tar.gz
+            netops-toolkit-${{ steps.version.outputs.new }}.tar.gz.sha256
+            netops-toolkit-${{ steps.version.outputs.new }}.zip
+            netops-toolkit-${{ steps.version.outputs.new }}.zip.sha256

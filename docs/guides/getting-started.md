@@ -1,124 +1,134 @@
 # Getting Started
 
-This guide gets you from zero to running your first command.
+This guide uses only current command-line interfaces. The core toolkit requires
+Python 3.9+; install the optional TUI only on Python 3.10+.
 
-## What You Need
+## 1. Install
 
-- Python 3.10 or newer
-- Network access to your devices (SSH or Telnet)
-- Device credentials (username/password)
+### Windows
 
-## Step 1: Install
-
-```bash
-# Clone the repo
+```powershell
 git clone https://github.com/plures/netops-toolkit.git
 cd netops-toolkit
-
-# Create a virtual environment (recommended)
-python3 -m venv .venv
-source .venv/bin/activate    # Linux/Mac
-# .venv\Scripts\activate     # Windows
-
-# Install
-pip install -e .
+py -3 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -e ".[snmp]"
+netops --help
 ```
 
-This installs the `netops` package and its dependencies (netmiko, paramiko, pyyaml).
+This is a per-user virtual environment and needs no administrator rights. Add
+`tui` or `report` to the extras when those features are needed:
 
-## Step 2: Create Your Inventory File
+```powershell
+python -m pip install -e ".[tui,snmp,report]"
+```
 
-Copy the example and edit it with your real devices:
+### Linux and macOS
+
+```bash
+curl -sSL https://raw.githubusercontent.com/plures/netops-toolkit/main/install.sh | bash
+source ~/.venv/netops/bin/activate
+netops --help
+```
+
+Or clone the repository and use the same virtual-environment steps as above.
+
+## 2. Create a local inventory
+
+Copy the example before adding any device-specific data:
 
 ```bash
 cp examples/inventory.yaml my-inventory.yaml
 ```
 
-Open `my-inventory.yaml` in any text editor:
-
 ```yaml
 defaults:
-  username: admin          # Default username for all devices
-  transport: ssh           # Default: ssh (options: ssh, telnet)
+  username: admin
+  transport: ssh
 
 devices:
-  # Give each device a short name
   core-rtr-01:
-    host: 10.0.0.1         # IP address or hostname
-    vendor: cisco_ios       # See vendor list below
-    role: core              # Optional: core, distribution, access
-    site: dc1               # Optional: location name
-    groups: [routers, core] # Optional: for filtering
-
-  nokia-pe-01:
-    host: 10.0.0.2
-    vendor: nokia_sros
-    groups: [routers, pe]
-
-  old-switch-01:
-    host: 10.0.1.1
+    host: 10.0.0.1
     vendor: cisco_ios
-    transport: telnet       # Override default for this device
-    port: 23
-    groups: [switches]
+    role: core
+    site: dc1
+    groups: [routers, core]
 ```
 
-### Vendor Names
+Use Netmiko device types in `vendor`. Common values are `cisco_ios`,
+`cisco_xe`, `cisco_xr`, `cisco_nxos`, `nokia_sros`, `juniper_junos`,
+`arista_eos`, `brocade_fastiron`, `brocade_nos`, and `paloalto_panos`.
 
-| Vendor/Platform | Use This |
-|----------------|----------|
-| Cisco IOS | `cisco_ios` |
-| Cisco IOS-XE | `cisco_xe` |
-| Cisco IOS-XR | `cisco_xr` |
-| Cisco NX-OS | `cisco_nxos` |
-| Nokia SR OS | `nokia_sros` |
-| Nokia SR Linux | `nokia_srl` |
-| Juniper Junos | `juniper_junos` |
-| Arista EOS | `arista_eos` |
-| Don't know | `autodetect` |
+Keep passwords and SNMP community strings out of shared inventories. For a
+single session, use `NETOPS_PASSWORD`:
 
-## Step 3: Test a Connection
+```bash
+export NETOPS_PASSWORD='replace-me'
+```
 
-Try collecting the config from one device:
+```powershell
+$env:NETOPS_PASSWORD = 'replace-me'
+```
+
+For stored credentials, initialise the encrypted vault and follow the
+[vault reference](../api/core.md#netopscorevault):
+
+```bash
+python -m netops.core.vault init
+python -m netops.core.vault set --default --user admin
+```
+
+## 3. Run a read-only command
+
+Run a health check against the inventory:
+
+```bash
+netops health --inventory my-inventory.yaml
+```
+
+Or collect a single configuration:
 
 ```bash
 python -m netops.collect.config \
-  --host 10.0.0.1 \
-  --vendor cisco_ios \
-  --user admin \
-  --password 'yourpassword'
+  --host 10.0.0.1 --vendor cisco_ios --user admin
 ```
 
-If it works, you'll see:
-
-```
-✅ 10.0.0.1: 347 lines collected
-```
-
-If it fails, you'll see the error:
-
-```
-❌ 10.0.0.1: Authentication failed
-```
-
-## Step 4: Set Up Password (Optional)
-
-Instead of typing your password every time, set an environment variable:
+Back up every device in the inventory:
 
 ```bash
-# Add to your .bashrc or .profile
-export NETOPS_PASSWORD='yourpassword'
+netops backup --inventory my-inventory.yaml --output ./backups
 ```
 
-Now you can skip `--password`:
+## 4. Discover devices (optional)
+
+Install the `snmp` extra, then scan a management subnet. The community string
+is purposeful input for SNMPv2c discovery; pass it at runtime rather than
+checking it into source control.
 
 ```bash
-python -m netops.collect.config --host 10.0.0.1 --vendor cisco_ios --user admin
+netops scan --subnet 10.0.0.0/24 --community 'replace-me' --output discovered.json
 ```
 
-## What's Next?
+See [Network Scanner](scan.md) for file-based target lists, safe merge
+behaviour, output formats, and deep SSH enrichment.
 
-- [Config Collector](config-collector.md) — back up configs from all your devices
-- [Interface Checker](interface-checker.md) — check what's up and what's down
-- [Inventory Management](inventory-management.md) — organize your devices into groups
-- [Auto-Inventory Pipeline](auto-inventory.md) — automatically discover devices via scan and feed them to Ansible
+## 5. Use a bastion (optional)
+
+For workstation-wide TCP routing through a bastion, connect once:
+
+```powershell
+netops bastion connect --host bastion.example.com --username netops --password-stdin
+netops bastion status
+```
+
+Then use the normal toolkit commands. No initial inventory or per-command
+proxy flag is needed. See [Active Bastion Routing](active-bastion.md) for
+transport limitations and host-key behavior.
+
+## Next steps
+
+- [CLI Reference](cli-reference.md) — working commands and flags
+- [Configuration Collector](config-collector.md) — collection and backups
+- [Inventory Management](inventory-management.md) — filters and exports
+- [Active Bastion Routing](active-bastion.md) — connect once, then use normal commands
+- [Configuration changes](../api/change.md) — plan and safely apply changes
