@@ -9,23 +9,29 @@ $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 
 function Get-PythonCommand {
-    $python = Get-Command python -ErrorAction SilentlyContinue
-    if ($null -eq $python) {
-        $python = Get-Command py -ErrorAction SilentlyContinue
+    $candidates = @(
+        @{ Name = "python"; Arguments = @() }
+        @{ Name = "py"; Arguments = @("-3") }
+    )
+
+    foreach ($candidate in $candidates) {
+        $python = Get-Command $candidate.Name -ErrorAction SilentlyContinue
         if ($null -eq $python) {
-            throw "Python 3.9 or newer is required. Install it for the current user from https://www.python.org/downloads/windows/ and run this installer again."
+            continue
         }
-        $arguments = @("-3")
-    } else {
-        $arguments = @()
+
+        $arguments = $candidate.Arguments
+        try {
+            & $python.Source @arguments -c "import sys; raise SystemExit(0 if sys.version_info >= (3, 9) else 1)"
+            if ($LASTEXITCODE -eq 0) {
+                return @{ Path = $python.Source; Arguments = $arguments }
+            }
+        } catch {
+            continue
+        }
     }
 
-    & $python.Source @arguments -c "import sys; raise SystemExit(0 if sys.version_info >= (3, 9) else 1)"
-    if ($LASTEXITCODE -ne 0) {
-        throw "Python 3.9 or newer is required. Found: $(& $python.Source @arguments --version)"
-    }
-
-    return @{ Path = $python.Source; Arguments = $arguments }
+    throw "Python 3.9 or newer is required. Install it for the current user from https://www.python.org/downloads/windows/ and run this installer again."
 }
 
 function Get-ReleaseSource([string]$RequestedVersion) {
