@@ -11,8 +11,14 @@
 
 set -euo pipefail
 
-VENV_DIR="$HOME/.venv/netops"
+VENV_DIR="${NETOPS_VENV_DIR:-$HOME/.venv/netops}"
 REPO="https://github.com/plures/netops-toolkit"
+
+# Allow constrained jump boxes to place the virtual environment and uv cache
+# on a filesystem with sufficient user quota without requiring sudo.
+if [ -n "${NETOPS_UV_CACHE_DIR:-}" ]; then
+  export UV_CACHE_DIR="$NETOPS_UV_CACHE_DIR"
+fi
 
 # Resolve version: env override, or fetch latest release tag from GitHub
 if [ -n "${NETOPS_VERSION:-}" ]; then
@@ -103,14 +109,34 @@ create_venv() {
 
 # ── Install netops-toolkit ────────────────────────────────────────────────────
 install_package() {
+  local package
+
   # If we're running from inside an extracted tarball, install local
   if [ -f "pyproject.toml" ] && grep -q "netops-toolkit" pyproject.toml 2>/dev/null; then
     echo "→ Installing from local source..."
-    $UV pip install --python "$VENV_DIR/bin/python" ".[tui,snmp,report]" --quiet
+    package=".[tui,snmp,report]"
   else
     echo "→ Installing netops-toolkit@${TAG} from GitHub..."
-    $UV pip install --python "$VENV_DIR/bin/python" \
-      "netops-toolkit[tui,snmp,report] @ git+${REPO}@${TAG}" --quiet
+    package="netops-toolkit[tui,snmp,report] @ git+${REPO}@${TAG}"
+  fi
+
+  if ! $UV pip install --python "$VENV_DIR/bin/python" "$package" --quiet; then
+    cat >&2 <<EOF
+
+netops-toolkit installation did not complete, so netops and netops-tui are
+not available from this environment yet. A prior partial environment at:
+  $VENV_DIR
+will be rebuilt on the next installer run.
+
+If uv reported disk quota or no-space errors, free cache space with:
+  uv cache clean
+
+Or choose paths on a filesystem with available quota, then retry:
+  export NETOPS_VENV_DIR=/path/with/space/netops
+  export NETOPS_UV_CACHE_DIR=/path/with/space/netops-uv-cache
+  curl -sSL https://raw.githubusercontent.com/plures/netops-toolkit/main/install.sh | bash
+EOF
+    return 1
   fi
 }
 
