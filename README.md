@@ -55,7 +55,10 @@ free the uv cache and retry:
 
 ```bash
 deactivate 2>/dev/null || true
-uv cache clean
+UV_BIN="$(command -v uv || true)"
+[ -x "$UV_BIN" ] || UV_BIN="$HOME/.local/bin/uv"
+[ -x "$UV_BIN" ] || UV_BIN="$HOME/.cargo/bin/uv"
+"$UV_BIN" cache clean
 quota -s 2>/dev/null || true
 df -h "$HOME" /tmp
 curl -sSL https://raw.githubusercontent.com/plures/netops-toolkit/main/install.sh | bash
