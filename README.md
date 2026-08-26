@@ -66,12 +66,14 @@ source "$HOME/.venv/netops/bin/activate"
 netops --help
 ```
 
-When your home directory cannot hold the environment, place both the virtual
-environment and uv cache on a filesystem with adequate user quota:
+When your home directory cannot hold the environment, place the virtual
+environment, uv cache, and uv-managed Python installs on a filesystem with
+adequate user quota:
 
 ```bash
 export NETOPS_VENV_DIR=/path/with/space/netops
 export NETOPS_UV_CACHE_DIR=/path/with/space/netops-uv-cache
+export UV_PYTHON_INSTALL_DIR=/path/with/space/netops-uv-python
 curl -sSL https://raw.githubusercontent.com/plures/netops-toolkit/main/install.sh | bash
 source "$NETOPS_VENV_DIR/bin/activate"
 ```

@@ -129,11 +129,13 @@ not available from this environment yet. A prior partial environment at:
 will be rebuilt on the next installer run.
 
 If uv reported disk quota or no-space errors, free cache space with:
-  uv cache clean
+  $UV cache clean
+  (cache directory: ${UV_CACHE_DIR:-$HOME/.cache/uv})
 
 Or choose paths on a filesystem with available quota, then retry:
   export NETOPS_VENV_DIR=/path/with/space/netops
   export NETOPS_UV_CACHE_DIR=/path/with/space/netops-uv-cache
+  export UV_PYTHON_INSTALL_DIR=/path/with/space/netops-uv-python
   curl -sSL https://raw.githubusercontent.com/plures/netops-toolkit/main/install.sh | bash
 EOF
     return 1
@@ -149,11 +151,25 @@ setup_activation() {
     *)    RC="$HOME/.bashrc" ;;
   esac
 
-  # Add alias if not already present
-  if ! grep -q "netops-activate" "$RC" 2>/dev/null; then
+  # Add or refresh the alias so it always targets the current, shell-escaped
+  # venv path (relocating an existing install must not leave a stale alias).
+  local escaped_venv_dir alias_line
+  escaped_venv_dir=$(printf '%q' "$VENV_DIR")
+  alias_line="alias netops-activate='source ${escaped_venv_dir}/bin/activate'"
+
+  if [ -f "$RC" ] && grep -q "^alias netops-activate=" "$RC" 2>/dev/null; then
+    if ! grep -qxF "$alias_line" "$RC" 2>/dev/null; then
+      local tmp
+      tmp="$(mktemp)"
+      grep -v "^alias netops-activate=" "$RC" > "$tmp"
+      mv "$tmp" "$RC"
+      echo "$alias_line" >> "$RC"
+      echo "  Updated 'netops-activate' alias in $RC"
+    fi
+  else
     echo "" >> "$RC"
     echo "# netops-toolkit" >> "$RC"
-    echo "alias netops-activate='source $VENV_DIR/bin/activate'" >> "$RC"
+    echo "$alias_line" >> "$RC"
     echo "  Added 'netops-activate' alias to $RC"
   fi
 }
