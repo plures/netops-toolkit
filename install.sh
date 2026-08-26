@@ -42,14 +42,28 @@ install_uv() {
   echo "  uv: $($UV --version)"
 }
 
+select_python() {
+  PYTHON="$($UV python find --no-project --no-python-downloads '>=3.9' 2>/dev/null || true)"
+  if [ -n "$PYTHON" ]; then
+    echo "→ Using installed Python: $PYTHON"
+  else
+    echo "→ No compatible installed Python found; uv will provision one."
+  fi
+}
+
 # ── Create venv ───────────────────────────────────────────────────────────────
 create_venv() {
+  local python_args=()
+  if [ -n "$PYTHON" ]; then
+    python_args=(--python "$PYTHON")
+  fi
+
   if [ -d "$VENV_DIR" ]; then
     echo "→ Upgrading existing install at $VENV_DIR"
-    $UV venv "$VENV_DIR" --clear --quiet
+    $UV venv "$VENV_DIR" "${python_args[@]}" --clear --quiet
   else
     echo "→ Creating virtual environment at $VENV_DIR"
-    $UV venv "$VENV_DIR" --quiet
+    $UV venv "$VENV_DIR" "${python_args[@]}" --quiet
   fi
 }
 
@@ -86,6 +100,7 @@ setup_activation() {
 
 # ── Run ───────────────────────────────────────────────────────────────────────
 install_uv
+select_python
 create_venv
 install_package
 setup_activation

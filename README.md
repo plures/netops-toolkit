@@ -32,8 +32,10 @@ Use the exact device type expected by Netmiko in `vendor` fields.
 ### Linux and macOS
 
 The maintained installer creates a user-local environment at `~/.venv/netops`
-and installs the TUI, scanning, and HTML report extras. It does not require
-`sudo`.
+and installs the TUI, scanning, and HTML report extras. It selects the newest
+compatible installed Python (3.9+) for that environment, so `netops` and
+`netops-tui` use the same interpreter. If no compatible Python is installed,
+`uv` provisions one. It does not require `sudo`.
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/plures/netops-toolkit/main/install.sh | bash
