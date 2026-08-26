@@ -1,3 +1,3 @@
 """netops-toolkit — Modular network automation utilities."""
 
-__version__ = "0.48.1"
+__version__ = "0.49.0"
