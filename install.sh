@@ -43,7 +43,38 @@ install_uv() {
 }
 
 select_python() {
-  PYTHON="$($UV python find --no-project --no-python-downloads '>=3.9' 2>/dev/null || true)"
+  local candidate candidate_major candidate_minor candidate_patch
+  local python_major="" python_minor="" python_patch=""
+
+  PYTHON=""
+  while IFS= read -r candidate; do
+    IFS=. read -r candidate_major candidate_minor candidate_patch <<EOF
+$("$candidate" -c 'import sys; print(".".join(map(str, sys.version_info[:3])))' 2>/dev/null || true)
+EOF
+    case "$candidate_major.$candidate_minor.$candidate_patch" in
+      [0-9]*.[0-9]*.[0-9]*) ;;
+      *) continue ;;
+    esac
+    if [ "$candidate_major" -lt 3 ] ||
+       { [ "$candidate_major" -eq 3 ] && [ "$candidate_minor" -lt 9 ]; }; then
+      continue
+    fi
+    if [ -z "$PYTHON" ] ||
+       [ "$candidate_major" -gt "$python_major" ] ||
+       { [ "$candidate_major" -eq "$python_major" ] &&
+         [ "$candidate_minor" -gt "$python_minor" ]; } ||
+       { [ "$candidate_major" -eq "$python_major" ] &&
+         [ "$candidate_minor" -eq "$python_minor" ] &&
+         [ "$candidate_patch" -gt "$python_patch" ]; }; then
+      PYTHON="$candidate"
+      python_major="$candidate_major"
+      python_minor="$candidate_minor"
+      python_patch="$candidate_patch"
+    fi
+  done <<EOF
+$($UV python list --only-installed 2>/dev/null | awk 'NF { print $NF }')
+EOF
+
   if [ -n "$PYTHON" ]; then
     echo "→ Using installed Python: $PYTHON"
   else
@@ -53,17 +84,20 @@ select_python() {
 
 # ── Create venv ───────────────────────────────────────────────────────────────
 create_venv() {
-  local python_args=()
-  if [ -n "$PYTHON" ]; then
-    python_args=(--python "$PYTHON")
-  fi
-
   if [ -d "$VENV_DIR" ]; then
     echo "→ Upgrading existing install at $VENV_DIR"
-    $UV venv "$VENV_DIR" "${python_args[@]}" --clear --quiet
+    if [ -n "$PYTHON" ]; then
+      $UV venv "$VENV_DIR" --python "$PYTHON" --clear --quiet
+    else
+      $UV venv "$VENV_DIR" --clear --quiet
+    fi
   else
     echo "→ Creating virtual environment at $VENV_DIR"
-    $UV venv "$VENV_DIR" "${python_args[@]}" --quiet
+    if [ -n "$PYTHON" ]; then
+      $UV venv "$VENV_DIR" --python "$PYTHON" --quiet
+    else
+      $UV venv "$VENV_DIR" --quiet
+    fi
   fi
 }
 
