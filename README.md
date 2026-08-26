@@ -46,6 +46,38 @@ netops --help
 For an offline installation, download and extract a release archive, then run
 `./install.sh` from its root.
 
+### Linux disk quota or no-space recovery
+
+If `uv` reports `Disk quota exceeded` or `No space left on device`, the install
+did not complete; activate neither the partial environment nor an unrelated
+`/home/...` path. Confirm the actual home directory with `echo "$HOME"`, then
+free the uv cache and retry:
+
+```bash
+deactivate 2>/dev/null || true
+UV_BIN="$(command -v uv || true)"
+[ -x "$UV_BIN" ] || UV_BIN="$HOME/.local/bin/uv"
+[ -x "$UV_BIN" ] || UV_BIN="$HOME/.cargo/bin/uv"
+"$UV_BIN" cache clean
+quota -s 2>/dev/null || true
+df -h "$HOME" /tmp
+curl -sSL https://raw.githubusercontent.com/plures/netops-toolkit/main/install.sh | bash
+source "$HOME/.venv/netops/bin/activate"
+netops --help
+```
+
+When your home directory cannot hold the environment, place the virtual
+environment, uv cache, and uv-managed Python installs on a filesystem with
+adequate user quota:
+
+```bash
+export NETOPS_VENV_DIR=/path/with/space/netops
+export NETOPS_UV_CACHE_DIR=/path/with/space/netops-uv-cache
+export UV_PYTHON_INSTALL_DIR=/path/with/space/netops-uv-python
+curl -sSL https://raw.githubusercontent.com/plures/netops-toolkit/main/install.sh | bash
+source "$NETOPS_VENV_DIR/bin/activate"
+```
+
 ### Windows and source development
 
 Clone the repository and install into a virtual environment. This is a

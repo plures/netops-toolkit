@@ -11,8 +11,14 @@
 
 set -euo pipefail
 
-VENV_DIR="$HOME/.venv/netops"
+VENV_DIR="${NETOPS_VENV_DIR:-$HOME/.venv/netops}"
 REPO="https://github.com/plures/netops-toolkit"
+
+# Allow constrained jump boxes to place the virtual environment and uv cache
+# on a filesystem with sufficient user quota without requiring sudo.
+if [ -n "${NETOPS_UV_CACHE_DIR:-}" ]; then
+  export UV_CACHE_DIR="$NETOPS_UV_CACHE_DIR"
+fi
 
 # Resolve version: env override, or fetch latest release tag from GitHub
 if [ -n "${NETOPS_VERSION:-}" ]; then
@@ -103,14 +109,36 @@ create_venv() {
 
 # ── Install netops-toolkit ────────────────────────────────────────────────────
 install_package() {
+  local package
+
   # If we're running from inside an extracted tarball, install local
   if [ -f "pyproject.toml" ] && grep -q "netops-toolkit" pyproject.toml 2>/dev/null; then
     echo "→ Installing from local source..."
-    $UV pip install --python "$VENV_DIR/bin/python" ".[tui,snmp,report]" --quiet
+    package=".[tui,snmp,report]"
   else
     echo "→ Installing netops-toolkit@${TAG} from GitHub..."
-    $UV pip install --python "$VENV_DIR/bin/python" \
-      "netops-toolkit[tui,snmp,report] @ git+${REPO}@${TAG}" --quiet
+    package="netops-toolkit[tui,snmp,report] @ git+${REPO}@${TAG}"
+  fi
+
+  if ! $UV pip install --python "$VENV_DIR/bin/python" "$package" --quiet; then
+    cat >&2 <<EOF
+
+netops-toolkit installation did not complete, so netops and netops-tui are
+not available from this environment yet. A prior partial environment at:
+  $VENV_DIR
+will be rebuilt on the next installer run.
+
+If uv reported disk quota or no-space errors, free cache space with:
+  $UV cache clean
+  (cache directory: ${UV_CACHE_DIR:-$HOME/.cache/uv})
+
+Or choose paths on a filesystem with available quota, then retry:
+  export NETOPS_VENV_DIR=/path/with/space/netops
+  export NETOPS_UV_CACHE_DIR=/path/with/space/netops-uv-cache
+  export UV_PYTHON_INSTALL_DIR=/path/with/space/netops-uv-python
+  curl -sSL https://raw.githubusercontent.com/plures/netops-toolkit/main/install.sh | bash
+EOF
+    return 1
   fi
 }
 
@@ -123,11 +151,25 @@ setup_activation() {
     *)    RC="$HOME/.bashrc" ;;
   esac
 
-  # Add alias if not already present
-  if ! grep -q "netops-activate" "$RC" 2>/dev/null; then
+  # Add or refresh the alias so it always targets the current, shell-escaped
+  # venv path (relocating an existing install must not leave a stale alias).
+  local escaped_venv_dir alias_line
+  escaped_venv_dir=$(printf '%q' "$VENV_DIR")
+  alias_line="alias netops-activate='source ${escaped_venv_dir}/bin/activate'"
+
+  if [ -f "$RC" ] && grep -q "^alias netops-activate=" "$RC" 2>/dev/null; then
+    if ! grep -qxF "$alias_line" "$RC" 2>/dev/null; then
+      local tmp
+      tmp="$(mktemp)"
+      grep -v "^alias netops-activate=" "$RC" > "$tmp"
+      mv "$tmp" "$RC"
+      echo "$alias_line" >> "$RC"
+      echo "  Updated 'netops-activate' alias in $RC"
+    fi
+  else
     echo "" >> "$RC"
     echo "# netops-toolkit" >> "$RC"
-    echo "alias netops-activate='source $VENV_DIR/bin/activate'" >> "$RC"
+    echo "$alias_line" >> "$RC"
     echo "  Added 'netops-activate' alias to $RC"
   fi
 }
