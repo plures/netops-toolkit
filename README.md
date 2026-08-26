@@ -66,7 +66,17 @@ Download the ZIP from [Releases](https://github.com/plures/netops-toolkit/releas
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\netops-toolkit-<version>\install.ps1"
 ```
 
-The installer needs Python 3.9 or newer, creates a virtual environment under `%LOCALAPPDATA%\netops-toolkit`, and adds a per-user Start menu shortcut. It does not require administrator rights.
+The installer finds the newest compatible Python (3.9+) registered on the machine, then creates a virtual environment under `%LOCALAPPDATA%\netops-toolkit`. Both `netops` and `netops-tui` run from that same environment. It adds a per-user Start menu shortcut and does not require administrator rights.
+
+To see which interpreter the installer will use without making changes:
+
+```powershell
+.\install.ps1 -CheckPython
+```
+
+The installed `netops` and `netops-tui` launchers use that managed environment.
+When running `python -m netops` directly, Python necessarily uses the
+interpreter that you explicitly invoked.
 
 ### Manual install from source (if you prefer)
 
