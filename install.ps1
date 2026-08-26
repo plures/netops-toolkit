@@ -42,7 +42,7 @@ function Get-PythonCommand {
     if ($null -ne $launcher) {
         $registered = & $launcher.Source -0p 2>$null
         foreach ($line in $registered) {
-            if ($line -notmatch '^\s*-V:(?<version>\d+(?:\.\d+)*)\s+\*?\s*(?<path>.+)$') {
+            if ($line -notmatch '^\s*-V:(?<tag>\S+)\s+\*?\s*(?<path>.+)$') {
                 continue
             }
             $path = $Matches.path.Trim()
