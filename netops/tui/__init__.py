@@ -27,7 +27,6 @@ from pathlib import Path
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
-from textual.events import Paste
 from textual.screen import ModalScreen
 from textual.widgets import (
     Button,
@@ -49,6 +48,17 @@ from netops.logging_setup import setup_logging
 # ---------------------------------------------------------------------------
 
 INVENTORY_FILE = Path(os.environ.get("NETOPS_INVENTORY", "inventory.json"))
+SETTINGS_FILE = Path(os.environ.get("NETOPS_TUI_SETTINGS", Path.home() / ".netops" / "tui-settings.json"))
+
+DEFAULT_SETTINGS = {
+    "snmp_port": 161,
+    "snmp_timeout": 2,
+    "ping_workers": 50,
+    "snmp_concurrency": 10,
+    "ssh_timeout": 15,
+    "ssh_concurrency": 5,
+    "backup_workers": 5,
+}
 
 
 def load_inventory() -> dict:
@@ -61,6 +71,23 @@ def load_inventory() -> dict:
 def save_inventory(data: dict) -> None:
     """Persist an inventory to disk."""
     INVENTORY_FILE.write_text(json.dumps(data, indent=2))
+
+
+def load_settings() -> dict:
+    """Load user-scoped, non-secret TUI settings with safe defaults."""
+    try:
+        saved = json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        saved = {}
+    if not isinstance(saved, dict):
+        saved = {}
+    return {**DEFAULT_SETTINGS, **saved}
+
+
+def save_settings(settings: dict) -> None:
+    """Persist non-secret TUI defaults without storing credentials."""
+    SETTINGS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    SETTINGS_FILE.write_text(json.dumps(settings, indent=2), encoding="utf-8")
 
 
 def export_csv(data: dict, path: str = "inventory.csv") -> int:
@@ -94,36 +121,24 @@ class ScanScreen(ModalScreen):
 
     BINDINGS = [Binding("escape", "dismiss", "Close")]
 
-    def on_paste(self, event: Paste) -> None:
-        """Route paste events to the focused input widget in this modal."""
-        from textual.widgets import Input, TextArea
-        focused = self.app.focused
-        if isinstance(focused, Input):
-            focused.insert_text_at_cursor(event.text)
-            event.prevent_default()
-            event.stop()
-        elif isinstance(focused, TextArea):
-            focused.insert(event.text)
-            event.prevent_default()
-            event.stop()
-
     def compose(self) -> ComposeResult:
         """Compose the inventory scan modal."""
+        settings = self.app.settings
         with Vertical(id="scan-modal"):
             yield Label("🔍 Inventory Scan", id="scan-title")
             yield Input(placeholder="Subnets (e.g. 10.0.0.0/24, 192.168.1.0/24)", id="scan-subnet")
             yield Input(placeholder="Or path to hosts file (hosts.csv or ips.txt)", id="scan-hosts-file")
             yield Input(placeholder="SNMP communities (comma-sep, or leave blank for registry)", id="scan-community")
             with Horizontal(classes="advanced-row"):
-                yield Input(value="161", placeholder="SNMP port", id="scan-snmp-port")
-                yield Input(value="2", placeholder="SNMP timeout (seconds)", id="scan-snmp-timeout")
-                yield Input(value="50", placeholder="Ping workers", id="scan-ping-workers")
-                yield Input(value="10", placeholder="SNMP concurrency", id="scan-snmp-concurrency")
-            yield Input(placeholder="SSH user (collects full device info)", id="scan-user")
-            yield Input(placeholder="SSH password", password=True, id="scan-password")
+                yield Input(value=str(settings["snmp_port"]), placeholder="SNMP port", id="scan-snmp-port")
+                yield Input(value=str(settings["snmp_timeout"]), placeholder="SNMP timeout (seconds)", id="scan-snmp-timeout")
+                yield Input(value=str(settings["ping_workers"]), placeholder="Ping workers", id="scan-ping-workers")
+                yield Input(value=str(settings["snmp_concurrency"]), placeholder="SNMP concurrency", id="scan-snmp-concurrency")
+            yield Input(placeholder="SSH user (vault default if blank)", id="scan-user")
+            yield Input(placeholder="SSH password (vault default if blank)", password=True, id="scan-password")
             with Horizontal(classes="advanced-row"):
-                yield Input(value="15", placeholder="SSH timeout (seconds)", id="scan-ssh-timeout")
-                yield Input(value="5", placeholder="SSH concurrency", id="scan-ssh-concurrency")
+                yield Input(value=str(settings["ssh_timeout"]), placeholder="SSH timeout (seconds)", id="scan-ssh-timeout")
+                yield Input(value=str(settings["ssh_concurrency"]), placeholder="SSH concurrency", id="scan-ssh-concurrency")
                 yield Checkbox("Probe every address (skip ping)", id="scan-skip-ping")
                 yield Checkbox("Ping only (skip SNMP)", id="scan-skip-snmp")
             yield Input(placeholder="Optional export file (.json or .csv)", id="scan-output")
@@ -160,6 +175,9 @@ class ScanScreen(ModalScreen):
                 community = "public"
             user = self.query_one("#scan-user", Input).value.strip()
             password = self.query_one("#scan-password", Input).value.strip()
+            vault_credentials = self.app.credentials_for()
+            user = user or str(vault_credentials.get("username", ""))
+            password = password or str(vault_credentials.get("password", ""))
             output = self.query_one("#scan-output", Input).value.strip()
             log = self.query_one("#scan-log", Log)
             try:
@@ -354,8 +372,8 @@ class HealthScreen(ModalScreen):
                 yield Input(placeholder="Inventory group filter", id="health-group")
                 yield Input(placeholder="Vendor for a single host (auto-detect when blank)", id="health-vendor")
                 yield Input(placeholder="Thresholds, e.g. cpu=80,mem=85", id="health-threshold")
-            yield Input(placeholder="SSH user", id="health-user")
-            yield Input(placeholder="SSH password", password=True, id="health-pass")
+            yield Input(placeholder="SSH user (vault if blank)", id="health-user")
+            yield Input(placeholder="SSH password (vault if blank)", password=True, id="health-pass")
             yield Input(placeholder="Optional JSON report output file", id="health-output")
             yield Checkbox("Mark the run failed when any alert is found", id="health-fail-on-alert")
             with Horizontal():
@@ -429,25 +447,34 @@ class HealthScreen(ModalScreen):
                         devices = inv.filter(group=group or None) if group else list(inv.devices.values())
                         if not devices:
                             raise ValueError("no devices matched the selected inventory/group")
-                        params_list = [
-                            ConnectionParams(
-                                host=device.host,
-                                username=user or device.username,
-                                password=password or device.password,
-                                device_type=device.vendor,
-                                jump_host=jump_host_from_inventory(device),
-                                transport=Transport(device.transport) if device.transport else Transport.SSH,
-                                port=device.port,
-                                enable_password=device.enable_password,
+                        params_list = []
+                        for device in devices:
+                            vault_credentials = self.app.credentials_for(device.hostname, device.groups)
+                            params_list.append(
+                                ConnectionParams(
+                                    host=device.host,
+                                    username=user or device.username or vault_credentials.get("username"),
+                                    password=password or device.password or vault_credentials.get("password"),
+                                    device_type=device.vendor,
+                                    jump_host=jump_host_from_inventory(device),
+                                    transport=Transport(device.transport) if device.transport else Transport.SSH,
+                                    port=device.port,
+                                    enable_password=device.enable_password or vault_credentials.get("enable_password"),
+                                )
                             )
-                            for device in devices
-                        ]
                     else:
                         inv = load_inventory()
                         device_info = inv.get("devices", {}).get(host, {})
                         vendor = vendor_input or device_info.get("vendor") or "autodetect"
+                        vault_credentials = self.app.credentials_for(host, device_info.get("groups", []))
                         params_list = [
-                            ConnectionParams(host=host, username=user, password=password, device_type=vendor)
+                            ConnectionParams(
+                                host=host,
+                                username=user or vault_credentials.get("username"),
+                                password=password or vault_credentials.get("password"),
+                                device_type=vendor,
+                                enable_password=vault_credentials.get("enable_password"),
+                            )
                         ]
 
                     results = await asyncio.get_event_loop().run_in_executor(
@@ -681,6 +708,144 @@ class BastionScreen(ModalScreen):
 
 
 # ---------------------------------------------------------------------------
+# Settings and Credential Vault Screens
+# ---------------------------------------------------------------------------
+
+class SettingsScreen(ModalScreen):
+    """Edit non-secret TUI defaults used by future operations."""
+
+    BINDINGS = [Binding("escape", "dismiss", "Close")]
+
+    def compose(self) -> ComposeResult:
+        """Compose the user-scoped settings form."""
+        settings = self.app.settings
+        with Vertical(id="settings-modal"):
+            yield Label("⚙️ TUI Settings", id="settings-title")
+            yield Label("Scan defaults")
+            with Horizontal(classes="advanced-row"):
+                yield Input(value=str(settings["snmp_port"]), id="settings-snmp-port")
+                yield Input(value=str(settings["snmp_timeout"]), id="settings-snmp-timeout")
+                yield Input(value=str(settings["ping_workers"]), id="settings-ping-workers")
+            yield Label("SNMP port · SNMP timeout (seconds) · ping workers")
+            with Horizontal(classes="advanced-row"):
+                yield Input(value=str(settings["snmp_concurrency"]), id="settings-snmp-concurrency")
+                yield Input(value=str(settings["ssh_timeout"]), id="settings-ssh-timeout")
+                yield Input(value=str(settings["ssh_concurrency"]), id="settings-ssh-concurrency")
+            yield Label("SNMP concurrency · SSH timeout (seconds) · SSH concurrency")
+            yield Label("Backup defaults")
+            yield Input(value=str(settings["backup_workers"]), id="settings-backup-workers")
+            yield Label("Concurrent backup workers")
+            with Horizontal():
+                yield Button("Save", variant="primary", id="btn-settings-save")
+                yield Button("Cancel", id="btn-settings-cancel")
+            yield Log(id="settings-log", highlight=True)
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Persist valid settings or close without changing them."""
+        if event.button.id == "btn-settings-cancel":
+            self.dismiss()
+            return
+        if event.button.id != "btn-settings-save":
+            return
+        log = self.query_one("#settings-log", Log)
+        fields = {
+            "snmp_port": "#settings-snmp-port",
+            "snmp_timeout": "#settings-snmp-timeout",
+            "ping_workers": "#settings-ping-workers",
+            "snmp_concurrency": "#settings-snmp-concurrency",
+            "ssh_timeout": "#settings-ssh-timeout",
+            "ssh_concurrency": "#settings-ssh-concurrency",
+            "backup_workers": "#settings-backup-workers",
+        }
+        try:
+            updated = {key: int(self.query_one(field_id, Input).value.strip()) for key, field_id in fields.items()}
+        except ValueError:
+            log.write_line("❌ All settings must be whole numbers")
+            return
+        if any(value < 1 for value in updated.values()) or not 1 <= updated["snmp_port"] <= 65535:
+            log.write_line("❌ Values must be positive and the SNMP port must be 1–65535")
+            return
+        self.app.settings = {**self.app.settings, **updated}
+        try:
+            save_settings(self.app.settings)
+        except OSError as exc:
+            log.write_line(f"❌ Could not save settings: {exc}")
+            return
+        log.write_line(f"✅ Saved settings to {SETTINGS_FILE}")
+
+
+class VaultScreen(ModalScreen):
+    """Unlock and manage encrypted device, group, and default credentials."""
+
+    BINDINGS = [Binding("escape", "dismiss", "Close")]
+
+    def compose(self) -> ComposeResult:
+        """Compose vault controls without exposing stored secrets."""
+        from netops.core.vault import CredentialVault
+
+        with Vertical(id="vault-modal"):
+            yield Label("🔑 Credential Vault", id="vault-title")
+            yield Label("Vault path and session unlock")
+            yield Input(value=str(CredentialVault.DEFAULT_VAULT_PATH), id="vault-path")
+            yield Input(placeholder="Vault master password (session only)", password=True, id="vault-master-password")
+            with Horizontal():
+                yield Button("Unlock", variant="primary", id="btn-vault-unlock")
+                yield Button("Create vault", id="btn-vault-create")
+            yield Label("Credential scope: default, group, or device")
+            with Horizontal(classes="advanced-row"):
+                yield Input(value="default", id="vault-scope")
+                yield Input(placeholder="Group or device name (not needed for default)", id="vault-target")
+            yield Input(placeholder="SSH username", id="vault-user")
+            yield Input(placeholder="SSH password", password=True, id="vault-password")
+            yield Input(placeholder="Optional enable password", password=True, id="vault-enable-password")
+            with Horizontal():
+                yield Button("Save credentials", variant="primary", id="btn-vault-save")
+                yield Button("Delete scope", variant="warning", id="btn-vault-delete")
+                yield Button("Close", id="btn-vault-close")
+            yield Log(id="vault-log", highlight=True)
+
+    def _scope(self) -> tuple[str, str]:
+        """Validate and return the requested credential scope and target."""
+        scope = self.query_one("#vault-scope", Input).value.strip().lower()
+        target = self.query_one("#vault-target", Input).value.strip()
+        if scope not in {"default", "group", "device"}:
+            raise ValueError("Scope must be default, group, or device")
+        if scope != "default" and not target:
+            raise ValueError(f"A {scope} name is required")
+        return scope, target
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Unlock, create, save, or delete vault entries with explicit feedback."""
+        if event.button.id == "btn-vault-close":
+            self.dismiss()
+            return
+        log = self.query_one("#vault-log", Log)
+        path = self.query_one("#vault-path", Input).value.strip()
+        master_password = self.query_one("#vault-master-password", Input).value
+        try:
+            if event.button.id in {"btn-vault-unlock", "btn-vault-create"}:
+                if not master_password:
+                    raise ValueError("A vault master password is required")
+                self.app.open_vault(path, master_password, create=event.button.id == "btn-vault-create")
+                log.write_line("✅ Vault unlocked for this TUI session")
+                return
+            scope, target = self._scope()
+            if event.button.id == "btn-vault-save":
+                username = self.query_one("#vault-user", Input).value.strip()
+                password = self.query_one("#vault-password", Input).value
+                enable_password = self.query_one("#vault-enable-password", Input).value or None
+                if not username or not password:
+                    raise ValueError("SSH username and password are required")
+                self.app.save_vault_credentials(scope, target, username, password, enable_password)
+                log.write_line(f"✅ Saved {scope} credentials in the encrypted vault")
+            elif event.button.id == "btn-vault-delete":
+                deleted = self.app.delete_vault_credentials(scope, target)
+                log.write_line("✅ Credential scope deleted" if deleted else "ℹ️ Credential scope did not exist")
+        except Exception as exc:
+            log.write_line(f"❌ {exc}")
+
+
+# ---------------------------------------------------------------------------
 # Config Push Screen
 # ---------------------------------------------------------------------------
 
@@ -699,8 +864,8 @@ class ConfigPushScreen(ModalScreen):
             yield Label("⚙️ Config Push", id="push-title")
             yield Input(placeholder="Hostname or IP (comma-separated for bulk)", id="push-hosts",
                         value=self._selected_host or "")
-            yield Input(placeholder="SSH user", id="push-user")
-            yield Input(placeholder="SSH password", password=True, id="push-pass")
+            yield Input(placeholder="SSH user (vault if blank)", id="push-user")
+            yield Input(placeholder="SSH password (vault if blank)", password=True, id="push-pass")
             yield Input(placeholder="Vendor (cisco_ios, nokia_sros, etc. — leave blank to auto-detect)", id="push-vendor")
             with Horizontal(classes="advanced-row"):
                 yield Input(value="ssh", placeholder="Transport: ssh or telnet", id="push-transport")
@@ -795,15 +960,17 @@ class ConfigPushScreen(ModalScreen):
                     log.write_line(f"  [{i+1}/{len(hosts)}] {host}...")
                     dev_info = inv.get("devices", {}).get(host, {})
                     dev_vendor = vendor or dev_info.get("vendor", "cisco_ios")
+                    vault_credentials = self.app.credentials_for(host, dev_info.get("groups", []))
 
                     try:
                         params = ConnectionParams(
                             host=dev_info.get("host", host),
-                            username=user,
-                            password=password,
+                            username=user or dev_info.get("username") or vault_credentials.get("username"),
+                            password=password or dev_info.get("password") or vault_credentials.get("password"),
                             device_type=dev_vendor,
                             transport=Transport(transport),
                             port=port,
+                            enable_password=dev_info.get("enable_password") or vault_credentials.get("enable_password"),
                         )
                         record = await asyncio.get_event_loop().run_in_executor(
                             None,
@@ -857,8 +1024,8 @@ class BackupScreen(ModalScreen):
             yield Label("💾 Config Backup", id="backup-title")
             yield Input(placeholder="Hostnames (comma-separated, or 'all' for inventory)", id="backup-hosts",
                         value=self._selected_host or "")
-            yield Input(placeholder="SSH user", id="backup-user")
-            yield Input(placeholder="SSH password", password=True, id="backup-pass")
+            yield Input(placeholder="SSH user (vault if blank)", id="backup-user")
+            yield Input(placeholder="SSH password (vault if blank)", password=True, id="backup-pass")
             yield Input(placeholder="Output directory (default: ./backups)", id="backup-dir")
             yield Input(
                 value=str(INVENTORY_FILE),
@@ -867,7 +1034,7 @@ class BackupScreen(ModalScreen):
             )
             with Horizontal(classes="advanced-row"):
                 yield Input(placeholder="Optional inventory group", id="backup-group")
-                yield Input(value="5", placeholder="Concurrent workers", id="backup-workers")
+                yield Input(value=str(self.app.settings["backup_workers"]), placeholder="Concurrent workers", id="backup-workers")
                 yield Checkbox("Commit changes to a local git repository", id="backup-git")
                 yield Checkbox("Suppress change alerts", id="backup-no-alert")
             with Horizontal():
@@ -923,19 +1090,21 @@ class BackupScreen(ModalScreen):
                     ]
                 if not devices:
                     raise ValueError("no devices matched the inventory, group, or host selection")
-                params_list = [
-                    ConnectionParams(
-                        host=device.host,
-                        username=device.username or user,
-                        password=device.password or password,
-                        device_type=device.vendor,
-                        jump_host=jump_host_from_inventory(device),
-                        transport=Transport(device.transport) if device.transport else Transport.SSH,
-                        port=device.port,
-                        enable_password=device.enable_password,
+                params_list = []
+                for device in devices:
+                    vault_credentials = self.app.credentials_for(device.hostname, device.groups)
+                    params_list.append(
+                        ConnectionParams(
+                            host=device.host,
+                            username=user or device.username or vault_credentials.get("username"),
+                            password=password or device.password or vault_credentials.get("password"),
+                            device_type=device.vendor,
+                            jump_host=jump_host_from_inventory(device),
+                            transport=Transport(device.transport) if device.transport else Transport.SSH,
+                            port=device.port,
+                            enable_password=device.enable_password or vault_credentials.get("enable_password"),
+                        )
                     )
-                    for device in devices
-                ]
                 log.write_line(f"  Collecting {len(params_list)} device(s) with {workers} worker(s)...")
                 summaries = await asyncio.get_event_loop().run_in_executor(
                     None,
@@ -965,6 +1134,38 @@ class BackupScreen(ModalScreen):
 
 
 # ---------------------------------------------------------------------------
+# Running Config View
+# ---------------------------------------------------------------------------
+
+class ConfigViewScreen(ModalScreen):
+    """Scrollable on-demand running-config view with a clipboard action."""
+
+    BINDINGS = [
+        Binding("escape", "dismiss", "Close"),
+        Binding("y", "copy_config", "Copy config"),
+    ]
+
+    def __init__(self, hostname: str, config: str) -> None:
+        super().__init__()
+        self._hostname = hostname
+        self._config = config
+
+    def compose(self) -> ComposeResult:
+        """Compose the fetched running-config reader."""
+        with Vertical(id="config-view-modal"):
+            yield Label(f"Running config — {self._hostname}", id="config-view-title")
+            yield Static(self._config, id="config-view-content")
+            yield Label("Press y to copy all text, or Escape to close.")
+
+    def action_copy_config(self) -> None:
+        """Request a terminal clipboard copy and acknowledge the result."""
+        if self.app.copy_to_clipboard(self._config):
+            self.notify("Copied running config to the terminal clipboard")
+        else:
+            self.notify("Clipboard is unavailable in this terminal", severity="warning")
+
+
+# ---------------------------------------------------------------------------
 # Main App
 # ---------------------------------------------------------------------------
 
@@ -977,15 +1178,22 @@ class NetopsTUI(App):
     Screen {
         background: $surface;
     }
+    #workspace {
+        height: 1fr;
+    }
+    #main-panel {
+        height: 1fr;
+    }
     #device-table {
         height: 1fr;
     }
     #detail-panel {
-        width: 40;
-        border-left: solid $primary;
+        height: auto;
+        max-height: 14;
+        border-top: solid $primary;
         padding: 1;
     }
-    #scan-modal, #health-modal, #push-modal, #backup-modal, #diff-modal, #bastion-modal {
+    #scan-modal, #health-modal, #push-modal, #backup-modal, #diff-modal, #bastion-modal, #settings-modal, #vault-modal, #config-view-modal {
         width: 70;
         height: 90%;
         overflow-y: auto;
@@ -993,12 +1201,12 @@ class NetopsTUI(App):
         background: $surface;
         padding: 1 2;
     }
-    #scan-title, #health-title, #push-title, #backup-title, #diff-title, #bastion-title {
+    #scan-title, #health-title, #push-title, #backup-title, #diff-title, #bastion-title, #settings-title, #vault-title, #config-view-title {
         text-style: bold;
         color: $text;
         margin-bottom: 1;
     }
-    #scan-log, #health-log, #push-log, #backup-log, #diff-log, #bastion-log {
+    #scan-log, #health-log, #push-log, #backup-log, #diff-log, #bastion-log, #settings-log, #vault-log {
         height: 10;
         margin-top: 1;
         border: solid $accent;
@@ -1017,6 +1225,12 @@ class NetopsTUI(App):
         width: auto;
         margin: 0 1;
     }
+    #config-view-content {
+        height: 1fr;
+        overflow-y: auto;
+        border: solid $accent;
+        padding: 1;
+    }
     """
 
     BINDINGS = [
@@ -1025,6 +1239,12 @@ class NetopsTUI(App):
         Binding("h", "health", "Health"),
         Binding("p", "push", "Config Push"),
         Binding("b", "backup", "Backup"),
+        Binding("space", "toggle_selection", "Select"),
+        Binding("ctrl+a", "toggle_all_selection", "Select all"),
+        Binding("enter", "toggle_detail", "More detail"),
+        Binding("c", "running_config", "Running config"),
+        Binding("v", "vault", "Credentials"),
+        Binding("o", "settings", "Settings"),
         Binding("f", "diff", "Config Diff"),
         Binding("j", "bastion", "Bastion"),
         Binding("e", "export", "Export CSV"),
@@ -1040,19 +1260,24 @@ class NetopsTUI(App):
         super().__init__()
         self._log_file = setup_logging()
         self.inventory = load_inventory()
+        self.settings = load_settings()
         self._selected_host: str | None = None
+        self._selected_hosts: set[str] = set()
+        self._detail_extended = False
+        self._vault = None
+        self._vault_password: str | None = None
 
     def compose(self) -> ComposeResult:
         """Compose the main TUI layout."""
         yield Header()
-        with Horizontal():
+        with Vertical(id="workspace"):
             with Vertical(id="main-panel"):
                 yield Input(placeholder="🔍 Search devices...", id="search-input")
                 yield DataTable(id="device-table", cursor_type="row")
             with Vertical(id="detail-panel"):
-                yield Static("Select a device", id="detail-content")
+                yield Static("Select a device to view details", id="detail-content")
         yield Static(
-            f"  {len(self.inventory.get('devices', {}))} devices  |  {INVENTORY_FILE}",
+            "",
             classes="status-bar",
         )
         yield Footer()
@@ -1077,8 +1302,9 @@ class NetopsTUI(App):
     def on_mount(self) -> None:
         """Initialize the device table after mounting."""
         table = self.query_one("#device-table", DataTable)
-        table.add_columns("Hostname", "Host", "Vendor", "Model", "Version", "Serial", "Site")
+        table.add_columns("", "Hostname", "Host", "Vendor", "Model", "Version", "Serial", "Site")
         self._populate_table()
+        self._update_status()
 
     def _populate_table(self, filter_text: str = "") -> None:
         table = self.query_one("#device-table", DataTable)
@@ -1092,6 +1318,7 @@ class NetopsTUI(App):
             if q and q not in row_text:
                 continue
             table.add_row(
+                "☑" if hostname in self._selected_hosts else "☐",
                 hostname,
                 info.get("host", ""),
                 info.get("vendor", ""),
@@ -1108,40 +1335,69 @@ class NetopsTUI(App):
             if event.row_key is None or event.row_key.value is None:
                 return
             hostname = str(event.row_key.value)
-            info = self.inventory.get("devices", {}).get(hostname, {})
-            detail = f"[bold]{hostname}[/bold]\n\n"
-            if isinstance(info, dict):
-                for k, v in sorted(info.items()):
-                    if k == "tags" and isinstance(v, dict):
-                        detail += f"[dim]{k}:[/dim]\n"
-                        for tk, tv in v.items():
-                            detail += f"  {tk}: {tv}\n"
-                    else:
-                        detail += f"[dim]{k}:[/dim] {v}\n"
             self._selected_host = hostname
-            self.query_one("#detail-content", Static).update(detail)
+            self._detail_extended = False
+            self._render_detail()
         except Exception as e:
             logging.getLogger("netops.tui").error(f"Row selection error: {e}")
+
+    def _render_detail(self) -> None:
+        """Render basic or extended metadata for the selected device."""
+        if not self._selected_host:
+            return
+        info = self.inventory.get("devices", {}).get(self._selected_host, {})
+        if not isinstance(info, dict):
+            return
+        basic_fields = ("host", "vendor", "model", "serial", "version", "uptime", "community", "mac_address")
+        extended_fields = (
+            "memory", "flash", "interfaces", "reload_reason", "domain", "neighbors",
+            "image", "site", "role", "groups", "tags",
+        )
+        fields = basic_fields + (extended_fields if self._detail_extended else ())
+        mode = "Extended detail" if self._detail_extended else "Device detail"
+        lines = [f"[bold]{mode} — {self._selected_host}[/bold]"]
+        for field in fields:
+            value = info.get(field)
+            if value in (None, "", [], {}):
+                continue
+            if isinstance(value, dict):
+                lines.append(f"[dim]{field}:[/dim]")
+                lines.extend(f"  {key}: {item}" for key, item in sorted(value.items()))
+            elif isinstance(value, list):
+                lines.append(f"[dim]{field}:[/dim] {', '.join(str(item) for item in value)}")
+            else:
+                lines.append(f"[dim]{field}:[/dim] {value}")
+        if len(lines) == 1:
+            lines.append("No inventory details are available yet. Run a deep scan to collect them.")
+        hint = "Enter: basic detail" if self._detail_extended else "Enter: more detail"
+        lines.extend(("", f"[dim]{hint} · c: running config · Space: select · Esc: close[/dim]"))
+        self.query_one("#detail-panel", Vertical).styles.display = True
+        self.query_one("#detail-content", Static).update("\n".join(lines))
+
+    def _update_status(self) -> None:
+        """Show inventory and multi-selection state in the persistent status bar."""
+        count = len(self.inventory.get("devices", {}))
+        selected = len(self._selected_hosts)
+        self.query_one(".status-bar", Static).update(
+            f"  {count} devices  |  {selected} selected  |  {INVENTORY_FILE}"
+        )
+
+    def _focused_hostname(self) -> str | None:
+        """Return the current table host key without trusting a mouse event."""
+        table = self.query_one("#device-table", DataTable)
+        try:
+            if table.cursor_row is None:
+                return self._selected_host
+            row = table.get_row_at(table.cursor_row)
+            hostname = str(row[1]) if len(row) > 1 else ""
+            return hostname if hostname in self.inventory.get("devices", {}) else self._selected_host
+        except Exception:
+            return self._selected_host
 
     def on_input_changed(self, event: Input.Changed) -> None:
         """Filter the device table when the search input changes."""
         if event.input.id == "search-input":
             self._populate_table(event.value)
-
-
-
-    def on_paste(self, event: Paste) -> None:
-        """Route paste events to the focused input widget."""
-        from textual.widgets import Input, TextArea
-        focused = self.focused
-        if isinstance(focused, Input):
-            focused.insert_text_at_cursor(event.text)
-            event.prevent_default()
-            event.stop()
-        elif isinstance(focused, TextArea):
-            focused.insert(event.text)
-            event.prevent_default()
-            event.stop()
 
     def _input_focused(self) -> bool:
         """Return True if an Input or TextArea widget currently has focus."""
@@ -1159,19 +1415,183 @@ class NetopsTUI(App):
         """Open the health check modal."""
         if self._input_focused():
             return
-        self.push_screen(HealthScreen(self._selected_host))
+        self.push_screen(HealthScreen(self._focused_hostname()))
 
     def action_push(self) -> None:
         """Open the configuration push modal."""
         if self._input_focused():
             return
-        self.push_screen(ConfigPushScreen(self._selected_host))
+        self.push_screen(ConfigPushScreen(", ".join(self.operation_hosts())))
 
     def action_backup(self) -> None:
         """Open the configuration backup modal."""
         if self._input_focused():
             return
-        self.push_screen(BackupScreen(self._selected_host))
+        self.push_screen(BackupScreen(", ".join(self.operation_hosts())))
+
+    def operation_hosts(self) -> list[str]:
+        """Return selected devices, or the focused device when none are selected."""
+        if self._selected_hosts:
+            return sorted(self._selected_hosts)
+        focused = self._focused_hostname()
+        return [focused] if focused else []
+
+    def action_toggle_selection(self) -> None:
+        """Toggle the selected flag for the focused device row."""
+        if self._input_focused():
+            return
+        hostname = self._focused_hostname()
+        if not hostname:
+            self.notify("Select a device first", severity="warning")
+            return
+        if hostname in self._selected_hosts:
+            self._selected_hosts.remove(hostname)
+        else:
+            self._selected_hosts.add(hostname)
+        self._populate_table(self.query_one("#search-input", Input).value)
+        self._update_status()
+
+    def action_toggle_all_selection(self) -> None:
+        """Select every inventory device, or clear the current selection."""
+        if self._input_focused():
+            return
+        devices = {
+            hostname for hostname, info in self.inventory.get("devices", {}).items()
+            if isinstance(info, dict)
+        }
+        self._selected_hosts = set() if devices and self._selected_hosts == devices else devices
+        self._populate_table(self.query_one("#search-input", Input).value)
+        self._update_status()
+
+    def action_toggle_detail(self) -> None:
+        """Cycle the selected device detail pane between basic and extended metadata."""
+        if self._input_focused():
+            return
+        hostname = self._focused_hostname()
+        if not hostname:
+            return
+        self._selected_host = hostname
+        self._detail_extended = not self._detail_extended
+        self._render_detail()
+
+    def action_running_config(self) -> None:
+        """Fetch a selected device running config without persisting it to inventory."""
+        if self._input_focused():
+            return
+        hostname = self._focused_hostname()
+        if not hostname:
+            self.notify("Select a device first", severity="warning")
+            return
+        info = self.inventory.get("devices", {}).get(hostname, {})
+        if not isinstance(info, dict):
+            self.notify("Selected inventory data is invalid", severity="error")
+            return
+        credentials = self.credentials_for(hostname, info.get("groups", []))
+        if not credentials.get("username") or not credentials.get("password"):
+            self.notify("Unlock the vault with v or enter credentials in an operation form", severity="warning")
+            return
+
+        async def fetch_config() -> None:
+            try:
+                from netops.core.connection import ConnectionParams, Transport
+
+                params = ConnectionParams(
+                    host=info.get("host", hostname),
+                    username=credentials["username"],
+                    password=credentials["password"],
+                    device_type=info.get("vendor", "cisco_ios"),
+                    transport=Transport(info.get("transport", "ssh")),
+                    port=info.get("port"),
+                    enable_password=credentials.get("enable_password"),
+                )
+                self.query_one("#detail-content", Static).update("[dim]Fetching running config…[/dim]")
+                config = await asyncio.get_event_loop().run_in_executor(
+                    None,
+                    lambda: self._fetch_running_config(params),
+                )
+                self.push_screen(ConfigViewScreen(hostname, config))
+            except Exception as exc:
+                self.notify(f"Could not fetch running config: {exc}", severity="error")
+                self._render_detail()
+
+        asyncio.get_event_loop().create_task(fetch_config())
+
+    @staticmethod
+    def _fetch_running_config(params) -> str:
+        """Open a bounded device session and obtain the vendor-aware configuration snapshot."""
+        from netops.change.push import _snapshot_config
+        from netops.core.connection import DeviceConnection
+
+        with DeviceConnection(params) as connection:
+            return _snapshot_config(connection, params.device_type)
+
+    def action_vault(self) -> None:
+        """Open the encrypted credential vault controls."""
+        if not self._input_focused():
+            self.push_screen(VaultScreen())
+
+    def action_settings(self) -> None:
+        """Open non-secret user settings."""
+        if not self._input_focused():
+            self.push_screen(SettingsScreen())
+
+    def open_vault(self, path: str, password: str, *, create: bool) -> None:
+        """Unlock or explicitly create the encrypted vault for this session only."""
+        from netops.core.vault import CredentialVault
+
+        vault = CredentialVault(Path(path).expanduser())
+        if create:
+            vault.init(password)
+        else:
+            vault.unlock(password)
+        self._vault = vault
+        self._vault_password = password
+
+    def credentials_for(self, hostname: str | None = None, groups: object = None) -> dict:
+        """Resolve session vault credentials device → group → global without persisting secrets."""
+        if self._vault is None:
+            return {}
+        safe_groups = [str(group) for group in groups] if isinstance(groups, list) else []
+        try:
+            return self._vault.get_credentials(hostname or "", safe_groups) or {}
+        except (RuntimeError, ValueError):
+            return {}
+
+    def _require_vault(self):
+        """Return the session vault and master password, or explain how to unlock it."""
+        if self._vault is None or self._vault_password is None:
+            raise RuntimeError("Unlock or create a vault first")
+        return self._vault, self._vault_password
+
+    def save_vault_credentials(
+        self,
+        scope: str,
+        target: str,
+        username: str,
+        password: str,
+        enable_password: str | None,
+    ) -> None:
+        """Persist an encrypted credential entry at the requested scope."""
+        vault, master_password = self._require_vault()
+        if scope == "default":
+            vault.set_default(username, password, enable_password)
+        elif scope == "group":
+            vault.set_group(target, username, password, enable_password)
+        else:
+            vault.set_device(target, username, password, enable_password)
+        vault.save(master_password)
+
+    def delete_vault_credentials(self, scope: str, target: str) -> bool:
+        """Delete a single encrypted credential scope after an explicit user request."""
+        vault, master_password = self._require_vault()
+        if scope == "default":
+            deleted = vault.delete_default()
+        elif scope == "group":
+            deleted = vault.delete_group(target)
+        else:
+            deleted = vault.delete_device(target)
+        vault.save(master_password)
+        return deleted
 
     def action_diff(self) -> None:
         """Open the semantic configuration diff modal."""
@@ -1194,6 +1614,11 @@ class NetopsTUI(App):
   h  — Health check a device
   p  — Push config to devices (bulk SNMP community change, etc.)
   b  — Backup device configs
+  Space / Ctrl+A — Select one / all devices for bulk operations
+  Enter — Toggle basic and extended device detail
+  c  — Fetch the selected device running config
+  v  — Unlock and manage credential vault entries
+  o  — Set non-secret scan and backup defaults
   f  — Compare configuration files
   j  — Connect, inspect, or disconnect the active bastion
   e  — Export inventory to CSV
@@ -1208,6 +1633,7 @@ class NetopsTUI(App):
   Or point to a hosts file (.csv or .txt)
   Deep scan adds SSH login for model/serial/version
   Tune SNMP/SSH timeouts and concurrency, or export the discovered fragment
+  Blank SSH fields resolve the session vault's global credentials
 
 [bold]Config Push:[/bold]
   Enter commands one per line
@@ -1216,8 +1642,8 @@ class NetopsTUI(App):
   Supports bulk push to multiple devices
 
 [bold]Config Backup:[/bold]
-  Type 'all' to backup every device in inventory
-  Or list specific hostnames
+  Selected devices are used when any are selected; otherwise the focused device
+  Use v to save credentials once, then reuse device/group/default vault entries
 
 [bold]Configuration Diff:[/bold]
   Compare before/after config files as semantic, unified, or JSON output
@@ -1231,6 +1657,10 @@ class NetopsTUI(App):
   Inventory saved to: inventory.json
   CSV export: inventory.csv
   Backups: ./backups/
+
+[bold]Clipboard:[/bold]
+  Inputs and command editors use Textual's native copy/paste support.
+  Bracketed paste must be supported by the terminal or remote client.
 
 Press Escape to close this help.
 """
@@ -1248,11 +1678,10 @@ Press Escape to close this help.
         if self._input_focused():
             return
         self.inventory = load_inventory()
+        self._selected_hosts.intersection_update(self.inventory.get("devices", {}).keys())
         self._populate_table()
         count = len(self.inventory.get("devices", {}))
-        self.query_one(".status-bar", Static).update(
-            f"  {count} devices  |  {INVENTORY_FILE}"
-        )
+        self._update_status()
         self.notify(f"Refreshed: {count} devices")
 
     def action_search(self) -> None:
@@ -1268,11 +1697,8 @@ Press Escape to close this help.
             search.focus()
 
     def action_close_detail(self) -> None:
-        """Close detail panel and clear search."""
-        self.query_one("#detail-content", Static).update("Select a device")
-        search = self.query_one("#search-input", Input)
-        search.value = ""
-        self._populate_table()
+        """Close detail panel and return focus to the device table."""
+        self.query_one("#detail-panel", Vertical).styles.display = False
         self.query_one("#device-table", DataTable).focus()
 
     def action_view_logs(self) -> None:
@@ -1293,15 +1719,16 @@ Press Escape to close this help.
         """Delete the currently selected device."""
         if self._input_focused():
             return
-        table = self.query_one("#device-table", DataTable)
-        if table.cursor_row is not None:
-            row_key = table.get_row_at(table.cursor_row)
-            hostname = row_key[0] if row_key else None
-            if hostname and hostname in self.inventory.get("devices", {}):
-                del self.inventory["devices"][hostname]
-                save_inventory(self.inventory)
-                self._populate_table()
-                self.notify(f"Deleted {hostname}")
+        hostname = self._focused_hostname()
+        if hostname and hostname in self.inventory.get("devices", {}):
+            del self.inventory["devices"][hostname]
+            self._selected_hosts.discard(hostname)
+            save_inventory(self.inventory)
+            self._selected_host = None
+            self.query_one("#detail-content", Static).update("Select a device to view details")
+            self._populate_table()
+            self._update_status()
+            self.notify(f"Deleted {hostname}")
 
 
 def main():

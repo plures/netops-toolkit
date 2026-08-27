@@ -179,3 +179,78 @@ async def test_tui_forms_expose_cli_equivalent_options(inv_file):
         await pilot.pause()
         assert app.screen.query_one("#push-transport", Input).value == "ssh"
         assert app.screen.query_one("#push-changelog", Input) is not None
+
+
+@pytest.mark.asyncio
+async def test_tui_selection_drives_bulk_operation_hosts(inv_file):
+    """Space selection is visible and takes precedence over the focused device."""
+    from netops.tui import NetopsTUI
+    from textual.widgets import DataTable
+
+    app = NetopsTUI()
+    app.inventory = {
+        "devices": {
+            "core-rtr-01": {"host": "10.0.0.1", "vendor": "cisco_ios"},
+            "sw-floor2": {"host": "10.0.0.2", "vendor": "cisco_ios"},
+        }
+    }
+    async with app.run_test(size=(120, 50)) as pilot:
+        table = app.query_one("#device-table", DataTable)
+        table.focus()
+        await pilot.pause()
+        app._selected_host = "core-rtr-01"
+        app.action_toggle_selection()
+        assert app.operation_hosts() == ["core-rtr-01"]
+        assert "core-rtr-01" in app._selected_hosts
+        app.action_toggle_all_selection()
+        assert app.operation_hosts() == ["core-rtr-01", "sw-floor2"]
+
+
+@pytest.mark.asyncio
+async def test_tui_detail_cycles_basic_and_extended_fields(inv_file):
+    """The detail pane follows the redesign's basic then extended behavior."""
+    from netops.tui import NetopsTUI
+    from textual.widgets import Static
+
+    app = NetopsTUI()
+    app.inventory = {
+        "devices": {
+            "router-01": {
+                "host": "10.0.0.1",
+                "vendor": "cisco_ios",
+                "model": "ISR",
+                "memory": "4 GB",
+                "neighbors": ["switch-01"],
+            }
+        }
+    }
+    async with app.run_test(size=(120, 50)) as _pilot:
+        app._selected_host = "router-01"
+        app._detail_extended = False
+        app._render_detail()
+        detail = app.query_one("#detail-content", Static).render()
+        assert "memory" not in str(detail).lower()
+        app._detail_extended = True
+        app._render_detail()
+        detail = app.query_one("#detail-content", Static).render()
+        assert "memory" in str(detail).lower()
+
+
+def test_tui_settings_are_non_secret_and_persist(tmp_path, monkeypatch):
+    """Settings store operational defaults only and retain them across launches."""
+    import netops.tui as tui_mod
+
+    monkeypatch.setattr(tui_mod, "SETTINGS_FILE", tmp_path / "tui-settings.json")
+    settings = tui_mod.load_settings()
+    assert "password" not in settings
+    settings["ping_workers"] = 17
+    tui_mod.save_settings(settings)
+    assert tui_mod.load_settings()["ping_workers"] == 17
+
+
+def test_tui_does_not_override_native_paste_handlers():
+    """Textual owns bracketed paste and clipboard handling for input widgets."""
+    from netops.tui import NetopsTUI, ScanScreen
+
+    assert "on_paste" not in NetopsTUI.__dict__
+    assert "on_paste" not in ScanScreen.__dict__
