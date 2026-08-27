@@ -479,7 +479,7 @@ class HealthScreen(ModalScreen):
                         vault_credentials = self.app.credentials_for(host, device_info.get("groups", []))
                         params_list = [
                             ConnectionParams(
-                                host=host,
+                                host=device_info.get("host", host),
                                 username=user or vault_credentials.get("username"),
                                 password=password or vault_credentials.get("password"),
                                 device_type=vendor,
