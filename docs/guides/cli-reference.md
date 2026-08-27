@@ -159,6 +159,35 @@ Routing](active-bastion.md) for security and protocol limitations.
 Launch the optional Textual TUI with `netops tui` or `netops-tui` after
 installing `.[tui]` on Python 3.10+.
 
+The TUI calls the same public scan, health, backup, push, diff, and active
+bastion operations as the command line. It provides the following shortcuts:
+
+| Key | TUI operation | CLI-equivalent controls |
+| --- | --- | --- |
+| `s` | Scan | SNMP port/timeout/concurrency, ping workers, skip-ping/skip-SNMP, SSH timeout/concurrency, JSON/CSV export |
+| `h` | Health | Single host or inventory/group, vendor, CPU/memory thresholds, JSON report, fail-on-alert status |
+| `b` | Backup | Inventory/group filtering, selected hosts, workers, change alerts, local Git history |
+| `p` | Config push | Safe pre/post snapshot and diff, SSH/Telnet, port, operator, and JSON-lines audit log |
+| `f` | Config diff | Semantic, unified, or JSON output; Cisco, Junos, or flat syntax |
+| `j` | Active bastion | Connect, status, and disconnect the workstation-wide SSH bastion |
+| `v` | Credential vault | Unlock/create an encrypted session vault; save device, group, or global credentials |
+| `o` | Settings | Persist non-secret scan and backup defaults under `~/.netops/tui-settings.json` |
+
+The main view follows the TUI redesign: a selection-aware device table above a
+basic/extended detail pane. `Space` selects the focused row, `Ctrl+A` toggles
+all devices, and bulk push/backup operations use the selection when present.
+`Enter` toggles extended metadata and `c` fetches a running configuration on
+demand without storing it in inventory. Credential resolution is device →
+group → global for the current unlocked vault session.
+
+Inputs and command editors use Textual's native `Ctrl+C`/`Ctrl+V` and bracketed
+paste handling. A terminal emulator or remote client must support bracketed
+paste for external clipboard paste to reach the TUI.
+
+The TUI intentionally does not offer the CLI's confirmation timer: it requires
+a separate terminal-stdin confirmation after a live change. Use `netops push
+--confirm-timer ... --commit` when that safety control is required.
+
 The report generator is a Python API. The executable report interface is the
 health dashboard:
 
