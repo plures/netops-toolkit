@@ -23,6 +23,7 @@ import json
 import logging
 import os
 from pathlib import Path
+from typing import cast
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
@@ -112,6 +113,11 @@ def export_csv(data: dict, path: str = "inventory.csv") -> int:
     return len(devices)
 
 
+def netops_app(screen: ModalScreen) -> NetopsTUI:
+    """Return the running application typed as the concrete netops app."""
+    return cast("NetopsTUI", screen.app)
+
+
 # ---------------------------------------------------------------------------
 # Scan Screen
 # ---------------------------------------------------------------------------
@@ -123,7 +129,7 @@ class ScanScreen(ModalScreen):
 
     def compose(self) -> ComposeResult:
         """Compose the inventory scan modal."""
-        settings = self.app.settings
+        settings = netops_app(self).settings
         with Vertical(id="scan-modal"):
             yield Label("🔍 Inventory Scan", id="scan-title")
             yield Input(placeholder="Subnets (e.g. 10.0.0.0/24, 192.168.1.0/24)", id="scan-subnet")
@@ -175,7 +181,7 @@ class ScanScreen(ModalScreen):
                 community = "public"
             user = self.query_one("#scan-user", Input).value.strip()
             password = self.query_one("#scan-password", Input).value.strip()
-            vault_credentials = self.app.credentials_for()
+            vault_credentials = netops_app(self).credentials_for()
             user = user or str(vault_credentials.get("username", ""))
             password = password or str(vault_credentials.get("password", ""))
             output = self.query_one("#scan-output", Input).value.strip()
@@ -436,7 +442,11 @@ class HealthScreen(ModalScreen):
                         _parse_thresholds,
                         run_health_check,
                     )
-                    from netops.core.connection import ConnectionParams, Transport, jump_host_from_inventory
+                    from netops.core.connection import (
+                        ConnectionParams,
+                        Transport,
+                        jump_host_from_inventory,
+                    )
                     from netops.core.inventory import Inventory
 
                     thresholds = _parse_thresholds(threshold_text)
@@ -718,7 +728,7 @@ class SettingsScreen(ModalScreen):
 
     def compose(self) -> ComposeResult:
         """Compose the user-scoped settings form."""
-        settings = self.app.settings
+        settings = netops_app(self).settings
         with Vertical(id="settings-modal"):
             yield Label("⚙️ TUI Settings", id="settings-title")
             yield Label("Scan defaults")
@@ -765,9 +775,10 @@ class SettingsScreen(ModalScreen):
         if any(value < 1 for value in updated.values()) or not 1 <= updated["snmp_port"] <= 65535:
             log.write_line("❌ Values must be positive and the SNMP port must be 1–65535")
             return
-        self.app.settings = {**self.app.settings, **updated}
+        app = netops_app(self)
+        app.settings = {**app.settings, **updated}
         try:
-            save_settings(self.app.settings)
+            save_settings(app.settings)
         except OSError as exc:
             log.write_line(f"❌ Could not save settings: {exc}")
             return
@@ -826,7 +837,7 @@ class VaultScreen(ModalScreen):
             if event.button.id in {"btn-vault-unlock", "btn-vault-create"}:
                 if not master_password:
                     raise ValueError("A vault master password is required")
-                self.app.open_vault(path, master_password, create=event.button.id == "btn-vault-create")
+                netops_app(self).open_vault(path, master_password, create=event.button.id == "btn-vault-create")
                 log.write_line("✅ Vault unlocked for this TUI session")
                 return
             scope, target = self._scope()
@@ -836,10 +847,10 @@ class VaultScreen(ModalScreen):
                 enable_password = self.query_one("#vault-enable-password", Input).value or None
                 if not username or not password:
                     raise ValueError("SSH username and password are required")
-                self.app.save_vault_credentials(scope, target, username, password, enable_password)
+                netops_app(self).save_vault_credentials(scope, target, username, password, enable_password)
                 log.write_line(f"✅ Saved {scope} credentials in the encrypted vault")
             elif event.button.id == "btn-vault-delete":
-                deleted = self.app.delete_vault_credentials(scope, target)
+                deleted = netops_app(self).delete_vault_credentials(scope, target)
                 log.write_line("✅ Credential scope deleted" if deleted else "ℹ️ Credential scope did not exist")
         except Exception as exc:
             log.write_line(f"❌ {exc}")
@@ -1034,7 +1045,7 @@ class BackupScreen(ModalScreen):
             )
             with Horizontal(classes="advanced-row"):
                 yield Input(placeholder="Optional inventory group", id="backup-group")
-                yield Input(value=str(self.app.settings["backup_workers"]), placeholder="Concurrent workers", id="backup-workers")
+                yield Input(value=str(netops_app(self).settings["backup_workers"]), placeholder="Concurrent workers", id="backup-workers")
                 yield Checkbox("Commit changes to a local git repository", id="backup-git")
                 yield Checkbox("Suppress change alerts", id="backup-no-alert")
             with Horizontal():
@@ -1074,7 +1085,11 @@ class BackupScreen(ModalScreen):
         async def _backup():
             try:
                 from netops.collect.backup import run_backup
-                from netops.core.connection import ConnectionParams, Transport, jump_host_from_inventory
+                from netops.core.connection import (
+                    ConnectionParams,
+                    Transport,
+                    jump_host_from_inventory,
+                )
                 from netops.core.inventory import Inventory
 
                 inv = Inventory.from_file(inventory_path)
@@ -1158,11 +1173,9 @@ class ConfigViewScreen(ModalScreen):
             yield Label("Press y to copy all text, or Escape to close.")
 
     def action_copy_config(self) -> None:
-        """Request a terminal clipboard copy and acknowledge the result."""
-        if self.app.copy_to_clipboard(self._config):
-            self.notify("Copied running config to the terminal clipboard")
-        else:
-            self.notify("Clipboard is unavailable in this terminal", severity="warning")
+        """Request a terminal clipboard copy and confirm it to the user."""
+        self.app.copy_to_clipboard(self._config)
+        self.notify("Copied running config to the terminal clipboard")
 
 
 # ---------------------------------------------------------------------------
@@ -1371,7 +1384,7 @@ class NetopsTUI(App):
             lines.append("No inventory details are available yet. Run a deep scan to collect them.")
         hint = "Enter: basic detail" if self._detail_extended else "Enter: more detail"
         lines.extend(("", f"[dim]{hint} · c: running config · Space: select · Esc: close[/dim]"))
-        self.query_one("#detail-panel", Vertical).styles.display = True
+        self.query_one("#detail-panel", Vertical).display = True
         self.query_one("#detail-content", Static).update("\n".join(lines))
 
     def _update_status(self) -> None:
@@ -1698,7 +1711,7 @@ Press Escape to close this help.
 
     def action_close_detail(self) -> None:
         """Close detail panel and return focus to the device table."""
-        self.query_one("#detail-panel", Vertical).styles.display = False
+        self.query_one("#detail-panel", Vertical).display = False
         self.query_one("#device-table", DataTable).focus()
 
     def action_view_logs(self) -> None:

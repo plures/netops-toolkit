@@ -121,8 +121,9 @@ async def test_tui_scan_modal_cancel_dismisses(inv_file):
 @pytest.mark.asyncio
 async def test_tui_scan_exposes_cli_tuning_controls(inv_file):
     """Scan modal exposes the timeout, concurrency, and probe controls from the CLI."""
-    from netops.tui import NetopsTUI, ScanScreen
     from textual.widgets import Checkbox, Input
+
+    from netops.tui import NetopsTUI, ScanScreen
 
     app = NetopsTUI()
     async with app.run_test(size=(120, 50)) as pilot:
@@ -138,10 +139,14 @@ async def test_tui_scan_exposes_cli_tuning_controls(inv_file):
 @pytest.mark.asyncio
 async def test_tui_opens_diff_and_bastion_tools(inv_file):
     """The CLI-only diff and active bastion features are available in the TUI."""
+    from textual.widgets import DataTable
+
     from netops.tui import BastionScreen, DiffScreen, NetopsTUI
 
     app = NetopsTUI()
     async with app.run_test(size=(120, 50)) as pilot:
+        app.query_one("#device-table", DataTable).focus()
+        await pilot.pause()
         app.action_diff()
         await pilot.pause()
         assert isinstance(app.screen, DiffScreen)
@@ -155,8 +160,9 @@ async def test_tui_opens_diff_and_bastion_tools(inv_file):
 @pytest.mark.asyncio
 async def test_tui_forms_expose_cli_equivalent_options(inv_file):
     """Health, backup, and push forms retain their CLI safety and scope options."""
-    from netops.tui import BackupScreen, ConfigPushScreen, HealthScreen, NetopsTUI
     from textual.widgets import Checkbox, Input
+
+    from netops.tui import BackupScreen, ConfigPushScreen, HealthScreen, NetopsTUI
 
     app = NetopsTUI()
     async with app.run_test(size=(120, 50)) as pilot:
@@ -184,8 +190,9 @@ async def test_tui_forms_expose_cli_equivalent_options(inv_file):
 @pytest.mark.asyncio
 async def test_tui_selection_drives_bulk_operation_hosts(inv_file):
     """Space selection is visible and takes precedence over the focused device."""
-    from netops.tui import NetopsTUI
     from textual.widgets import DataTable
+
+    from netops.tui import NetopsTUI
 
     app = NetopsTUI()
     app.inventory = {
@@ -209,8 +216,9 @@ async def test_tui_selection_drives_bulk_operation_hosts(inv_file):
 @pytest.mark.asyncio
 async def test_tui_detail_cycles_basic_and_extended_fields(inv_file):
     """The detail pane follows the redesign's basic then extended behavior."""
-    from netops.tui import NetopsTUI
     from textual.widgets import Static
+
+    from netops.tui import NetopsTUI
 
     app = NetopsTUI()
     app.inventory = {
