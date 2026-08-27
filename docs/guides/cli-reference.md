@@ -159,6 +159,22 @@ Routing](active-bastion.md) for security and protocol limitations.
 Launch the optional Textual TUI with `netops tui` or `netops-tui` after
 installing `.[tui]` on Python 3.10+.
 
+The TUI calls the same public scan, health, backup, push, diff, and active
+bastion operations as the command line. It provides the following shortcuts:
+
+| Key | TUI operation | CLI-equivalent controls |
+| --- | --- | --- |
+| `s` | Scan | SNMP port/timeout/concurrency, ping workers, skip-ping/skip-SNMP, SSH timeout/concurrency, JSON/CSV export |
+| `h` | Health | Single host or inventory/group, vendor, CPU/memory thresholds, JSON report, fail-on-alert status |
+| `b` | Backup | Inventory/group filtering, selected hosts, workers, change alerts, local Git history |
+| `p` | Config push | Safe pre/post snapshot and diff, SSH/Telnet, port, operator, and JSON-lines audit log |
+| `f` | Config diff | Semantic, unified, or JSON output; Cisco, Junos, or flat syntax |
+| `j` | Active bastion | Connect, status, and disconnect the workstation-wide SSH bastion |
+
+The TUI intentionally does not offer the CLI's confirmation timer: it requires
+a separate terminal-stdin confirmation after a live change. Use `netops push
+--confirm-timer ... --commit` when that safety control is required.
+
 The report generator is a Python API. The executable report interface is the
 health dashboard:
 

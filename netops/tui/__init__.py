@@ -31,6 +31,7 @@ from textual.events import Paste
 from textual.screen import ModalScreen
 from textual.widgets import (
     Button,
+    Checkbox,
     DataTable,
     Footer,
     Header,
@@ -41,7 +42,7 @@ from textual.widgets import (
     TextArea,
 )
 
-from netops.logging_setup import friendly_vendor_name, setup_logging
+from netops.logging_setup import setup_logging
 
 # ---------------------------------------------------------------------------
 # Inventory data store (JSON file)
@@ -113,8 +114,19 @@ class ScanScreen(ModalScreen):
             yield Input(placeholder="Subnets (e.g. 10.0.0.0/24, 192.168.1.0/24)", id="scan-subnet")
             yield Input(placeholder="Or path to hosts file (hosts.csv or ips.txt)", id="scan-hosts-file")
             yield Input(placeholder="SNMP communities (comma-sep, or leave blank for registry)", id="scan-community")
+            with Horizontal(classes="advanced-row"):
+                yield Input(value="161", placeholder="SNMP port", id="scan-snmp-port")
+                yield Input(value="2", placeholder="SNMP timeout (seconds)", id="scan-snmp-timeout")
+                yield Input(value="50", placeholder="Ping workers", id="scan-ping-workers")
+                yield Input(value="10", placeholder="SNMP concurrency", id="scan-snmp-concurrency")
             yield Input(placeholder="SSH user (collects full device info)", id="scan-user")
             yield Input(placeholder="SSH password", password=True, id="scan-password")
+            with Horizontal(classes="advanced-row"):
+                yield Input(value="15", placeholder="SSH timeout (seconds)", id="scan-ssh-timeout")
+                yield Input(value="5", placeholder="SSH concurrency", id="scan-ssh-concurrency")
+                yield Checkbox("Probe every address (skip ping)", id="scan-skip-ping")
+                yield Checkbox("Ping only (skip SNMP)", id="scan-skip-snmp")
+            yield Input(placeholder="Optional export file (.json or .csv)", id="scan-output")
             with Horizontal():
                 yield Button("Scan", variant="primary", id="btn-scan")
                 yield Button("Ping Only", variant="default", id="btn-ping")
@@ -127,7 +139,8 @@ class ScanScreen(ModalScreen):
         if event.button.id == "btn-cancel-scan":
             self.dismiss()
         elif event.button.id in ("btn-scan", "btn-ping"):
-            skip_snmp = event.button.id == "btn-ping"
+            skip_snmp = event.button.id == "btn-ping" or self.query_one("#scan-skip-snmp", Checkbox).value
+            skip_ping = self.query_one("#scan-skip-ping", Checkbox).value
             subnet_text = self.query_one("#scan-subnet", Input).value.strip()
             hosts_file = self.query_one("#scan-hosts-file", Input).value.strip()
             if not subnet_text and not hosts_file:
@@ -147,13 +160,42 @@ class ScanScreen(ModalScreen):
                 community = "public"
             user = self.query_one("#scan-user", Input).value.strip()
             password = self.query_one("#scan-password", Input).value.strip()
+            output = self.query_one("#scan-output", Input).value.strip()
             log = self.query_one("#scan-log", Log)
+            try:
+                snmp_port = self._positive_int("#scan-snmp-port", "SNMP port")
+                snmp_timeout = self._positive_int("#scan-snmp-timeout", "SNMP timeout")
+                ping_workers = self._positive_int("#scan-ping-workers", "ping workers")
+                snmp_concurrency = self._positive_int("#scan-snmp-concurrency", "SNMP concurrency")
+                ssh_timeout = self._positive_int("#scan-ssh-timeout", "SSH timeout")
+                ssh_concurrency = self._positive_int("#scan-ssh-concurrency", "SSH concurrency")
+            except ValueError as exc:
+                log.write_line(f"❌ {exc}")
+                return
             # Parse multiple subnets (comma or space separated)
             subnets = [s.strip() for s in subnet_text.replace(',', ' ').split() if s.strip()] if subnet_text else []
             log.write_line(f"🔍 Scanning {len(subnets)} subnet(s)..." if subnets else f"🔍 Scanning from {hosts_file}...")
-            self.run_scan(subnets, hosts_file, community, user, password, skip_snmp, log)
+            self.run_scan(
+                subnets, hosts_file, community, user, password, skip_ping, skip_snmp,
+                snmp_port, snmp_timeout, ping_workers, snmp_concurrency,
+                ssh_timeout, ssh_concurrency, output, log,
+            )
 
-    def run_scan(self, subnets, hosts_file, community, user, password, skip_snmp, log):
+    def _positive_int(self, field_id: str, label: str) -> int:
+        """Return a positive integer from an advanced scan field."""
+        try:
+            value = int(self.query_one(field_id, Input).value.strip())
+        except ValueError as exc:
+            raise ValueError(f"{label} must be a whole number") from exc
+        if value < 1:
+            raise ValueError(f"{label} must be at least 1")
+        return value
+
+    def run_scan(
+        self, subnets, hosts_file, community, user, password, skip_ping, skip_snmp,
+        snmp_port, snmp_timeout, ping_workers, snmp_concurrency, ssh_timeout,
+        ssh_concurrency, output, log,
+    ):
         """Run scan in background."""
         async def _scan():
             try:
@@ -195,11 +237,26 @@ class ScanScreen(ModalScreen):
                 # Scan each subnet
                 for i, subnet in enumerate(subnets):
                     log.write_line(f"  [{i+1}/{len(subnets)}] Scanning {subnet}...")
-                    results = await scan_subnet_async(
-                        subnet=subnet,
-                        community=community,
-                        skip_snmp=skip_snmp,
-                    )
+                    from netops.core.bastion import active_bastion
+                    if active_bastion() is not None:
+                        from netops.inventory.scan import scan_subnet_through_active_bastion
+                        log.write_line("    🔐 Discovering SSH endpoints through the active bastion")
+                        results = await asyncio.get_event_loop().run_in_executor(
+                            None, lambda: scan_subnet_through_active_bastion(
+                                subnet, max_workers=ping_workers, timeout=ssh_timeout
+                            )
+                        )
+                    else:
+                        results = await scan_subnet_async(
+                            subnet=subnet,
+                            community=community,
+                            snmp_port=snmp_port,
+                            snmp_timeout=snmp_timeout,
+                            ping_workers=ping_workers,
+                            snmp_concurrency=snmp_concurrency,
+                            skip_ping=skip_ping,
+                            skip_snmp=skip_snmp,
+                        )
                     reachable = sum(1 for r in results if r.reachable)
                     log.write_line(f"    Found {reachable} reachable hosts")
                     all_results.extend(results)
@@ -215,6 +272,8 @@ class ScanScreen(ModalScreen):
                             fragment,
                             username=user,
                             password=password,
+                            concurrency=ssh_concurrency,
+                            timeout=ssh_timeout,
                         ),
                     )
                     # Learn community strings from identified devices
@@ -253,6 +312,14 @@ class ScanScreen(ModalScreen):
                 save_inventory(existing)
                 device_count = len(fragment.get("devices", {}))
                 log.write_line(f"  ✅ {device_count} devices saved to {INVENTORY_FILE}")
+                if output:
+                    from netops.inventory.scan import _fragment_to_csv
+                    output_path = Path(output)
+                    if output_path.suffix.lower() == ".csv":
+                        _fragment_to_csv(fragment, output_path)
+                    else:
+                        output_path.write_text(json.dumps(fragment, indent=2), encoding="utf-8")
+                    log.write_line(f"  📄 Exported scan results to {output_path}")
                 log.write_line("  Close this dialog and press 'r' to refresh the table")
 
             except ImportError as e:
@@ -282,8 +349,15 @@ class HealthScreen(ModalScreen):
             yield Label("🏥 Health Check", id="health-title")
             yield Input(placeholder="Hostname or IP", id="health-host",
                         value=self._selected_host or "")
+            yield Input(placeholder="Optional inventory file (instead of a single host)", id="health-inventory")
+            with Horizontal(classes="advanced-row"):
+                yield Input(placeholder="Inventory group filter", id="health-group")
+                yield Input(placeholder="Vendor for a single host (auto-detect when blank)", id="health-vendor")
+                yield Input(placeholder="Thresholds, e.g. cpu=80,mem=85", id="health-threshold")
             yield Input(placeholder="SSH user", id="health-user")
             yield Input(placeholder="SSH password", password=True, id="health-pass")
+            yield Input(placeholder="Optional JSON report output file", id="health-output")
+            yield Checkbox("Mark the run failed when any alert is found", id="health-fail-on-alert")
             with Horizontal():
                 yield Button("Check", variant="primary", id="btn-health-run")
                 yield Button("Close", id="btn-health-close")
@@ -318,58 +392,111 @@ class HealthScreen(ModalScreen):
             self.dismiss()
         elif event.button.id == "btn-health-run":
             host = self.query_one("#health-host", Input).value.strip()
+            inventory_path = self.query_one("#health-inventory", Input).value.strip()
+            group = self.query_one("#health-group", Input).value.strip()
+            vendor_input = self.query_one("#health-vendor", Input).value.strip()
+            threshold_text = self.query_one("#health-threshold", Input).value.strip()
+            output = self.query_one("#health-output", Input).value.strip()
+            fail_on_alert = self.query_one("#health-fail-on-alert", Checkbox).value
             user = self.query_one("#health-user", Input).value.strip()
             password = self.query_one("#health-pass", Input).value.strip()
             log = self.query_one("#health-log", Log)
-            if not all([host, user, password]):
-                log.write_line("❌ Host, user, and password required")
+            if not inventory_path and not host:
+                log.write_line("❌ Enter a host or an inventory file")
                 return
 
-            # Auto-resolve vendor from inventory or auto-detect
-            inv = load_inventory()
-            device_info = inv.get("devices", {}).get(host, {})
-            if device_info.get("vendor") and device_info["vendor"] != "unknown":
-                vendor = device_info["vendor"]
-            else:
-                vendor = "autodetect"
-
-            log.write_line(f"🔍 Checking {host} (device family: {friendly_vendor_name(vendor)})...")
+            log.write_line(
+                f"🔍 Checking inventory {inventory_path}..." if inventory_path
+                else f"🔍 Checking {host}..."
+            )
 
             async def _check():
                 try:
-                    from netops.check.health import run_health_check
-                    from netops.core.connection import ConnectionParams
-
-                    params = ConnectionParams(
-                        host=host,
-                        username=user,
-                        password=password,
-                        device_type=vendor,
+                    from netops.check.health import (
+                        DEFAULT_CPU_THRESHOLD,
+                        DEFAULT_MEM_THRESHOLD,
+                        _parse_thresholds,
+                        run_health_check,
                     )
-                    result = await asyncio.get_event_loop().run_in_executor(
-                        None, lambda: run_health_check(params)
+                    from netops.core.connection import ConnectionParams, Transport, jump_host_from_inventory
+                    from netops.core.inventory import Inventory
+
+                    thresholds = _parse_thresholds(threshold_text)
+                    cpu_threshold = thresholds.get("cpu", DEFAULT_CPU_THRESHOLD)
+                    mem_threshold = thresholds.get("mem", DEFAULT_MEM_THRESHOLD)
+                    if inventory_path:
+                        inv = Inventory.from_file(inventory_path)
+                        devices = inv.filter(group=group or None) if group else list(inv.devices.values())
+                        if not devices:
+                            raise ValueError("no devices matched the selected inventory/group")
+                        params_list = [
+                            ConnectionParams(
+                                host=device.host,
+                                username=user or device.username,
+                                password=password or device.password,
+                                device_type=device.vendor,
+                                jump_host=jump_host_from_inventory(device),
+                                transport=Transport(device.transport) if device.transport else Transport.SSH,
+                                port=device.port,
+                                enable_password=device.enable_password,
+                            )
+                            for device in devices
+                        ]
+                    else:
+                        inv = load_inventory()
+                        device_info = inv.get("devices", {}).get(host, {})
+                        vendor = vendor_input or device_info.get("vendor") or "autodetect"
+                        params_list = [
+                            ConnectionParams(host=host, username=user, password=password, device_type=vendor)
+                        ]
+
+                    results = await asyncio.get_event_loop().run_in_executor(
+                        None,
+                        lambda: [
+                            run_health_check(
+                                params, cpu_threshold=cpu_threshold, mem_threshold=mem_threshold
+                            )
+                            for params in params_list
+                        ],
                     )
+                    if output:
+                        payload = results if len(results) != 1 else results[0]
+                        Path(output).write_text(json.dumps(payload, indent=2), encoding="utf-8")
+                        log.write_line(f"  📄 Wrote JSON report to {output}")
 
-                    if not result.get("success"):
-                        log.write_line(f"  ❌ Connection failed: {result.get('error', 'unknown')}")
-                        return
+                    for result in results:
+                        icon = "🚨" if result.get("overall_alert") else "✅"
+                        log.write_line(f"  {icon} {result['host']}")
+                        if not result.get("success"):
+                            log.write_line(f"    ❌ Connection failed: {result.get('error', 'unknown')}")
+                            continue
+                        for check_name, check_data in result.get("checks", {}).items():
+                            alert = check_data.get("alert", False)
+                            check_icon = "⚠️" if alert else "✅"
+                            if "utilization" in check_data and check_data["utilization"] is not None:
+                                summary = (
+                                    f"{check_data['utilization']:.1f}% "
+                                    f"(threshold {check_data.get('threshold', '?')}%)"
+                                )
+                            elif "with_errors" in check_data:
+                                summary = (
+                                    f"{check_data['with_errors']}/{check_data.get('total', 0)} "
+                                    "interfaces with errors"
+                                )
+                            elif "critical_count" in check_data:
+                                summary = (
+                                    f"{check_data['critical_count']} critical, "
+                                    f"{check_data.get('major_count', 0)} major"
+                                )
+                            else:
+                                summary = "OK" if not alert else "ALERT"
+                            log.write_line(f"    {check_icon} {check_name}: {summary}")
 
-                    for check_name, check_data in result.get("checks", {}).items():
-                        alert = check_data.get("alert", False)
-                        icon = "⚠️" if alert else "✅"
-                        # Build summary from check data
-                        if "utilization" in check_data and check_data["utilization"] is not None:
-                            summary = f"{check_data['utilization']:.1f}% (threshold {check_data.get('threshold', '?')}%)"
-                        elif "with_errors" in check_data:
-                            summary = f"{check_data['with_errors']}/{check_data.get('total', 0)} interfaces with errors"
-                        elif "critical_count" in check_data:
-                            summary = f"{check_data['critical_count']} critical, {check_data.get('major_count', 0)} major"
-                        else:
-                            summary = "OK" if not alert else "ALERT"
-                        log.write_line(f"  {icon} {check_name}: {summary}")
-
-                    overall = "🚨 ALERTS DETECTED" if result.get("overall_alert") else "✅ All checks passed"
-                    log.write_line(f"  {overall}")
+                    alerts = any(result.get("overall_alert") for result in results)
+                    if alerts and fail_on_alert:
+                        log.write_line("  🚨 Run marked failed: fail-on-alert selected")
+                    else:
+                        log.write_line("  🚨 ALERTS DETECTED" if alerts else "  ✅ All checks passed")
 
                 except ImportError as e:
                     log.write_line(f"  ❌ Missing: {e}")
@@ -377,6 +504,180 @@ class HealthScreen(ModalScreen):
                     log.write_line(f"  ❌ {e}")
 
             asyncio.get_event_loop().create_task(_check())
+
+
+# ---------------------------------------------------------------------------
+# Config Diff Screen
+# ---------------------------------------------------------------------------
+
+class DiffScreen(ModalScreen):
+    """Modal for the CLI-equivalent semantic configuration diff."""
+
+    BINDINGS = [Binding("escape", "dismiss", "Close")]
+
+    def compose(self) -> ComposeResult:
+        """Compose the configuration diff modal."""
+        with Vertical(id="diff-modal"):
+            yield Label("🔎 Configuration Diff", id="diff-title")
+            yield Input(placeholder="Before (original) config file", id="diff-before")
+            yield Input(placeholder="After (new) config file", id="diff-after")
+            with Horizontal(classes="advanced-row"):
+                yield Input(value="semantic", placeholder="Format: semantic, unified, json", id="diff-format")
+                yield Input(placeholder="Style: auto, cisco, junos, flat", id="diff-style")
+            yield Input(placeholder="Optional output file", id="diff-output")
+            with Horizontal():
+                yield Button("Compare", variant="primary", id="btn-diff-run")
+                yield Button("Close", id="btn-diff-close")
+            yield Log(id="diff-log", highlight=False)
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Run a semantic diff or close the modal."""
+        if event.button.id == "btn-diff-close":
+            self.dismiss()
+            return
+        if event.button.id != "btn-diff-run":
+            return
+
+        before = Path(self.query_one("#diff-before", Input).value.strip())
+        after = Path(self.query_one("#diff-after", Input).value.strip())
+        output = self.query_one("#diff-output", Input).value.strip()
+        fmt = self.query_one("#diff-format", Input).value.strip().lower() or "semantic"
+        style_name = self.query_one("#diff-style", Input).value.strip().lower()
+        log = self.query_one("#diff-log", Log)
+        if fmt not in {"semantic", "unified", "json"}:
+            log.write_line("❌ Format must be semantic, unified, or json")
+            return
+        if style_name and style_name not in {"cisco", "junos", "flat"}:
+            log.write_line("❌ Style must be auto, cisco, junos, or flat")
+            return
+        if not before.is_file() or not after.is_file():
+            log.write_line("❌ Both before and after config files must exist")
+            return
+
+        async def _diff() -> None:
+            try:
+                from netops.change.diff import (
+                    ConfigStyle,
+                    diff_configs,
+                    format_json,
+                    format_semantic,
+                    format_unified,
+                )
+
+                def build_output() -> str:
+                    style = ConfigStyle(style_name) if style_name else None
+                    result = diff_configs(
+                        before.read_text(encoding="utf-8"),
+                        after.read_text(encoding="utf-8"),
+                        style=style,
+                    )
+                    if fmt == "unified":
+                        return format_unified(result, fromfile=str(before), tofile=str(after))
+                    if fmt == "json":
+                        return format_json(result)
+                    return format_semantic(result)
+
+                rendered = await asyncio.get_event_loop().run_in_executor(None, build_output)
+                if output:
+                    Path(output).write_text(rendered, encoding="utf-8")
+                    log.write_line(f"📄 Wrote {fmt} diff to {output}")
+                for line in rendered.splitlines() or ["No differences found"]:
+                    log.write_line(line)
+            except Exception as exc:
+                log.write_line(f"❌ {exc}")
+
+        asyncio.get_event_loop().create_task(_diff())
+
+
+# ---------------------------------------------------------------------------
+# Active Bastion Screen
+# ---------------------------------------------------------------------------
+
+class BastionScreen(ModalScreen):
+    """Modal for managing the workstation-wide active SSH bastion."""
+
+    BINDINGS = [Binding("escape", "dismiss", "Close")]
+
+    def compose(self) -> ComposeResult:
+        """Compose the active bastion management modal."""
+        with Vertical(id="bastion-modal"):
+            yield Label("🔐 Active SSH Bastion", id="bastion-title")
+            yield Input(placeholder="Bastion host", id="bastion-host")
+            yield Input(placeholder="Bastion username", id="bastion-user")
+            yield Input(value="22", placeholder="SSH port", id="bastion-port")
+            yield Input(placeholder="Optional private key file", id="bastion-key-file")
+            yield Input(placeholder="Password (not stored)", password=True, id="bastion-password")
+            yield Input(placeholder="Private-key passphrase (not stored)", password=True, id="bastion-key-passphrase")
+            with Horizontal():
+                yield Button("Connect", variant="primary", id="btn-bastion-connect")
+                yield Button("Status", id="btn-bastion-status")
+                yield Button("Disconnect", variant="warning", id="btn-bastion-disconnect")
+                yield Button("Close", id="btn-bastion-close")
+            yield Log(id="bastion-log", highlight=True)
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Connect, inspect, or disconnect the active bastion."""
+        if event.button.id == "btn-bastion-close":
+            self.dismiss()
+            return
+        log = self.query_one("#bastion-log", Log)
+
+        async def _manage() -> None:
+            try:
+                from netops.core.bastion import (
+                    ActiveBastionUnavailableError,
+                    active_bastion,
+                    connect_active_bastion,
+                    disconnect_active_bastion,
+                )
+
+                if event.button.id == "btn-bastion-status":
+                    try:
+                        state = await asyncio.get_event_loop().run_in_executor(None, active_bastion)
+                    except ActiveBastionUnavailableError as exc:
+                        log.write_line(f"⚠️ Bastion is selected but unavailable: {exc}")
+                        return
+                    if state is None:
+                        log.write_line("ℹ️ No active bastion is connected")
+                    else:
+                        log.write_line(
+                            f"✅ Connected: {state.username}@{state.host}:{state.port} "
+                            f"(local SOCKS {state.socks_host}:{state.socks_port})"
+                        )
+                    return
+                if event.button.id == "btn-bastion-disconnect":
+                    disconnected = await asyncio.get_event_loop().run_in_executor(
+                        None, disconnect_active_bastion
+                    )
+                    log.write_line("✅ Bastion disconnected" if disconnected else "ℹ️ No active bastion to disconnect")
+                    return
+                if event.button.id != "btn-bastion-connect":
+                    return
+
+                host = self.query_one("#bastion-host", Input).value.strip()
+                username = self.query_one("#bastion-user", Input).value.strip()
+                key_file = self.query_one("#bastion-key-file", Input).value.strip() or None
+                password = self.query_one("#bastion-password", Input).value or None
+                key_passphrase = self.query_one("#bastion-key-passphrase", Input).value or None
+                try:
+                    port = int(self.query_one("#bastion-port", Input).value.strip())
+                except ValueError:
+                    log.write_line("❌ SSH port must be a whole number")
+                    return
+                if not host or not username:
+                    log.write_line("❌ Bastion host and username are required")
+                    return
+                state = await asyncio.get_event_loop().run_in_executor(
+                    None,
+                    lambda: connect_active_bastion(
+                        host, username, port, key_file, password, key_passphrase
+                    ),
+                )
+                log.write_line(f"✅ Connected: {state.username}@{state.host}:{state.port}")
+            except Exception as exc:
+                log.write_line(f"❌ {exc}")
+
+        asyncio.get_event_loop().create_task(_manage())
 
 
 # ---------------------------------------------------------------------------
@@ -401,6 +702,13 @@ class ConfigPushScreen(ModalScreen):
             yield Input(placeholder="SSH user", id="push-user")
             yield Input(placeholder="SSH password", password=True, id="push-pass")
             yield Input(placeholder="Vendor (cisco_ios, nokia_sros, etc. — leave blank to auto-detect)", id="push-vendor")
+            with Horizontal(classes="advanced-row"):
+                yield Input(value="ssh", placeholder="Transport: ssh or telnet", id="push-transport")
+                yield Input(placeholder="Optional port override", id="push-port")
+                yield Input(value="0", placeholder="Confirm timer minutes", id="push-confirm-timer")
+            with Horizontal(classes="advanced-row"):
+                yield Input(placeholder="Operator name (defaults to SSH user)", id="push-operator")
+                yield Input(value="~/.netops/changelog.jsonl", placeholder="Change log path", id="push-changelog")
             yield Label("[dim]Commands (one per line):[/dim]")
             yield TextArea(id="push-commands")
             with Horizontal():
@@ -433,11 +741,36 @@ class ConfigPushScreen(ModalScreen):
         user = self.query_one("#push-user", Input).value.strip()
         password = self.query_one("#push-pass", Input).value.strip()
         vendor = self.query_one("#push-vendor", Input).value.strip() or None
+        transport = self.query_one("#push-transport", Input).value.strip().lower() or "ssh"
+        port_text = self.query_one("#push-port", Input).value.strip()
+        confirm_text = self.query_one("#push-confirm-timer", Input).value.strip()
+        operator = self.query_one("#push-operator", Input).value.strip()
+        changelog = self.query_one("#push-changelog", Input).value.strip()
         commands_text = self.query_one("#push-commands", TextArea).text.strip()
         log = self.query_one("#push-log", Log)
 
-        if not all([hosts_text, user, password, commands_text]):
-            log.write_line("❌ All fields required")
+        if not all([hosts_text, commands_text]):
+            log.write_line("❌ Hosts and commands are required")
+            return
+        if transport not in {"ssh", "telnet"}:
+            log.write_line("❌ Transport must be ssh or telnet")
+            return
+        try:
+            port = int(port_text) if port_text else None
+            confirm_timer = int(confirm_text or "0")
+        except ValueError:
+            log.write_line("❌ Port and confirm timer must be whole numbers")
+            return
+        if port is not None and not 1 <= port <= 65535:
+            log.write_line("❌ Port must be between 1 and 65535")
+            return
+        if confirm_timer < 0:
+            log.write_line("❌ Confirm timer cannot be negative")
+            return
+        if confirm_timer:
+            log.write_line(
+                "❌ Confirmation timers require interactive terminal input; use netops push for this operation"
+            )
             return
 
         hosts = [h.strip() for h in hosts_text.replace(',', ' ').split() if h.strip()]
@@ -452,7 +785,8 @@ class ConfigPushScreen(ModalScreen):
 
         async def _push():
             try:
-                from netops.core.connection import DeviceConnection
+                from netops.change.push import run_push
+                from netops.core.connection import ConnectionParams, Transport
 
                 # Auto-detect vendor from inventory if not specified
                 inv = load_inventory()
@@ -463,24 +797,34 @@ class ConfigPushScreen(ModalScreen):
                     dev_vendor = vendor or dev_info.get("vendor", "cisco_ios")
 
                     try:
-                        conn = DeviceConnection(
-                            host=host,
+                        params = ConnectionParams(
+                            host=dev_info.get("host", host),
                             username=user,
                             password=password,
                             device_type=dev_vendor,
+                            transport=Transport(transport),
+                            port=port,
                         )
-                        conn.connect()
-
-                        if commit:
-                            output = conn.send_config_set(commands)
-                            log.write_line("    ✅ Committed")
-                            for line in output.splitlines()[-3:]:
-                                log.write_line(f"    {line}")
+                        record = await asyncio.get_event_loop().run_in_executor(
+                            None,
+                            lambda: run_push(
+                                params,
+                                commands,
+                                commit=commit,
+                                operator=operator or user,
+                                changelog_path=Path(changelog).expanduser() if changelog else None,
+                            ),
+                        )
+                        if record.error:
+                            log.write_line(f"    ❌ {record.error}")
+                        elif record.committed:
+                            log.write_line("    ✅ Committed and recorded in the change log")
                         else:
-                            log.write_line(f"    📋 Would send: {commands[0]}{'...' if len(commands) > 1 else ''}")
-                            log.write_line("    ℹ️ Dry run — no changes made")
-
-                        conn.disconnect()
+                            log.write_line("    ✅ Dry run complete — no changes made")
+                        if record.diff:
+                            log.write_line("    📋 Post-change diff:")
+                            for line in record.diff.splitlines()[:20]:
+                                log.write_line(f"      {line}")
                     except Exception as e:
                         log.write_line(f"    ❌ {host}: {e}")
 
@@ -516,6 +860,16 @@ class BackupScreen(ModalScreen):
             yield Input(placeholder="SSH user", id="backup-user")
             yield Input(placeholder="SSH password", password=True, id="backup-pass")
             yield Input(placeholder="Output directory (default: ./backups)", id="backup-dir")
+            yield Input(
+                value=str(INVENTORY_FILE),
+                placeholder="Inventory file (YAML or JSON)",
+                id="backup-inventory",
+            )
+            with Horizontal(classes="advanced-row"):
+                yield Input(placeholder="Optional inventory group", id="backup-group")
+                yield Input(value="5", placeholder="Concurrent workers", id="backup-workers")
+                yield Checkbox("Commit changes to a local git repository", id="backup-git")
+                yield Checkbox("Suppress change alerts", id="backup-no-alert")
             with Horizontal():
                 yield Button("Backup", variant="primary", id="btn-backup-run")
                 yield Button("Cancel", id="btn-backup-cancel")
@@ -531,54 +885,77 @@ class BackupScreen(ModalScreen):
         user = self.query_one("#backup-user", Input).value.strip()
         password = self.query_one("#backup-pass", Input).value.strip()
         backup_dir = self.query_one("#backup-dir", Input).value.strip() or "./backups"
+        inventory_path = self.query_one("#backup-inventory", Input).value.strip()
+        group = self.query_one("#backup-group", Input).value.strip()
+        git_enabled = self.query_one("#backup-git", Checkbox).value
+        no_alert = self.query_one("#backup-no-alert", Checkbox).value
         log = self.query_one("#backup-log", Log)
 
-        if not all([hosts_text, user, password]):
-            log.write_line("❌ Hosts, user, and password required")
+        if not inventory_path:
+            log.write_line("❌ An inventory file is required")
+            return
+        try:
+            workers = int(self.query_one("#backup-workers", Input).value.strip())
+            if workers < 1:
+                raise ValueError
+        except ValueError:
+            log.write_line("❌ Concurrent workers must be at least 1")
             return
 
-        # Resolve hosts
-        inv = load_inventory()
-        if hosts_text.lower() == 'all':
-            hosts = list(inv.get("devices", {}).keys())
-        else:
-            hosts = [h.strip() for h in hosts_text.replace(',', ' ').split() if h.strip()]
-
-        log.write_line(f"💾 Backing up {len(hosts)} device(s) to {backup_dir}/")
+        log.write_line(f"💾 Backing up inventory from {inventory_path} to {backup_dir}/")
 
         async def _backup():
             try:
-                from datetime import datetime
-                from pathlib import Path
+                from netops.collect.backup import run_backup
+                from netops.core.connection import ConnectionParams, Transport, jump_host_from_inventory
+                from netops.core.inventory import Inventory
 
-                from netops.core.connection import DeviceConnection
-
-                out = Path(backup_dir)
-                out.mkdir(parents=True, exist_ok=True)
-                ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-                for i, host in enumerate(hosts):
-                    log.write_line(f"  [{i+1}/{len(hosts)}] {host}...")
-                    dev_info = inv.get("devices", {}).get(host, {})
-                    vendor = dev_info.get("vendor", "cisco_ios")
-
-                    try:
-                        conn = DeviceConnection(
-                            host=dev_info.get("host", host),
-                            username=user,
-                            password=password,
-                            device_type=vendor,
+                inv = Inventory.from_file(inventory_path)
+                devices = inv.filter(group=group or None) if group else list(inv.devices.values())
+                requested_hosts = {
+                    host.strip() for host in hosts_text.replace(',', ' ').split()
+                    if host.strip() and host.strip().lower() != "all"
+                }
+                if requested_hosts:
+                    devices = [
+                        device for device in devices
+                        if device.hostname in requested_hosts or device.host in requested_hosts
+                    ]
+                if not devices:
+                    raise ValueError("no devices matched the inventory, group, or host selection")
+                params_list = [
+                    ConnectionParams(
+                        host=device.host,
+                        username=device.username or user,
+                        password=device.password or password,
+                        device_type=device.vendor,
+                        jump_host=jump_host_from_inventory(device),
+                        transport=Transport(device.transport) if device.transport else Transport.SSH,
+                        port=device.port,
+                        enable_password=device.enable_password,
+                    )
+                    for device in devices
+                ]
+                log.write_line(f"  Collecting {len(params_list)} device(s) with {workers} worker(s)...")
+                summaries = await asyncio.get_event_loop().run_in_executor(
+                    None,
+                    lambda: run_backup(
+                        params_list,
+                        Path(backup_dir),
+                        workers=workers,
+                        git=git_enabled,
+                        alert_on_change=not no_alert,
+                    ),
+                )
+                for summary in sorted(summaries, key=lambda item: str(item.get("host", ""))):
+                    if summary.get("success"):
+                        status = "changed" if summary.get("changed") else "unchanged"
+                        log.write_line(
+                            f"    ✅ {summary.get('host')}: {status} "
+                            f"({summary.get('saved_path', '')})"
                         )
-                        conn.connect()
-                        config = conn.send_command("show running-config")
-                        conn.disconnect()
-
-                        filename = f"{host}_{ts}.cfg"
-                        (out / filename).write_text(config)
-                        log.write_line(f"    ✅ {filename} ({len(config)} bytes)")
-                    except Exception as e:
-                        log.write_line(f"    ❌ {host}: {e}")
-
+                    else:
+                        log.write_line(f"    ❌ {summary.get('host')}: {summary.get('error', 'backup failed')}")
                 log.write_line(f"  ✅ Backups saved to {backup_dir}/")
 
             except Exception as e:
@@ -608,19 +985,20 @@ class NetopsTUI(App):
         border-left: solid $primary;
         padding: 1;
     }
-    #scan-modal, #health-modal, #push-modal, #backup-modal {
+    #scan-modal, #health-modal, #push-modal, #backup-modal, #diff-modal, #bastion-modal {
         width: 70;
-        height: 35;
+        height: 90%;
+        overflow-y: auto;
         border: thick $primary;
         background: $surface;
         padding: 1 2;
     }
-    #scan-title, #health-title, #push-title, #backup-title {
+    #scan-title, #health-title, #push-title, #backup-title, #diff-title, #bastion-title {
         text-style: bold;
         color: $text;
         margin-bottom: 1;
     }
-    #scan-log, #health-log, #push-log, #backup-log {
+    #scan-log, #health-log, #push-log, #backup-log, #diff-log, #bastion-log {
         height: 10;
         margin-top: 1;
         border: solid $accent;
@@ -632,6 +1010,13 @@ class NetopsTUI(App):
         color: $text;
         padding: 0 1;
     }
+    .advanced-row Input {
+        width: 1fr;
+    }
+    .advanced-row Checkbox {
+        width: auto;
+        margin: 0 1;
+    }
     """
 
     BINDINGS = [
@@ -640,6 +1025,8 @@ class NetopsTUI(App):
         Binding("h", "health", "Health"),
         Binding("p", "push", "Config Push"),
         Binding("b", "backup", "Backup"),
+        Binding("f", "diff", "Config Diff"),
+        Binding("j", "bastion", "Bastion"),
         Binding("e", "export", "Export CSV"),
         Binding("r", "refresh", "Refresh"),
         Binding("/", "search", "Search"),
@@ -786,6 +1173,18 @@ class NetopsTUI(App):
             return
         self.push_screen(BackupScreen(self._selected_host))
 
+    def action_diff(self) -> None:
+        """Open the semantic configuration diff modal."""
+        if self._input_focused():
+            return
+        self.push_screen(DiffScreen())
+
+    def action_bastion(self) -> None:
+        """Open the workstation-wide active bastion modal."""
+        if self._input_focused():
+            return
+        self.push_screen(BastionScreen())
+
     def action_help_screen(self) -> None:
         """Show the keyboard shortcut help."""
         help_text = """[bold]netops-toolkit TUI — Help[/bold]
@@ -795,6 +1194,8 @@ class NetopsTUI(App):
   h  — Health check a device
   p  — Push config to devices (bulk SNMP community change, etc.)
   b  — Backup device configs
+  f  — Compare configuration files
+  j  — Connect, inspect, or disconnect the active bastion
   e  — Export inventory to CSV
   /  — Search/filter devices
   d  — Delete selected device
@@ -806,6 +1207,7 @@ class NetopsTUI(App):
   Enter multiple subnets separated by commas
   Or point to a hosts file (.csv or .txt)
   Deep scan adds SSH login for model/serial/version
+  Tune SNMP/SSH timeouts and concurrency, or export the discovered fragment
 
 [bold]Config Push:[/bold]
   Enter commands one per line
@@ -816,6 +1218,14 @@ class NetopsTUI(App):
 [bold]Config Backup:[/bold]
   Type 'all' to backup every device in inventory
   Or list specific hostnames
+
+[bold]Configuration Diff:[/bold]
+  Compare before/after config files as semantic, unified, or JSON output
+  Select cisco, junos, or flat syntax, or leave style blank to auto-detect
+
+[bold]Active Bastion:[/bold]
+  Connect once with j and all toolkit TCP operations route through it
+  Passwords and key passphrases are passed only to the local service, not saved
 
 [bold]Data:[/bold]
   Inventory saved to: inventory.json
