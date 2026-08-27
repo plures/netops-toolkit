@@ -1168,8 +1168,8 @@ class ConfigViewScreen(ModalScreen):
     def compose(self) -> ComposeResult:
         """Compose the fetched running-config reader."""
         with Vertical(id="config-view-modal"):
-            yield Label(f"Running config — {self._hostname}", id="config-view-title")
-            yield Static(self._config, id="config-view-content")
+            yield Label(f"Running config — {self._hostname}", id="config-view-title", markup=False)
+            yield Static(self._config, id="config-view-content", markup=False)
             yield Label("Press y to copy all text, or Escape to close.")
 
     def action_copy_config(self) -> None:
