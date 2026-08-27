@@ -1318,6 +1318,7 @@ class NetopsTUI(App):
         table.add_columns("", "Hostname", "Host", "Vendor", "Model", "Version", "Serial", "Site")
         self._populate_table()
         self._update_status()
+        table.focus()
 
     def _populate_table(self, filter_text: str = "") -> None:
         table = self.query_one("#device-table", DataTable)
