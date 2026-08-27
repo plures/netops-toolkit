@@ -1140,7 +1140,9 @@ class BackupScreen(ModalScreen):
                         )
                     else:
                         log.write_line(f"    ❌ {summary.get('host')}: {summary.get('error', 'backup failed')}")
-                log.write_line(f"  ✅ Backups saved to {backup_dir}/")
+                successful = sum(1 for summary in summaries if summary.get("success"))
+                icon = "✅" if successful == len(summaries) else "⚠️"
+                log.write_line(f"  {icon} {successful}/{len(summaries)} backups saved to {backup_dir}/")
 
             except Exception as e:
                 log.write_line(f"  ❌ {e}")
