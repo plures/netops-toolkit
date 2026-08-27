@@ -1666,7 +1666,7 @@ class NetopsTUI(App):
   Select cisco, junos, or flat syntax, or leave style blank to auto-detect
 
 [bold]Active Bastion:[/bold]
-  Connect once with j and all toolkit TCP operations route through it
+  SSH device connections route through it; Telnet is rejected while a bastion is active
   Passwords and key passphrases are passed only to the local service, not saved
 
 [bold]Data:[/bold]
