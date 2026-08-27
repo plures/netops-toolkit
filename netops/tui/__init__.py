@@ -1371,18 +1371,21 @@ class NetopsTUI(App):
         )
         fields = basic_fields + (extended_fields if self._detail_extended else ())
         mode = "Extended detail" if self._detail_extended else "Device detail"
-        lines = [f"[bold]{mode} — {self._selected_host}[/bold]"]
+        from rich.markup import escape
+
+        lines = [f"[bold]{mode} — {escape(self._selected_host)}[/bold]"]
         for field in fields:
             value = info.get(field)
             if value in (None, "", [], {}):
                 continue
             if isinstance(value, dict):
                 lines.append(f"[dim]{field}:[/dim]")
-                lines.extend(f"  {key}: {item}" for key, item in sorted(value.items()))
+                lines.extend(f"  {escape(str(key))}: {escape(str(item))}" for key, item in sorted(value.items()))
             elif isinstance(value, list):
-                lines.append(f"[dim]{field}:[/dim] {', '.join(str(item) for item in value)}")
+                rendered = ", ".join(escape(str(item)) for item in value)
+                lines.append(f"[dim]{field}:[/dim] {rendered}")
             else:
-                lines.append(f"[dim]{field}:[/dim] {value}")
+                lines.append(f"[dim]{field}:[/dim] {escape(str(value))}")
         if len(lines) == 1:
             lines.append("No inventory details are available yet. Run a deep scan to collect them.")
         hint = "Enter: basic detail" if self._detail_extended else "Enter: more detail"
