@@ -119,12 +119,14 @@ async def test_tui_scan_modal_cancel_dismisses(inv_file):
 
 
 @pytest.mark.asyncio
-async def test_tui_scan_exposes_cli_tuning_defaults(inv_file):
+async def test_tui_scan_exposes_cli_tuning_defaults(inv_file, tmp_path, monkeypatch):
     """Scan uses persistent timeout and concurrency defaults instead of per-run fields."""
+    import netops.tui as tui_mod
     from textual.widgets import Checkbox, Input, Label
 
     from netops.tui import NetopsTUI, ScanScreen
 
+    monkeypatch.setattr(tui_mod, "SETTINGS_FILE", tmp_path / "tui-settings.json")
     app = NetopsTUI()
     async with app.run_test(size=(120, 50)) as pilot:
         app.push_screen(ScanScreen())
