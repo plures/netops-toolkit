@@ -1310,6 +1310,16 @@ class NetopsTUI(App):
         color: $text;
         padding: 0 1;
     }
+    #scan-modal Input {
+        /* Do not rely on a terminal theme to distinguish editable fields. */
+        height: 3;
+        color: $text;
+        background: $surface;
+        border: solid $accent;
+    }
+    #scan-modal Input:focus {
+        border: solid $primary;
+    }
     .advanced-row Input {
         width: 1fr;
     }
