@@ -65,9 +65,9 @@ from netops.logging_setup import setup_logging
 class TerminalLog(Log):
     """Log widget that applies terminal compatibility text at its boundary."""
 
-    def write_line(self, text: str, *args, **kwargs):
+    def write_line(self, line: str, scroll_end: bool | None = None) -> TerminalLog:
         """Write a line using the active terminal's safe text representation."""
-        return super().write_line(terminal_text(text), *args, **kwargs)
+        return super().write_line(terminal_text(line), scroll_end)
 
 
 # ---------------------------------------------------------------------------
