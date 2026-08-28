@@ -184,6 +184,33 @@ async def test_operation_forms_show_defaults_and_open_settings():
 
 
 @pytest.mark.asyncio
+async def test_saving_settings_updates_the_originating_defaults_summary():
+    """Editing a saved default should refresh the parent form after Settings closes."""
+    from textual.widgets import Input, Label
+
+    from netops.tui import HealthScreen, NetopsTUI, SettingsScreen
+
+    app = NetopsTUI()
+    async with app.run_test(size=(100, 80)) as pilot:
+        app.push_screen(HealthScreen())
+        await pilot.pause()
+        await pilot.press("ctrl+o")
+        await pilot.pause()
+        assert isinstance(app.screen, SettingsScreen)
+
+        cpu_input = app.screen.query_one("#settings-health-cpu-threshold", Input)
+        cpu_input.value = "42"
+        await pilot.click("#btn-settings-save")
+        await pilot.pause()
+        await pilot.press("escape")
+        await pilot.pause()
+
+        assert isinstance(app.screen, HealthScreen)
+        summary = app.screen.query_one("#health-defaults-summary", Label)
+        assert "CPU alert 42.0%" in str(summary.render())
+
+
+@pytest.mark.asyncio
 async def test_settings_is_the_labelled_visible_home_for_tuning_defaults():
     """All persistent operation defaults are visible and editable in Settings."""
     from textual.widgets import Input, Label
