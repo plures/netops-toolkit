@@ -1382,17 +1382,16 @@ class NetopsTUI(App):
         padding: 0 1;
     }
     #scan-modal Input, #health-modal Input, #push-modal Input, #backup-modal Input, #diff-modal Input, #bastion-modal Input, #settings-modal Input, #vault-modal Input {
-        /* Compact, high-contrast fields remain visible without consuming five rows. */
-        height: 1;
-        min-height: 1;
-        max-height: 1;
+        height: 3;
+        min-height: 3;
         color: #ffffff;
         background: #1f2937;
-        border: none;
+        border: solid $accent;
         padding: 0 1;
     }
     #scan-modal Input:focus, #health-modal Input:focus, #push-modal Input:focus, #backup-modal Input:focus, #diff-modal Input:focus, #bastion-modal Input:focus, #settings-modal Input:focus, #vault-modal Input:focus {
         background: #172554;
+        border: solid #facc15;
         color: #facc15;
         text-style: bold;
     }

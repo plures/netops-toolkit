@@ -236,7 +236,7 @@ async def test_settings_is_the_labelled_visible_home_for_tuning_defaults():
         ):
             field = screen.query_one(field_id, Input)
             assert "default-setting-input" in field.classes
-            assert field.region.height == 1
+            assert field.region.height >= 3
             assert field.styles.background != screen.query_one("#settings-modal").styles.background
 
 
@@ -275,7 +275,8 @@ async def test_modal_inputs_are_visible_in_all_operation_forms():
             inputs = list(app.screen.query(Input))
             assert inputs, f"{screen_type.__name__} must expose an editable input when applicable"
             for field in inputs:
-                assert field.region.height == 1, f"{field.id} does not use compact input geometry"
+                assert field.region.height >= 3, f"{field.id} is clipped to fewer than three rows"
+                assert field.styles.border.top[0] == "solid"
                 assert field.styles.color != field.styles.background
             for row in app.screen.query(Horizontal):
                 assert len(list(row.query(Input))) <= 1, (
