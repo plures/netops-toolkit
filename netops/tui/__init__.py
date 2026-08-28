@@ -185,20 +185,36 @@ class ScanScreen(ModalScreen):
             yield Input(placeholder="Subnets (e.g. 10.0.0.0/24, 192.168.1.0/24)", id="scan-subnet")
             yield Input(placeholder="Or path to hosts file (hosts.csv or ips.txt)", id="scan-hosts-file")
             yield Input(placeholder="SNMP communities (comma-sep, or leave blank for registry)", id="scan-community")
+            yield Label("SNMP scan controls", classes="form-section-title")
             with Horizontal(classes="advanced-row"):
-                yield Input(value=str(settings["snmp_port"]), placeholder="SNMP port", id="scan-snmp-port")
-                yield Input(value=str(settings["snmp_timeout"]), placeholder="SNMP timeout (seconds)", id="scan-snmp-timeout")
-                yield Input(value=str(settings["ping_workers"]), placeholder="Ping workers", id="scan-ping-workers")
-                yield Input(value=str(settings["snmp_concurrency"]), placeholder="SNMP concurrency", id="scan-snmp-concurrency")
+                with Vertical(classes="advanced-field"):
+                    yield Label("SNMP port", id="scan-snmp-port-label", classes="field-label")
+                    yield Input(value=str(settings["snmp_port"]), id="scan-snmp-port")
+                with Vertical(classes="advanced-field"):
+                    yield Label("SNMP timeout (seconds)", id="scan-snmp-timeout-label", classes="field-label")
+                    yield Input(value=str(settings["snmp_timeout"]), id="scan-snmp-timeout")
+                with Vertical(classes="advanced-field"):
+                    yield Label("Ping workers", id="scan-ping-workers-label", classes="field-label")
+                    yield Input(value=str(settings["ping_workers"]), id="scan-ping-workers")
+                with Vertical(classes="advanced-field"):
+                    yield Label("SNMP concurrency", id="scan-snmp-concurrency-label", classes="field-label")
+                    yield Input(value=str(settings["snmp_concurrency"]), id="scan-snmp-concurrency")
             yield Input(placeholder="SSH user (vault default if blank)", id="scan-user")
             yield Input(placeholder="SSH password (vault default if blank)", password=True, id="scan-password")
+            yield Label("SSH scan controls", classes="form-section-title")
             with Horizontal(classes="advanced-row"):
-                yield Input(value=str(settings["ssh_timeout"]), placeholder="SSH timeout (seconds)", id="scan-ssh-timeout")
-                yield Input(value=str(settings["ssh_concurrency"]), placeholder="SSH concurrency", id="scan-ssh-concurrency")
-                yield Checkbox("Probe every address (skip ping)", id="scan-skip-ping")
-                yield Checkbox("Ping only (skip SNMP)", id="scan-skip-snmp")
+                with Vertical(classes="advanced-field"):
+                    yield Label("SSH timeout (seconds)", id="scan-ssh-timeout-label", classes="field-label")
+                    yield Input(value=str(settings["ssh_timeout"]), id="scan-ssh-timeout")
+                with Vertical(classes="advanced-field"):
+                    yield Label("SSH concurrency", id="scan-ssh-concurrency-label", classes="field-label")
+                    yield Input(value=str(settings["ssh_concurrency"]), id="scan-ssh-concurrency")
+                with Vertical(classes="advanced-options"):
+                    yield Label("Discovery options", classes="field-label")
+                    yield Checkbox("Probe every address (skip ping)", id="scan-skip-ping")
+                    yield Checkbox("Ping only (skip SNMP)", id="scan-skip-snmp")
             yield Input(placeholder="Optional export file (.json or .csv)", id="scan-output")
-            with Horizontal():
+            with Horizontal(id="scan-actions"):
                 yield Button("Scan", variant="primary", id="btn-scan")
                 yield Button("Ping Only", variant="default", id="btn-ping")
                 yield Button("Cancel", variant="error", id="btn-cancel-scan")
@@ -1286,9 +1302,48 @@ class NetopsTUI(App):
     .advanced-row Input {
         width: 1fr;
     }
+    .advanced-field {
+        width: 1fr;
+        height: auto;
+    }
+    .advanced-options {
+        width: 2fr;
+        height: auto;
+    }
+    .form-section-title {
+        margin-top: 1;
+        text-style: bold;
+        color: $text;
+    }
+    .field-label {
+        color: $text;
+        text-style: bold;
+    }
     .advanced-row Checkbox {
         width: auto;
         margin: 0 1;
+    }
+    #scan-actions {
+        height: 3;
+        margin-top: 1;
+    }
+    #scan-actions Button {
+        width: 1fr;
+        min-width: 12;
+        text-style: bold;
+    }
+    #btn-scan {
+        background: $primary;
+        color: $text;
+    }
+    #btn-ping {
+        background: $surface;
+        color: $text;
+        border: solid $primary;
+    }
+    #btn-cancel-scan {
+        background: $error;
+        color: $text;
     }
     #config-view-content {
         height: 1fr;

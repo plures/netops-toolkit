@@ -47,6 +47,7 @@ nav:
   - Home: index.md
   - Guides:
     - Getting Started: guides/getting-started.md
+    - Terminal UI: guides/tui.md
     - CLI Reference: guides/cli-reference.md
     - Config Collector: guides/config-collector.md
     - Interface Checker: guides/interface-checker.md

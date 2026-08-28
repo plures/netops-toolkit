@@ -153,6 +153,39 @@ async def test_paste_works_in_all_scan_fields():
 
 
 @pytest.mark.asyncio
+async def test_scan_advanced_fields_and_actions_have_visible_labels():
+    """Scan controls with default values must not rely on hidden placeholders."""
+    from textual.widgets import Label
+
+    from netops.tui import NetopsTUI, ScanScreen
+
+    app = NetopsTUI()
+    async with app.run_test(size=(120, 40)) as pilot:
+        app.push_screen(ScanScreen())
+        await pilot.pause()
+        screen = app.screen
+        expected_labels = {
+            "#scan-snmp-port-label": "SNMP port",
+            "#scan-snmp-timeout-label": "SNMP timeout (seconds)",
+            "#scan-ping-workers-label": "Ping workers",
+            "#scan-snmp-concurrency-label": "SNMP concurrency",
+            "#scan-ssh-timeout-label": "SSH timeout (seconds)",
+            "#scan-ssh-concurrency-label": "SSH concurrency",
+        }
+        for label_id, expected in expected_labels.items():
+            assert str(screen.query_one(label_id, Label).render()) == expected
+
+        assert {
+            button.id: str(button.label)
+            for button in screen.query("#scan-actions Button")
+        } == {
+            "btn-scan": "Scan",
+            "btn-ping": "Ping Only",
+            "btn-cancel-scan": "Cancel",
+        }
+
+
+@pytest.mark.asyncio
 async def test_selected_device_prepopulates_health_check():
     """Selecting a device then pressing 'h' must pre-fill the host field."""
     from textual.widgets import DataTable, Input

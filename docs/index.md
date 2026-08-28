@@ -9,7 +9,8 @@ changes. The core works on Python 3.9+; the optional Textual TUI needs Python
 
 1. Follow [Getting Started](guides/getting-started.md) to install locally and
    create an inventory.
-2. Use [CLI Reference](guides/cli-reference.md) for the exact public command
+2. Use the [Terminal UI](guides/tui.md) for an interactive inventory and scan
+   workflow, or use [CLI Reference](guides/cli-reference.md) for exact public command
    names and flags.
 3. If devices are reachable only through a jump host, start with [Active
    Bastion Routing](guides/active-bastion.md).
@@ -45,6 +46,7 @@ platform-specific commands and optional extras.
 
 - [Guides](guides/README.md) — task-oriented documentation
 - [CLI Reference](guides/cli-reference.md) — verified command examples
+- [Terminal UI](guides/tui.md) — screenshots, keybindings, and interactive scans
 - [API Reference](api/README.md) — public Python modules
 - [Scanner](guides/scan.md) — SNMP discovery, file-based inputs, and safe output
 - [Configuration changes](api/change.md) — plan, diff, push, and rollback
