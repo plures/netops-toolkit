@@ -193,6 +193,7 @@ class ScanScreen(ModalScreen):
                 with Vertical(classes="advanced-field"):
                     yield Label("SNMP timeout (seconds)", id="scan-snmp-timeout-label", classes="field-label")
                     yield Input(value=str(settings["snmp_timeout"]), id="scan-snmp-timeout")
+            with Horizontal(classes="advanced-row"):
                 with Vertical(classes="advanced-field"):
                     yield Label("Ping workers", id="scan-ping-workers-label", classes="field-label")
                     yield Input(value=str(settings["ping_workers"]), id="scan-ping-workers")
@@ -209,6 +210,7 @@ class ScanScreen(ModalScreen):
                 with Vertical(classes="advanced-field"):
                     yield Label("SSH concurrency", id="scan-ssh-concurrency-label", classes="field-label")
                     yield Input(value=str(settings["ssh_concurrency"]), id="scan-ssh-concurrency")
+            with Horizontal(classes="advanced-row"):
                 with Vertical(classes="advanced-options"):
                     yield Label("Discovery options", classes="field-label")
                     yield Checkbox("Probe every address (skip ping)", id="scan-skip-ping")

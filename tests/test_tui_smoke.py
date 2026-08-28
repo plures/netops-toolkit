@@ -173,7 +173,9 @@ async def test_scan_advanced_fields_and_actions_have_visible_labels():
             "#scan-ssh-concurrency-label": "SSH concurrency",
         }
         for label_id, expected in expected_labels.items():
-            assert str(screen.query_one(label_id, Label).render()) == expected
+            label = screen.query_one(label_id, Label)
+            assert str(label.render()) == expected
+            assert label.region.width >= len(expected)
 
         assert {
             button.id: str(button.label)
