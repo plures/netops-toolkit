@@ -191,7 +191,7 @@ jobs:
           - Python >= 3.9
           - No sudo needed (installs to ~/.venv/netops)
 
-          **Full Changelog**: https://github.com/plures/netops-toolkit/compare/v${CURRENT_VERSION}...v${VERSION}
+          **Full Changelog**: https://github.com/plures/netops-toolkit/compare/$(git describe --tags --abbrev=0 "${TAG}^")...${TAG}
           EOF
 
           for attempt in 1 2 3 4 5 6; do
