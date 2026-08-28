@@ -6,6 +6,9 @@ routing into one keyboard-friendly interface. It operates on the same local
 inventory and settings as the command-line tools; it does not require a
 running service.
 
+See [Terminal UI Screen Reference](tui-screens.md) for a captured view of
+every user-facing screen.
+
 ## Launch the TUI
 
 Install the `tui` extra, then start either entry point:
@@ -87,9 +90,16 @@ Text fields accept normal keyboard input and terminal paste. Do not paste
 passwords into a shared terminal transcript. For reusable credentials, open
 the credentials screen with `v` and use the encrypted vault instead.
 
+Create the vault once, then save default, group, or device credentials. Those
+credentials remain encrypted on disk after the TUI closes. The vault password
+is entered only to unlock the existing vault for the current TUI session; it
+is intentionally not stored alongside the credentials. When `c` needs SSH
+credentials to fetch a running configuration, the TUI opens this guided vault
+screen instead of leaving an unexplained "unlock" error.
+
 Network operations run in the background. Errors and progress are written to
-the screen's log area, so a failed device does not close the TUI or prevent
-work on other devices.
+the screen's log area. A failed operation or contained UI error keeps the TUI
+open so you can continue working on other devices.
 
 For scanner details such as file formats, output, merge behavior, and network
 requirements, see [Network Scanner](scan.md). For settings stored by the TUI,
