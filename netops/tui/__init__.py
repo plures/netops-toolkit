@@ -907,6 +907,7 @@ class VaultScreen(ModalScreen):
             self.dismiss()
             return
         log = self.query_one("#vault-log", Log)
+        log.clear()
         path = self.query_one("#vault-path", Input).value.strip()
         master_password = self.query_one("#vault-master-password", Input).value
         try:

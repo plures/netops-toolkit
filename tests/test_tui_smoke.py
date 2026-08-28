@@ -279,6 +279,30 @@ async def test_unhandled_tui_event_is_contained_instead_of_exiting():
 
 
 @pytest.mark.asyncio
+async def test_vault_validation_log_replaces_previous_result(tmp_path):
+    """Vault validation must show the current result, not stale failures."""
+    from textual.widgets import Button, Input, Log
+
+    from netops.tui import NetopsTUI, VaultScreen
+
+    app = NetopsTUI()
+    async with app.run_test(size=(120, 40)) as pilot:
+        app.push_screen(VaultScreen())
+        await pilot.pause()
+        screen = app.screen
+        screen.query_one("#vault-path", Input).value = str(tmp_path / "missing-vault.yaml")
+        screen.query_one("#vault-master-password", Input).value = "test-password"
+        unlock = screen.query_one("#btn-vault-unlock", Button)
+        log = screen.query_one("#vault-log", Log)
+
+        screen.on_button_pressed(Button.Pressed(unlock))
+        assert log.line_count == 1
+
+        screen.on_button_pressed(Button.Pressed(unlock))
+        assert log.line_count == 1
+
+
+@pytest.mark.asyncio
 async def test_selected_device_prepopulates_health_check():
     """Selecting a device then pressing 'h' must pre-fill the host field."""
     from textual.widgets import DataTable, Input
