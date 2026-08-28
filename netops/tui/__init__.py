@@ -185,20 +185,38 @@ class ScanScreen(ModalScreen):
             yield Input(placeholder="Subnets (e.g. 10.0.0.0/24, 192.168.1.0/24)", id="scan-subnet")
             yield Input(placeholder="Or path to hosts file (hosts.csv or ips.txt)", id="scan-hosts-file")
             yield Input(placeholder="SNMP communities (comma-sep, or leave blank for registry)", id="scan-community")
+            yield Label("SNMP scan controls", classes="form-section-title")
             with Horizontal(classes="advanced-row"):
-                yield Input(value=str(settings["snmp_port"]), placeholder="SNMP port", id="scan-snmp-port")
-                yield Input(value=str(settings["snmp_timeout"]), placeholder="SNMP timeout (seconds)", id="scan-snmp-timeout")
-                yield Input(value=str(settings["ping_workers"]), placeholder="Ping workers", id="scan-ping-workers")
-                yield Input(value=str(settings["snmp_concurrency"]), placeholder="SNMP concurrency", id="scan-snmp-concurrency")
+                with Vertical(classes="advanced-field"):
+                    yield Label("SNMP port", id="scan-snmp-port-label", classes="field-label")
+                    yield Input(value=str(settings["snmp_port"]), id="scan-snmp-port")
+                with Vertical(classes="advanced-field"):
+                    yield Label("SNMP timeout (seconds)", id="scan-snmp-timeout-label", classes="field-label")
+                    yield Input(value=str(settings["snmp_timeout"]), id="scan-snmp-timeout")
+            with Horizontal(classes="advanced-row"):
+                with Vertical(classes="advanced-field"):
+                    yield Label("Ping workers", id="scan-ping-workers-label", classes="field-label")
+                    yield Input(value=str(settings["ping_workers"]), id="scan-ping-workers")
+                with Vertical(classes="advanced-field"):
+                    yield Label("SNMP concurrency", id="scan-snmp-concurrency-label", classes="field-label")
+                    yield Input(value=str(settings["snmp_concurrency"]), id="scan-snmp-concurrency")
             yield Input(placeholder="SSH user (vault default if blank)", id="scan-user")
             yield Input(placeholder="SSH password (vault default if blank)", password=True, id="scan-password")
+            yield Label("SSH scan controls", classes="form-section-title")
             with Horizontal(classes="advanced-row"):
-                yield Input(value=str(settings["ssh_timeout"]), placeholder="SSH timeout (seconds)", id="scan-ssh-timeout")
-                yield Input(value=str(settings["ssh_concurrency"]), placeholder="SSH concurrency", id="scan-ssh-concurrency")
-                yield Checkbox("Probe every address (skip ping)", id="scan-skip-ping")
-                yield Checkbox("Ping only (skip SNMP)", id="scan-skip-snmp")
+                with Vertical(classes="advanced-field"):
+                    yield Label("SSH timeout (seconds)", id="scan-ssh-timeout-label", classes="field-label")
+                    yield Input(value=str(settings["ssh_timeout"]), id="scan-ssh-timeout")
+                with Vertical(classes="advanced-field"):
+                    yield Label("SSH concurrency", id="scan-ssh-concurrency-label", classes="field-label")
+                    yield Input(value=str(settings["ssh_concurrency"]), id="scan-ssh-concurrency")
+            with Horizontal(classes="advanced-row"):
+                with Vertical(classes="advanced-options"):
+                    yield Label("Discovery options", classes="field-label")
+                    yield Checkbox("Probe every address (skip ping)", id="scan-skip-ping")
+                    yield Checkbox("Ping only (skip SNMP)", id="scan-skip-snmp")
             yield Input(placeholder="Optional export file (.json or .csv)", id="scan-output")
-            with Horizontal():
+            with Horizontal(id="scan-actions", classes="modal-actions"):
                 yield Button("Scan", variant="primary", id="btn-scan")
                 yield Button("Ping Only", variant="default", id="btn-ping")
                 yield Button("Cancel", variant="error", id="btn-cancel-scan")
@@ -401,7 +419,7 @@ class ScanScreen(ModalScreen):
             except Exception as e:
                 log.write_line(f"  ❌ Error: {e}")
 
-        asyncio.get_event_loop().create_task(_scan())
+        self.run_worker(_scan(), name="inventory scan", group="inventory-scan", exit_on_error=False, exclusive=True)
 
 
 # ---------------------------------------------------------------------------
@@ -432,7 +450,7 @@ class HealthScreen(ModalScreen):
             yield Input(placeholder="SSH password (vault if blank)", password=True, id="health-pass")
             yield Input(placeholder="Optional JSON report output file", id="health-output")
             yield Checkbox("Mark the run failed when any alert is found", id="health-fail-on-alert")
-            with Horizontal():
+            with Horizontal(classes="modal-actions"):
                 yield Button("Check", variant="primary", id="btn-health-run")
                 yield Button("Close", id="btn-health-close")
             yield TerminalLog(id="health-log", highlight=True)
@@ -590,7 +608,7 @@ class HealthScreen(ModalScreen):
                 except Exception as e:
                     log.write_line(f"  ❌ {e}")
 
-            asyncio.get_event_loop().create_task(_check())
+            self.run_worker(_check(), name="health check", group="health-check", exit_on_error=False, exclusive=True)
 
 
 # ---------------------------------------------------------------------------
@@ -612,7 +630,7 @@ class DiffScreen(ModalScreen):
                 yield Input(value="semantic", placeholder="Format: semantic, unified, json", id="diff-format")
                 yield Input(placeholder="Style: auto, cisco, junos, flat", id="diff-style")
             yield Input(placeholder="Optional output file", id="diff-output")
-            with Horizontal():
+            with Horizontal(classes="modal-actions"):
                 yield Button("Compare", variant="primary", id="btn-diff-run")
                 yield Button("Close", id="btn-diff-close")
             yield TerminalLog(id="diff-log", highlight=False)
@@ -673,7 +691,7 @@ class DiffScreen(ModalScreen):
             except Exception as exc:
                 log.write_line(f"❌ {exc}")
 
-        asyncio.get_event_loop().create_task(_diff())
+        self.run_worker(_diff(), name="configuration diff", group="configuration-diff", exit_on_error=False, exclusive=True)
 
 
 # ---------------------------------------------------------------------------
@@ -695,7 +713,7 @@ class BastionScreen(ModalScreen):
             yield Input(placeholder="Optional private key file", id="bastion-key-file")
             yield Input(placeholder="Password (not stored)", password=True, id="bastion-password")
             yield Input(placeholder="Private-key passphrase (not stored)", password=True, id="bastion-key-passphrase")
-            with Horizontal():
+            with Horizontal(classes="modal-actions"):
                 yield Button("Connect", variant="primary", id="btn-bastion-connect")
                 yield Button("Status", id="btn-bastion-status")
                 yield Button("Disconnect", variant="warning", id="btn-bastion-disconnect")
@@ -764,7 +782,7 @@ class BastionScreen(ModalScreen):
             except Exception as exc:
                 log.write_line(f"❌ {exc}")
 
-        asyncio.get_event_loop().create_task(_manage())
+        self.run_worker(_manage(), name="active bastion", group="active-bastion", exit_on_error=False, exclusive=True)
 
 
 # ---------------------------------------------------------------------------
@@ -795,7 +813,7 @@ class SettingsScreen(ModalScreen):
             yield Label("Backup defaults")
             yield Input(value=str(settings["backup_workers"]), id="settings-backup-workers")
             yield Label("Concurrent backup workers")
-            with Horizontal():
+            with Horizontal(classes="modal-actions"):
                 yield Button("Save", variant="primary", id="btn-settings-save")
                 yield Button("Cancel", id="btn-settings-cancel")
             yield TerminalLog(id="settings-log", highlight=True)
@@ -840,18 +858,26 @@ class VaultScreen(ModalScreen):
 
     BINDINGS = [Binding("escape", "dismiss", "Close")]
 
+    def __init__(self, reason: str | None = None) -> None:
+        super().__init__()
+        self._reason = reason
+
     def compose(self) -> ComposeResult:
         """Compose vault controls without exposing stored secrets."""
         from netops.core.vault import CredentialVault
 
         with Vertical(id="vault-modal"):
             yield Label(terminal_text("🔑 Credential Vault"), id="vault-title")
-            yield Label("Vault path and session unlock")
+            yield Label("Saved credentials are encrypted on disk and persist between TUI sessions.")
+            yield Label("Create a vault once. Later, enter that same password only to unlock it for this TUI session.")
+            yield Label("The unlock password is never stored by netops-toolkit.")
+            if self._reason:
+                yield Label(self._reason, classes="vault-guidance")
             yield Input(value=str(CredentialVault.DEFAULT_VAULT_PATH), id="vault-path")
-            yield Input(placeholder="Vault master password (session only)", password=True, id="vault-master-password")
-            with Horizontal():
-                yield Button("Unlock", variant="primary", id="btn-vault-unlock")
-                yield Button("Create vault", id="btn-vault-create")
+            yield Input(placeholder="Vault password to create or unlock saved credentials", password=True, id="vault-master-password")
+            with Horizontal(classes="modal-actions"):
+                yield Button("Unlock saved vault", variant="primary", id="btn-vault-unlock")
+                yield Button("Create new vault", id="btn-vault-create")
             yield Label("Credential scope: default, group, or device")
             with Horizontal(classes="advanced-row"):
                 yield Input(value="default", id="vault-scope")
@@ -859,7 +885,7 @@ class VaultScreen(ModalScreen):
             yield Input(placeholder="SSH username", id="vault-user")
             yield Input(placeholder="SSH password", password=True, id="vault-password")
             yield Input(placeholder="Optional enable password", password=True, id="vault-enable-password")
-            with Horizontal():
+            with Horizontal(classes="modal-actions"):
                 yield Button("Save credentials", variant="primary", id="btn-vault-save")
                 yield Button("Delete scope", variant="warning", id="btn-vault-delete")
                 yield Button("Close", id="btn-vault-close")
@@ -881,6 +907,7 @@ class VaultScreen(ModalScreen):
             self.dismiss()
             return
         log = self.query_one("#vault-log", Log)
+        log.clear()
         path = self.query_one("#vault-path", Input).value.strip()
         master_password = self.query_one("#vault-master-password", Input).value
         try:
@@ -888,7 +915,7 @@ class VaultScreen(ModalScreen):
                 if not master_password:
                     raise ValueError("A vault master password is required")
                 netops_app(self).open_vault(path, master_password, create=event.button.id == "btn-vault-create")
-                log.write_line("✅ Vault unlocked for this TUI session")
+                log.write_line("✅ Vault ready. Saved credentials remain encrypted on disk after the TUI closes.")
                 return
             scope, target = self._scope()
             if event.button.id == "btn-vault-save":
@@ -937,7 +964,7 @@ class ConfigPushScreen(ModalScreen):
                 yield Input(value="~/.netops/changelog.jsonl", placeholder="Change log path", id="push-changelog")
             yield Label("[dim]Commands (one per line):[/dim]")
             yield TextArea(id="push-commands")
-            with Horizontal():
+            with Horizontal(classes="modal-actions"):
                 yield Button("Dry Run", variant="primary", id="btn-push-dry")
                 yield Button("Commit", variant="warning", id="btn-push-commit")
                 yield Button("Cancel", id="btn-push-cancel")
@@ -1063,7 +1090,7 @@ class ConfigPushScreen(ModalScreen):
             except Exception as e:
                 log.write_line(f"  ❌ {e}")
 
-        asyncio.get_event_loop().create_task(_push())
+        self.run_worker(_push(), name="configuration push", group="configuration-push", exit_on_error=False, exclusive=True)
 
 
 # ---------------------------------------------------------------------------
@@ -1098,7 +1125,7 @@ class BackupScreen(ModalScreen):
                 yield Input(value=str(netops_app(self).settings["backup_workers"]), placeholder="Concurrent workers", id="backup-workers")
                 yield Checkbox("Commit changes to a local git repository", id="backup-git")
                 yield Checkbox("Suppress change alerts", id="backup-no-alert")
-            with Horizontal():
+            with Horizontal(classes="modal-actions"):
                 yield Button("Backup", variant="primary", id="btn-backup-run")
                 yield Button("Cancel", id="btn-backup-cancel")
             yield TerminalLog(id="backup-log", highlight=True)
@@ -1197,7 +1224,7 @@ class BackupScreen(ModalScreen):
             except Exception as e:
                 log.write_line(f"  ❌ {e}")
 
-        asyncio.get_event_loop().create_task(_backup())
+        self.run_worker(_backup(), name="configuration backup", group="configuration-backup", exit_on_error=False, exclusive=True)
 
 
 # ---------------------------------------------------------------------------
@@ -1286,9 +1313,59 @@ class NetopsTUI(App):
     .advanced-row Input {
         width: 1fr;
     }
+    .advanced-field {
+        width: 1fr;
+        height: auto;
+    }
+    .advanced-options {
+        width: 2fr;
+        height: auto;
+    }
+    .form-section-title {
+        margin-top: 1;
+        text-style: bold;
+        color: $text;
+    }
+    .field-label {
+        color: $text;
+        text-style: bold;
+    }
     .advanced-row Checkbox {
         width: auto;
         margin: 0 1;
+    }
+    .modal-actions {
+        height: 3;
+        min-height: 3;
+        margin-top: 1;
+    }
+    .modal-actions Button {
+        width: 1fr;
+        min-width: 12;
+        height: 3;
+        color: $text;
+        text-style: bold;
+    }
+    Button {
+        color: $text;
+        text-style: bold;
+    }
+    .vault-guidance {
+        color: $warning;
+        text-style: bold;
+    }
+    #btn-scan {
+        background: $primary;
+        color: $text;
+    }
+    #btn-ping {
+        background: $surface;
+        color: $text;
+        border: solid $primary;
+    }
+    #btn-cancel-scan {
+        background: $error;
+        color: $text;
     }
     #config-view-content {
         height: 1fr;
@@ -1334,6 +1411,28 @@ class NetopsTUI(App):
     def notify(self, message: str, *args, **kwargs):
         """Notify with text compatible with the active terminal."""
         return super().notify(terminal_text(message), *args, **kwargs)
+
+    def _handle_exception(self, error: Exception) -> None:
+        """Contain Textual event failures instead of returning users to their shell.
+
+        Textual's default implementation renders a fatal error then exits. The
+        TUI performs remote operations and must keep the rest of the workspace
+        available when one event, callback, or terminal interaction fails.
+        """
+        logging.getLogger("netops.tui").error(
+            "Contained TUI exception; the application remains available",
+            exc_info=(type(error), error, error.__traceback__),
+        )
+        try:
+            self.notify(
+                "Unexpected error contained; the TUI is still running. See the netops log for details.",
+                severity="error",
+                timeout=12,
+            )
+        except Exception:
+            # A failure while the screen is mounting must not recurse into the
+            # same handler or force a terminal exit.
+            pass
 
     def compose(self) -> ComposeResult:
         """Compose the main TUI layout."""
@@ -1573,7 +1672,11 @@ class NetopsTUI(App):
             return
         credentials = self.credentials_for(hostname, info.get("groups", []))
         if not credentials.get("username") or not credentials.get("password"):
-            self.notify("Unlock the vault with v or enter credentials in an operation form", severity="warning")
+            self.push_screen(
+                VaultScreen(
+                    "Running configuration needs SSH credentials. Create a vault on first use, or unlock your existing vault and save default, group, or device credentials."
+                )
+            )
             return
 
         async def fetch_config() -> None:
@@ -1599,7 +1702,7 @@ class NetopsTUI(App):
                 self.notify(f"Could not fetch running config: {exc}", severity="error")
                 self._render_detail()
 
-        asyncio.get_event_loop().create_task(fetch_config())
+        self.run_worker(fetch_config(), name="running configuration", group="running-configuration", exit_on_error=False, exclusive=True)
 
     @staticmethod
     def _fetch_running_config(params) -> str:

@@ -5,6 +5,8 @@ Step-by-step guides for each utility. Start with [Getting Started](getting-start
 | Guide | What It Does |
 |-------|-------------|
 | [Getting Started](getting-started.md) | Install the toolkit and set up your first inventory |
+| [Terminal UI](tui.md) | Launch, navigate, and scan with the keyboard-friendly TUI |
+| [TUI Screen Reference](tui-screens.md) | Captured views of every interactive TUI screen |
 | [CLI Reference](cli-reference.md) | Complete reference for all CLI commands and flags |
 | [Config Collector](config-collector.md) | Back up device configurations |
 | [Interface Checker](interface-checker.md) | Check interface status across devices |
