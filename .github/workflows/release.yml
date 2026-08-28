@@ -12,7 +12,7 @@ on:
         type: choice
         options: [patch, minor, major]
       target_version:
-        description: 'Exact version (MAJOR.MINOR.PATCH). Overrides bump logic.'
+        description: 'Exact version (MAJOR.MINOR.PATCH). An existing tag is republished without another version bump.'
         required: false
         type: string
 
@@ -81,6 +81,21 @@ jobs:
           echo "tag=v${NEW}" >> "$GITHUB_OUTPUT"
           echo "Bump: ${BUMP_TYPE} ($CURRENT → $NEW)"
 
+      - name: Reuse an existing release tag when recovering publication
+        id: existing_tag
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          git fetch --tags --force
+          if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+            git checkout "${TAG}"
+            python scripts/sync_version.py --check
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Recovering publication for existing ${TAG}"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build release archives
         run: |
           VERSION="${{ steps.version.outputs.new }}"
@@ -115,6 +130,7 @@ jobs:
           echo "Contents: netops/ (with TUI), docs/, examples/, tests/, README, pyproject.toml" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Commit + tag
+        if: steps.existing_tag.outputs.exists != 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -123,54 +139,77 @@ jobs:
           git tag -a "v${{ steps.version.outputs.new }}" -m "Release v${{ steps.version.outputs.new }}"
           git push origin main --follow-tags
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          name: "v${{ steps.version.outputs.new }}"
-          make_latest: true
-          body: |
-            ## netops-toolkit v${{ steps.version.outputs.new }}
+      - name: Create or repair GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.new }}
+          CURRENT_VERSION: ${{ steps.version.outputs.current }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          NAME="netops-toolkit-${VERSION}"
+          ASSETS=(
+            "${NAME}.tar.gz"
+            "${NAME}.tar.gz.sha256"
+            "${NAME}.zip"
+            "${NAME}.zip.sha256"
+          )
+          cat > release-notes.md <<EOF
+          ## netops-toolkit v${VERSION}
 
-            ### 📥 One-command install
+          ### 📥 One-command install
 
-            ```bash
-            curl -sSL https://raw.githubusercontent.com/plures/netops-toolkit/main/install.sh | bash
-            ```
+          \`\`\`bash
+          curl -sSL https://raw.githubusercontent.com/plures/netops-toolkit/main/install.sh | bash
+          \`\`\`
 
-            Then:
-            ```bash
-            source ~/.venv/netops/bin/activate
-            netops-tui
-            ```
+          Then:
+          \`\`\`bash
+          source ~/.venv/netops/bin/activate
+          netops-tui
+          \`\`\`
 
-            ### Windows (no administrator rights)
+          ### Windows (no administrator rights)
 
-            Download `netops-toolkit-${{ steps.version.outputs.new }}.zip`, extract it, then run:
+          Download \`${NAME}.zip\`, extract it, then run:
 
-            ```powershell
-            powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\netops-toolkit-${{ steps.version.outputs.new }}\install.ps1"
-            ```
+          \`\`\`powershell
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\\${NAME}\\install.ps1"
+          \`\`\`
 
-            The installer creates a per-user virtual environment under `%LOCALAPPDATA%\netops-toolkit` and adds a Start menu shortcut for `netops-tui`.
+          The installer creates a per-user virtual environment under \`%LOCALAPPDATA%\\netops-toolkit\` and adds a Start menu shortcut for \`netops-tui\`.
 
-            ### 📥 Air-gapped / offline
+          ### 📥 Air-gapped / offline
 
-            ```bash
-            # Copy the tarball to the target machine, then:
-            tar xzf netops-toolkit-${{ steps.version.outputs.new }}.tar.gz
-            cd netops-toolkit-${{ steps.version.outputs.new }}
-            ./install.sh
-            ```
+          \`\`\`bash
+          tar xzf ${NAME}.tar.gz
+          cd ${NAME}
+          ./install.sh
+          \`\`\`
 
-            ### Requirements
+          ### Requirements
 
-            - Python >= 3.9
-            - No sudo needed (installs to ~/.venv/netops)
+          - Python >= 3.9
+          - No sudo needed (installs to ~/.venv/netops)
 
-            **Full Changelog**: https://github.com/plures/netops-toolkit/compare/v${{ steps.version.outputs.current }}...v${{ steps.version.outputs.new }}
-          files: |
-            netops-toolkit-${{ steps.version.outputs.new }}.tar.gz
-            netops-toolkit-${{ steps.version.outputs.new }}.tar.gz.sha256
-            netops-toolkit-${{ steps.version.outputs.new }}.zip
-            netops-toolkit-${{ steps.version.outputs.new }}.zip.sha256
+          **Full Changelog**: https://github.com/plures/netops-toolkit/compare/$(git describe --tags --abbrev=0 "${TAG}^")...${TAG}
+          EOF
+
+          for attempt in 1 2 3 4 5 6; do
+          if gh release view "${TAG}" >/dev/null 2>&1; then
+            if gh release upload "${TAG}" "${ASSETS[@]}" --clobber; then
+              exit 0
+            fi
+          elif gh release create "${TAG}" "${ASSETS[@]}" \
+            --title "v${VERSION}" --notes-file release-notes.md --latest; then
+            exit 0
+          fi
+
+            if [ "$attempt" -lt 6 ]; then
+              delay=$((5 * 2 ** (attempt - 1)))
+              echo "Release API failed; retrying in ${delay}s (attempt ${attempt}/6)." >&2
+              sleep "${delay}"
+            fi
+          done
+
+          echo "Could not create or repair GitHub release ${TAG}." >&2
+          exit 1
