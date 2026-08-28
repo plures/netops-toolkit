@@ -186,30 +186,51 @@ class ScanScreen(ModalScreen):
             yield Input(placeholder="Or path to hosts file (hosts.csv or ips.txt)", id="scan-hosts-file")
             yield Input(placeholder="SNMP communities (comma-sep, or leave blank for registry)", id="scan-community")
             yield Label("SNMP scan controls", classes="form-section-title")
-            with Horizontal(classes="advanced-row"):
-                with Vertical(classes="advanced-field"):
-                    yield Label("SNMP port", id="scan-snmp-port-label", classes="field-label")
-                    yield Input(value=str(settings["snmp_port"]), id="scan-snmp-port")
-                with Vertical(classes="advanced-field"):
-                    yield Label("SNMP timeout (seconds)", id="scan-snmp-timeout-label", classes="field-label")
-                    yield Input(value=str(settings["snmp_timeout"]), id="scan-snmp-timeout")
-            with Horizontal(classes="advanced-row"):
-                with Vertical(classes="advanced-field"):
-                    yield Label("Ping workers", id="scan-ping-workers-label", classes="field-label")
-                    yield Input(value=str(settings["ping_workers"]), id="scan-ping-workers")
-                with Vertical(classes="advanced-field"):
-                    yield Label("SNMP concurrency", id="scan-snmp-concurrency-label", classes="field-label")
-                    yield Input(value=str(settings["snmp_concurrency"]), id="scan-snmp-concurrency")
+            yield Label("SNMP port", id="scan-snmp-port-label", classes="field-label")
+            yield Input(
+                value=str(settings["snmp_port"]),
+                placeholder="Enter SNMP port",
+                id="scan-snmp-port",
+                classes="scan-setting-input",
+            )
+            yield Label("SNMP timeout (seconds)", id="scan-snmp-timeout-label", classes="field-label")
+            yield Input(
+                value=str(settings["snmp_timeout"]),
+                placeholder="Enter SNMP timeout in seconds",
+                id="scan-snmp-timeout",
+                classes="scan-setting-input",
+            )
+            yield Label("Ping workers", id="scan-ping-workers-label", classes="field-label")
+            yield Input(
+                value=str(settings["ping_workers"]),
+                placeholder="Enter concurrent ping workers",
+                id="scan-ping-workers",
+                classes="scan-setting-input",
+            )
+            yield Label("SNMP concurrency", id="scan-snmp-concurrency-label", classes="field-label")
+            yield Input(
+                value=str(settings["snmp_concurrency"]),
+                placeholder="Enter concurrent SNMP probes",
+                id="scan-snmp-concurrency",
+                classes="scan-setting-input",
+            )
             yield Input(placeholder="SSH user (vault default if blank)", id="scan-user")
             yield Input(placeholder="SSH password (vault default if blank)", password=True, id="scan-password")
             yield Label("SSH scan controls", classes="form-section-title")
-            with Horizontal(classes="advanced-row"):
-                with Vertical(classes="advanced-field"):
-                    yield Label("SSH timeout (seconds)", id="scan-ssh-timeout-label", classes="field-label")
-                    yield Input(value=str(settings["ssh_timeout"]), id="scan-ssh-timeout")
-                with Vertical(classes="advanced-field"):
-                    yield Label("SSH concurrency", id="scan-ssh-concurrency-label", classes="field-label")
-                    yield Input(value=str(settings["ssh_concurrency"]), id="scan-ssh-concurrency")
+            yield Label("SSH timeout (seconds)", id="scan-ssh-timeout-label", classes="field-label")
+            yield Input(
+                value=str(settings["ssh_timeout"]),
+                placeholder="Enter SSH timeout in seconds",
+                id="scan-ssh-timeout",
+                classes="scan-setting-input",
+            )
+            yield Label("SSH concurrency", id="scan-ssh-concurrency-label", classes="field-label")
+            yield Input(
+                value=str(settings["ssh_concurrency"]),
+                placeholder="Enter SSH concurrency",
+                id="scan-ssh-concurrency",
+                classes="scan-setting-input",
+            )
             with Horizontal(classes="advanced-row"):
                 with Vertical(classes="advanced-options"):
                     yield Label("Discovery options", classes="field-label")
@@ -1319,6 +1340,19 @@ class NetopsTUI(App):
     }
     #scan-modal Input:focus {
         border: solid $primary;
+    }
+    #scan-modal .scan-setting-input {
+        /* Keep numeric scan controls obvious in ANSI and low-colour terminals. */
+        width: 100%;
+        height: 3;
+        color: #ffffff;
+        background: #1f2937;
+        border: solid #38bdf8;
+        padding: 0 1;
+    }
+    #scan-modal .scan-setting-input:focus {
+        background: #172554;
+        border: solid #facc15;
     }
     .advanced-row Input {
         width: 1fr;

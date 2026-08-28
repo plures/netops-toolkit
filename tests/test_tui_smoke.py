@@ -154,16 +154,17 @@ async def test_paste_works_in_all_scan_fields():
 
 @pytest.mark.asyncio
 async def test_scan_advanced_fields_and_actions_have_visible_labels():
-    """Scan controls render labelled, visible, editable fields at a normal terminal width."""
+    """Advanced scan settings use full-width, high-contrast, editable inputs."""
     from textual.widgets import Input, Label
 
     from netops.tui import NetopsTUI, ScanScreen
 
     app = NetopsTUI()
-    async with app.run_test(size=(80, 40)) as pilot:
+    async with app.run_test(size=(80, 80)) as pilot:
         app.push_screen(ScanScreen())
         await pilot.pause()
         screen = app.screen
+        scan_modal = screen.query_one("#scan-modal")
         expected_labels = {
             "#scan-snmp-port-label": "SNMP port",
             "#scan-snmp-timeout-label": "SNMP timeout (seconds)",
@@ -185,7 +186,9 @@ async def test_scan_advanced_fields_and_actions_have_visible_labels():
             field = screen.query_one(input_ids[label_id], Input)
             assert str(label.render()) == expected
             assert label.region.width >= len(expected)
-            assert field.region.width >= 12
+            assert "scan-setting-input" in field.classes
+            assert field.parent is scan_modal
+            assert field.region.width >= 50
             assert field.region.height == 3
             assert field.region.y == label.region.bottom
 
@@ -199,6 +202,7 @@ async def test_scan_advanced_fields_and_actions_have_visible_labels():
             assert field.styles.border_bottom == unfocused_border
             assert field.styles.border_top == unfocused_border
             assert unfocused_color != unfocused_background
+            assert unfocused_background != scan_modal.styles.background
             assert unfocused_color.a > 0.5
 
             field.focus()
@@ -207,7 +211,7 @@ async def test_scan_advanced_fields_and_actions_have_visible_labels():
             assert focused_border[0] == "solid"
             assert focused_border[1] != unfocused_border[1]
             assert field.styles.color == unfocused_color
-            assert field.styles.background == unfocused_background
+            assert field.styles.background != unfocused_background
             field.blur()
             await pilot.pause()
             field.value = original_value
