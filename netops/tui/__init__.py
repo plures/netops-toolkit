@@ -873,7 +873,10 @@ class SettingsScreen(ModalScreen):
             "backup_workers": "#settings-backup-workers",
         }
         try:
-            updated = {key: int(self.query_one(field_id, Input).value.strip()) for key, field_id in fields.items()}
+            updated: dict[str, int | float] = {
+                key: int(self.query_one(field_id, Input).value.strip())
+                for key, field_id in fields.items()
+            }
         except ValueError:
             log.write_line("❌ All settings must be whole numbers")
             return
