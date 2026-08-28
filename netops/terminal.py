@@ -15,25 +15,25 @@ from dataclasses import dataclass
 _TRUE_VALUES = {"1", "true", "yes", "on"}
 _LOW_CAPABILITY_TERMS = {"ansi", "dumb", "linux", "vt100", "vt102", "vt220"}
 _ASCII_REPLACEMENTS = (
-    ("⚠️", "[warning]"),
-    ("ℹ️", "[info]"),
-    ("⚙️", "[settings]"),
-    ("🔍", "[scan]"),
-    ("🔎", "[diff]"),
-    ("🔐", "[bastion]"),
-    ("🔑", "[vault]"),
-    ("🏥", "[health]"),
-    ("💾", "[backup]"),
-    ("✅", "[ok]"),
-    ("❌", "[error]"),
-    ("⚠", "[warning]"),
-    ("ℹ", "[info]"),
-    ("📄", "[file]"),
-    ("📋", "[log]"),
-    ("🚨", "[alert]"),
-    ("🔬", "[probe]"),
-    ("🔴", "[red]"),
-    ("🔵", "[blue]"),
+    ("⚠️", "(warning)"),
+    ("ℹ️", "(info)"),
+    ("⚙️", "(settings)"),
+    ("🔍", "(scan)"),
+    ("🔎", "(diff)"),
+    ("🔐", "(bastion)"),
+    ("🔑", "(vault)"),
+    ("🏥", "(health)"),
+    ("💾", "(backup)"),
+    ("✅", "(ok)"),
+    ("❌", "(error)"),
+    ("⚠", "(warning)"),
+    ("ℹ", "(info)"),
+    ("📄", "(file)"),
+    ("📋", "(log)"),
+    ("🚨", "(alert)"),
+    ("🔬", "(probe)"),
+    ("🔴", "(red)"),
+    ("🔵", "(blue)"),
     ("·", " | "),
     ("—", "-"),
 )
@@ -85,7 +85,7 @@ def configure_terminal_environment(environment: MutableMapping[str, str]) -> Ter
     """
     profile = terminal_profile(environment)
     if profile.compatibility_mode:
-        environment.setdefault("TEXTUAL_COLOR_SYSTEM", "standard")
+        environment["TEXTUAL_COLOR_SYSTEM"] = "standard"
     return profile
 
 

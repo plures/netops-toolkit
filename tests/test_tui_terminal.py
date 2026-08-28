@@ -33,4 +33,4 @@ def test_compatibility_text_does_not_require_unicode_glyphs():
     """ASCII mode degrades app-owned visual status text safely."""
     text = terminal_text("🔍 Scan · ✅", {"NETOPS_TUI_COMPAT": "1"})
 
-    assert text == "[scan] Scan  |  [ok]"
+    assert text == "(scan) Scan  |  (ok)"

@@ -70,6 +70,7 @@ async def test_space_selects_from_the_focused_table_without_exiting():
 def test_compat_flag_configures_textual_before_the_app_imports():
     """Console-script imports honour --compat before Textual reads its settings."""
     environment = os.environ.copy()
+    environment["TERM"] = "xterm-256color"
     environment.pop("NETOPS_TUI_COMPAT", None)
     environment.pop("TEXTUAL_COLOR_SYSTEM", None)
     script = (

@@ -61,6 +61,15 @@ from textual.widgets import (
 
 from netops.logging_setup import setup_logging
 
+
+class TerminalLog(Log):
+    """Log widget that applies terminal compatibility text at its boundary."""
+
+    def write_line(self, text: str, *args, **kwargs):
+        """Write a line using the active terminal's safe text representation."""
+        return super().write_line(terminal_text(text), *args, **kwargs)
+
+
 # ---------------------------------------------------------------------------
 # Inventory data store (JSON file)
 # ---------------------------------------------------------------------------
@@ -194,7 +203,7 @@ class ScanScreen(ModalScreen):
                 yield Button("Ping Only", variant="default", id="btn-ping")
                 yield Button("Cancel", variant="error", id="btn-cancel-scan")
             yield Label("[dim]Tip: separate multiple subnets with commas[/dim]")
-            yield Log(id="scan-log", highlight=True)
+            yield TerminalLog(id="scan-log", highlight=True)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle scan modal button presses."""
@@ -426,7 +435,7 @@ class HealthScreen(ModalScreen):
             with Horizontal():
                 yield Button("Check", variant="primary", id="btn-health-run")
                 yield Button("Close", id="btn-health-close")
-            yield Log(id="health-log", highlight=True)
+            yield TerminalLog(id="health-log", highlight=True)
 
     def on_error(self, event) -> None:
         """Global error handler — display errors, never crash."""
@@ -606,7 +615,7 @@ class DiffScreen(ModalScreen):
             with Horizontal():
                 yield Button("Compare", variant="primary", id="btn-diff-run")
                 yield Button("Close", id="btn-diff-close")
-            yield Log(id="diff-log", highlight=False)
+            yield TerminalLog(id="diff-log", highlight=False)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Run a semantic diff or close the modal."""
@@ -691,7 +700,7 @@ class BastionScreen(ModalScreen):
                 yield Button("Status", id="btn-bastion-status")
                 yield Button("Disconnect", variant="warning", id="btn-bastion-disconnect")
                 yield Button("Close", id="btn-bastion-close")
-            yield Log(id="bastion-log", highlight=True)
+            yield TerminalLog(id="bastion-log", highlight=True)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Connect, inspect, or disconnect the active bastion."""
@@ -789,7 +798,7 @@ class SettingsScreen(ModalScreen):
             with Horizontal():
                 yield Button("Save", variant="primary", id="btn-settings-save")
                 yield Button("Cancel", id="btn-settings-cancel")
-            yield Log(id="settings-log", highlight=True)
+            yield TerminalLog(id="settings-log", highlight=True)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Persist valid settings or close without changing them."""
@@ -854,7 +863,7 @@ class VaultScreen(ModalScreen):
                 yield Button("Save credentials", variant="primary", id="btn-vault-save")
                 yield Button("Delete scope", variant="warning", id="btn-vault-delete")
                 yield Button("Close", id="btn-vault-close")
-            yield Log(id="vault-log", highlight=True)
+            yield TerminalLog(id="vault-log", highlight=True)
 
     def _scope(self) -> tuple[str, str]:
         """Validate and return the requested credential scope and target."""
@@ -933,7 +942,7 @@ class ConfigPushScreen(ModalScreen):
                 yield Button("Commit", variant="warning", id="btn-push-commit")
                 yield Button("Cancel", id="btn-push-cancel")
             yield Label("[dim]Presets: press 'c' for SNMP community change template[/dim]")
-            yield Log(id="push-log", highlight=True)
+            yield TerminalLog(id="push-log", highlight=True)
 
     def on_key(self, event) -> None:
         """Handle configuration editor shortcuts."""
@@ -1092,7 +1101,7 @@ class BackupScreen(ModalScreen):
             with Horizontal():
                 yield Button("Backup", variant="primary", id="btn-backup-run")
                 yield Button("Cancel", id="btn-backup-cancel")
-            yield Log(id="backup-log", highlight=True)
+            yield TerminalLog(id="backup-log", highlight=True)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle backup modal button presses."""
@@ -1322,6 +1331,10 @@ class NetopsTUI(App):
         self._vault = None
         self._vault_password: str | None = None
 
+    def notify(self, message: str, *args, **kwargs):
+        """Notify with text compatible with the active terminal."""
+        return super().notify(terminal_text(message), *args, **kwargs)
+
     def compose(self) -> ComposeResult:
         """Compose the main TUI layout."""
         yield Header()
@@ -1345,7 +1358,7 @@ class NetopsTUI(App):
         try:
             from textual.widgets import Static
             status = self.query_one(".status-bar", Static)
-            status.update(f"  ⚠️ Error (see logs): {str(event)[:60]}")
+            status.update(terminal_text(f"  ⚠️ Error (see logs): {str(event)[:60]}"))
         except Exception:
             pass
 
@@ -1433,14 +1446,14 @@ class NetopsTUI(App):
         hint = "Enter: basic detail" if self._detail_extended else "Enter: more detail"
         lines.extend(("", terminal_text(f"[dim]{hint} · c: running config · Space/x: select · Esc: close[/dim]")))
         self.query_one("#detail-panel", Vertical).display = True
-        self.query_one("#detail-content", Static).update("\n".join(lines))
+        self.query_one("#detail-content", Static).update(terminal_text("\n".join(lines)))
 
     def _update_status(self) -> None:
         """Show inventory and multi-selection state in the persistent status bar."""
         count = len(self.inventory.get("devices", {}))
         selected = len(self._selected_hosts)
         self.query_one(".status-bar", Static).update(
-            f"  {count} devices  |  {selected} selected  |  {INVENTORY_FILE}"
+            terminal_text(f"  {count} devices  |  {selected} selected  |  {INVENTORY_FILE}")
         )
 
     def _focused_hostname(self) -> str | None:
