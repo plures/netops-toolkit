@@ -189,9 +189,33 @@ async def test_scan_advanced_fields_and_actions_have_visible_labels():
             assert field.region.height == 3
             assert field.region.y == label.region.bottom
 
+            original_value = field.value
+            unfocused_border = field.styles.border_top
+            unfocused_color = field.styles.color
+            unfocused_background = field.styles.background
+            assert unfocused_border[0] == "solid"
+            assert field.styles.border_left == unfocused_border
+            assert field.styles.border_right == unfocused_border
+            assert field.styles.border_bottom == unfocused_border
+            assert field.styles.border_top == unfocused_border
+            assert unfocused_color != unfocused_background
+            assert unfocused_color.a > 0.5
+
+            field.focus()
+            await pilot.pause()
+            focused_border = field.styles.border_top
+            assert focused_border[0] == "solid"
+            assert focused_border[1] != unfocused_border[1]
+            assert field.styles.color == unfocused_color
+            assert field.styles.background == unfocused_background
+            field.blur()
+            await pilot.pause()
+            field.value = original_value
+
         snmp_port = screen.query_one("#scan-snmp-port", Input)
         snmp_port.focus()
-        await pilot.press("ctrl+a", "1", "6", "2")
+        snmp_port.select_all()
+        await pilot.press("1", "6", "2")
         assert snmp_port.value == "162"
 
         assert {
