@@ -37,9 +37,10 @@ you add an inventory or discover devices with a scan.
 ![The netops-toolkit TUI workspace, with the inventory table, detail pane, and keyboard shortcut footer.](../images/tui-workspace.svg)
 
 Use the arrow keys to move through devices. Press `Space` to select the
-focused device, or `Ctrl+A` to select or clear all listed devices. When one or
-more devices are selected, bulk actions apply to that selection; otherwise
-they apply to the focused device.
+focused device, or `Ctrl+A` to select or clear every inventory device, including
+devices hidden by the current search filter. When one or more devices are
+selected, bulk actions apply to that selection; otherwise they apply to the
+focused device.
 
 | Key | Action |
 | --- | --- |
