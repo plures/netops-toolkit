@@ -13,7 +13,7 @@ from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
 
 _TRUE_VALUES = {"1", "true", "yes", "on"}
-_LOW_CAPABILITY_TERMS = {"", "ansi", "dumb", "linux", "vt100", "vt102", "vt220"}
+_LOW_CAPABILITY_TERMS = {"ansi", "dumb", "linux", "vt100", "vt102", "vt220"}
 _ASCII_REPLACEMENTS = (
     ("⚠️", "[warning]"),
     ("ℹ️", "[info]"),
