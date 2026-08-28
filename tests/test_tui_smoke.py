@@ -154,13 +154,13 @@ async def test_paste_works_in_all_scan_fields():
 
 @pytest.mark.asyncio
 async def test_scan_advanced_fields_and_actions_have_visible_labels():
-    """Scan controls with default values must not rely on hidden placeholders."""
-    from textual.widgets import Label
+    """Scan controls render labelled, visible, editable fields at a normal terminal width."""
+    from textual.widgets import Input, Label
 
     from netops.tui import NetopsTUI, ScanScreen
 
     app = NetopsTUI()
-    async with app.run_test(size=(120, 40)) as pilot:
+    async with app.run_test(size=(80, 40)) as pilot:
         app.push_screen(ScanScreen())
         await pilot.pause()
         screen = app.screen
@@ -172,10 +172,27 @@ async def test_scan_advanced_fields_and_actions_have_visible_labels():
             "#scan-ssh-timeout-label": "SSH timeout (seconds)",
             "#scan-ssh-concurrency-label": "SSH concurrency",
         }
+        input_ids = {
+            "#scan-snmp-port-label": "#scan-snmp-port",
+            "#scan-snmp-timeout-label": "#scan-snmp-timeout",
+            "#scan-ping-workers-label": "#scan-ping-workers",
+            "#scan-snmp-concurrency-label": "#scan-snmp-concurrency",
+            "#scan-ssh-timeout-label": "#scan-ssh-timeout",
+            "#scan-ssh-concurrency-label": "#scan-ssh-concurrency",
+        }
         for label_id, expected in expected_labels.items():
             label = screen.query_one(label_id, Label)
+            field = screen.query_one(input_ids[label_id], Input)
             assert str(label.render()) == expected
             assert label.region.width >= len(expected)
+            assert field.region.width >= 12
+            assert field.region.height == 3
+            assert field.region.y == label.region.bottom
+
+        snmp_port = screen.query_one("#scan-snmp-port", Input)
+        snmp_port.focus()
+        await pilot.press("ctrl+a", "1", "6", "2")
+        assert snmp_port.value == "162"
 
         assert {
             button.id: str(button.label)
