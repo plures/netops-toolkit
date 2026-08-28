@@ -893,7 +893,7 @@ class SettingsScreen(ModalScreen):
         if any(value < 1 for value in updated.values()) or not 1 <= updated["snmp_port"] <= 65535:
             log.write_line("❌ Values must be positive and the SNMP port must be 1–65535")
             return
-        if any(updated[key] > 100 for key in ("health_cpu_threshold", "health_mem_threshold")):
+        if any(not 1 <= updated[key] <= 100 for key in ("health_cpu_threshold", "health_mem_threshold")):
             log.write_line("❌ Health thresholds must be percentages between 1 and 100")
             return
         app = netops_app(self)
