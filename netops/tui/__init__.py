@@ -15,6 +15,8 @@ Usage:
     python -m netops.tui
 """
 
+# ruff: noqa: E402
+
 from __future__ import annotations
 
 import asyncio
@@ -22,8 +24,23 @@ import csv
 import json
 import logging
 import os
+import sys
 from pathlib import Path
 from typing import cast
+
+from netops.terminal import (
+    TerminalProfile,
+    configure_terminal_environment,
+    terminal_profile,
+    terminal_text,
+)
+
+# A console-script entry point imports this package before ``__main__`` can
+# parse --compat. Honour the flag here as well, before Textual reads its
+# environment-based colour settings.
+if "--compat" in sys.argv:
+    os.environ["NETOPS_TUI_COMPAT"] = "1"
+configure_terminal_environment(os.environ)
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
@@ -43,6 +60,15 @@ from textual.widgets import (
 )
 
 from netops.logging_setup import setup_logging
+
+
+class TerminalLog(Log):
+    """Log widget that applies terminal compatibility text at its boundary."""
+
+    def write_line(self, line: str, scroll_end: bool | None = None) -> TerminalLog:
+        """Write a line using the active terminal's safe text representation."""
+        return super().write_line(terminal_text(line), scroll_end)
+
 
 # ---------------------------------------------------------------------------
 # Inventory data store (JSON file)
@@ -118,6 +144,30 @@ def netops_app(screen: ModalScreen) -> NetopsTUI:
     return cast("NetopsTUI", screen.app)
 
 
+class DeviceTable(DataTable):
+    """Device list with table-scoped selection keys.
+
+    Keeping Space on the focused table prevents it from falling through to an
+    application-wide action while Textual is dispatching a terminal key event.
+    That is safer for terminal emulators and avoids mutating a table from a
+    parent binding during its own key handling.
+    """
+
+    BINDINGS = [
+        *DataTable.BINDINGS,
+        Binding("space,x", "toggle_selection", "Select"),
+        Binding("ctrl+a", "toggle_all_selection", "Select all"),
+    ]
+
+    def action_toggle_selection(self) -> None:
+        """Toggle the row under this table's cursor."""
+        cast("NetopsTUI", self.app).toggle_focused_selection()
+
+    def action_toggle_all_selection(self) -> None:
+        """Toggle all inventory rows without falling through to the App."""
+        cast("NetopsTUI", self.app).toggle_all_selection()
+
+
 # ---------------------------------------------------------------------------
 # Scan Screen
 # ---------------------------------------------------------------------------
@@ -131,7 +181,7 @@ class ScanScreen(ModalScreen):
         """Compose the inventory scan modal."""
         settings = netops_app(self).settings
         with Vertical(id="scan-modal"):
-            yield Label("🔍 Inventory Scan", id="scan-title")
+            yield Label(terminal_text("🔍 Inventory Scan"), id="scan-title")
             yield Input(placeholder="Subnets (e.g. 10.0.0.0/24, 192.168.1.0/24)", id="scan-subnet")
             yield Input(placeholder="Or path to hosts file (hosts.csv or ips.txt)", id="scan-hosts-file")
             yield Input(placeholder="SNMP communities (comma-sep, or leave blank for registry)", id="scan-community")
@@ -153,7 +203,7 @@ class ScanScreen(ModalScreen):
                 yield Button("Ping Only", variant="default", id="btn-ping")
                 yield Button("Cancel", variant="error", id="btn-cancel-scan")
             yield Label("[dim]Tip: separate multiple subnets with commas[/dim]")
-            yield Log(id="scan-log", highlight=True)
+            yield TerminalLog(id="scan-log", highlight=True)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle scan modal button presses."""
@@ -370,7 +420,7 @@ class HealthScreen(ModalScreen):
     def compose(self) -> ComposeResult:
         """Compose the health check modal."""
         with Vertical(id="health-modal"):
-            yield Label("🏥 Health Check", id="health-title")
+            yield Label(terminal_text("🏥 Health Check"), id="health-title")
             yield Input(placeholder="Hostname or IP", id="health-host",
                         value=self._selected_host or "")
             yield Input(placeholder="Optional inventory file (instead of a single host)", id="health-inventory")
@@ -385,7 +435,7 @@ class HealthScreen(ModalScreen):
             with Horizontal():
                 yield Button("Check", variant="primary", id="btn-health-run")
                 yield Button("Close", id="btn-health-close")
-            yield Log(id="health-log", highlight=True)
+            yield TerminalLog(id="health-log", highlight=True)
 
     def on_error(self, event) -> None:
         """Global error handler — display errors, never crash."""
@@ -555,7 +605,7 @@ class DiffScreen(ModalScreen):
     def compose(self) -> ComposeResult:
         """Compose the configuration diff modal."""
         with Vertical(id="diff-modal"):
-            yield Label("🔎 Configuration Diff", id="diff-title")
+            yield Label(terminal_text("🔎 Configuration Diff"), id="diff-title")
             yield Input(placeholder="Before (original) config file", id="diff-before")
             yield Input(placeholder="After (new) config file", id="diff-after")
             with Horizontal(classes="advanced-row"):
@@ -565,7 +615,7 @@ class DiffScreen(ModalScreen):
             with Horizontal():
                 yield Button("Compare", variant="primary", id="btn-diff-run")
                 yield Button("Close", id="btn-diff-close")
-            yield Log(id="diff-log", highlight=False)
+            yield TerminalLog(id="diff-log", highlight=False)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Run a semantic diff or close the modal."""
@@ -638,7 +688,7 @@ class BastionScreen(ModalScreen):
     def compose(self) -> ComposeResult:
         """Compose the active bastion management modal."""
         with Vertical(id="bastion-modal"):
-            yield Label("🔐 Active SSH Bastion", id="bastion-title")
+            yield Label(terminal_text("🔐 Active SSH Bastion"), id="bastion-title")
             yield Input(placeholder="Bastion host", id="bastion-host")
             yield Input(placeholder="Bastion username", id="bastion-user")
             yield Input(value="22", placeholder="SSH port", id="bastion-port")
@@ -650,7 +700,7 @@ class BastionScreen(ModalScreen):
                 yield Button("Status", id="btn-bastion-status")
                 yield Button("Disconnect", variant="warning", id="btn-bastion-disconnect")
                 yield Button("Close", id="btn-bastion-close")
-            yield Log(id="bastion-log", highlight=True)
+            yield TerminalLog(id="bastion-log", highlight=True)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Connect, inspect, or disconnect the active bastion."""
@@ -730,7 +780,7 @@ class SettingsScreen(ModalScreen):
         """Compose the user-scoped settings form."""
         settings = netops_app(self).settings
         with Vertical(id="settings-modal"):
-            yield Label("⚙️ TUI Settings", id="settings-title")
+            yield Label(terminal_text("⚙️ TUI Settings"), id="settings-title")
             yield Label("Scan defaults")
             with Horizontal(classes="advanced-row"):
                 yield Input(value=str(settings["snmp_port"]), id="settings-snmp-port")
@@ -748,7 +798,7 @@ class SettingsScreen(ModalScreen):
             with Horizontal():
                 yield Button("Save", variant="primary", id="btn-settings-save")
                 yield Button("Cancel", id="btn-settings-cancel")
-            yield Log(id="settings-log", highlight=True)
+            yield TerminalLog(id="settings-log", highlight=True)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Persist valid settings or close without changing them."""
@@ -795,7 +845,7 @@ class VaultScreen(ModalScreen):
         from netops.core.vault import CredentialVault
 
         with Vertical(id="vault-modal"):
-            yield Label("🔑 Credential Vault", id="vault-title")
+            yield Label(terminal_text("🔑 Credential Vault"), id="vault-title")
             yield Label("Vault path and session unlock")
             yield Input(value=str(CredentialVault.DEFAULT_VAULT_PATH), id="vault-path")
             yield Input(placeholder="Vault master password (session only)", password=True, id="vault-master-password")
@@ -813,7 +863,7 @@ class VaultScreen(ModalScreen):
                 yield Button("Save credentials", variant="primary", id="btn-vault-save")
                 yield Button("Delete scope", variant="warning", id="btn-vault-delete")
                 yield Button("Close", id="btn-vault-close")
-            yield Log(id="vault-log", highlight=True)
+            yield TerminalLog(id="vault-log", highlight=True)
 
     def _scope(self) -> tuple[str, str]:
         """Validate and return the requested credential scope and target."""
@@ -872,7 +922,7 @@ class ConfigPushScreen(ModalScreen):
     def compose(self) -> ComposeResult:
         """Compose the configuration push modal."""
         with Vertical(id="push-modal"):
-            yield Label("⚙️ Config Push", id="push-title")
+            yield Label(terminal_text("⚙️ Config Push"), id="push-title")
             yield Input(placeholder="Hostname or IP (comma-separated for bulk)", id="push-hosts",
                         value=self._selected_host or "")
             yield Input(placeholder="SSH user (vault if blank)", id="push-user")
@@ -892,7 +942,7 @@ class ConfigPushScreen(ModalScreen):
                 yield Button("Commit", variant="warning", id="btn-push-commit")
                 yield Button("Cancel", id="btn-push-cancel")
             yield Label("[dim]Presets: press 'c' for SNMP community change template[/dim]")
-            yield Log(id="push-log", highlight=True)
+            yield TerminalLog(id="push-log", highlight=True)
 
     def on_key(self, event) -> None:
         """Handle configuration editor shortcuts."""
@@ -1032,7 +1082,7 @@ class BackupScreen(ModalScreen):
     def compose(self) -> ComposeResult:
         """Compose the configuration backup modal."""
         with Vertical(id="backup-modal"):
-            yield Label("💾 Config Backup", id="backup-title")
+            yield Label(terminal_text("💾 Config Backup"), id="backup-title")
             yield Input(placeholder="Hostnames (comma-separated, or 'all' for inventory)", id="backup-hosts",
                         value=self._selected_host or "")
             yield Input(placeholder="SSH user (vault if blank)", id="backup-user")
@@ -1051,7 +1101,7 @@ class BackupScreen(ModalScreen):
             with Horizontal():
                 yield Button("Backup", variant="primary", id="btn-backup-run")
                 yield Button("Cancel", id="btn-backup-cancel")
-            yield Log(id="backup-log", highlight=True)
+            yield TerminalLog(id="backup-log", highlight=True)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle backup modal button presses."""
@@ -1254,8 +1304,6 @@ class NetopsTUI(App):
         Binding("h", "health", "Health"),
         Binding("p", "push", "Config Push"),
         Binding("b", "backup", "Backup"),
-        Binding("space", "toggle_selection", "Select"),
-        Binding("ctrl+a", "toggle_all_selection", "Select all"),
         Binding("enter", "toggle_detail", "More detail"),
         Binding("c", "running_config", "Running config"),
         Binding("v", "vault", "Credentials"),
@@ -1276,19 +1324,24 @@ class NetopsTUI(App):
         self._log_file = setup_logging()
         self.inventory = load_inventory()
         self.settings = load_settings()
+        self.terminal_profile: TerminalProfile = terminal_profile()
         self._selected_host: str | None = None
         self._selected_hosts: set[str] = set()
         self._detail_extended = False
         self._vault = None
         self._vault_password: str | None = None
 
+    def notify(self, message: str, *args, **kwargs):
+        """Notify with text compatible with the active terminal."""
+        return super().notify(terminal_text(message), *args, **kwargs)
+
     def compose(self) -> ComposeResult:
         """Compose the main TUI layout."""
         yield Header()
         with Vertical(id="workspace"):
             with Vertical(id="main-panel"):
-                yield Input(placeholder="🔍 Search devices...", id="search-input")
-                yield DataTable(id="device-table", cursor_type="row")
+                yield Input(placeholder=terminal_text("🔍 Search devices..."), id="search-input")
+                yield DeviceTable(id="device-table", cursor_type="row")
             with Vertical(id="detail-panel"):
                 yield Static("Select a device to view details", id="detail-content")
         yield Static(
@@ -1305,7 +1358,7 @@ class NetopsTUI(App):
         try:
             from textual.widgets import Static
             status = self.query_one(".status-bar", Static)
-            status.update(f"  ⚠️ Error (see logs): {str(event)[:60]}")
+            status.update(terminal_text(f"  ⚠️ Error (see logs): {str(event)[:60]}"))
         except Exception:
             pass
 
@@ -1334,7 +1387,9 @@ class NetopsTUI(App):
             if q and q not in row_text:
                 continue
             table.add_row(
-                "☑" if hostname in self._selected_hosts else "☐",
+                self.terminal_profile.selected_marker
+                if hostname in self._selected_hosts
+                else self.terminal_profile.unselected_marker,
                 hostname,
                 info.get("host", ""),
                 info.get("vendor", ""),
@@ -1389,16 +1444,16 @@ class NetopsTUI(App):
         if len(lines) == 1:
             lines.append("No inventory details are available yet. Run a deep scan to collect them.")
         hint = "Enter: basic detail" if self._detail_extended else "Enter: more detail"
-        lines.extend(("", f"[dim]{hint} · c: running config · Space: select · Esc: close[/dim]"))
+        lines.extend(("", terminal_text(f"[dim]{hint} · c: running config · Space/x: select · Esc: close[/dim]")))
         self.query_one("#detail-panel", Vertical).display = True
-        self.query_one("#detail-content", Static).update("\n".join(lines))
+        self.query_one("#detail-content", Static).update(terminal_text("\n".join(lines)))
 
     def _update_status(self) -> None:
         """Show inventory and multi-selection state in the persistent status bar."""
         count = len(self.inventory.get("devices", {}))
         selected = len(self._selected_hosts)
         self.query_one(".status-bar", Static).update(
-            f"  {count} devices  |  {selected} selected  |  {INVENTORY_FILE}"
+            terminal_text(f"  {count} devices  |  {selected} selected  |  {INVENTORY_FILE}")
         )
 
     def _focused_hostname(self) -> str | None:
@@ -1455,7 +1510,7 @@ class NetopsTUI(App):
         focused = self._focused_hostname()
         return [focused] if focused else []
 
-    def action_toggle_selection(self) -> None:
+    def toggle_focused_selection(self) -> None:
         """Toggle the selected flag for the focused device row."""
         if self._input_focused():
             return
@@ -1467,10 +1522,9 @@ class NetopsTUI(App):
             self._selected_hosts.remove(hostname)
         else:
             self._selected_hosts.add(hostname)
-        self._populate_table(self.query_one("#search-input", Input).value)
-        self._update_status()
+        self.call_after_refresh(self._refresh_selection_view)
 
-    def action_toggle_all_selection(self) -> None:
+    def toggle_all_selection(self) -> None:
         """Select every inventory device, or clear the current selection."""
         if self._input_focused():
             return
@@ -1479,8 +1533,20 @@ class NetopsTUI(App):
             if isinstance(info, dict)
         }
         self._selected_hosts = set() if devices and self._selected_hosts == devices else devices
+        self.call_after_refresh(self._refresh_selection_view)
+
+    def _refresh_selection_view(self) -> None:
+        """Refresh selection indicators after the current key event completes."""
         self._populate_table(self.query_one("#search-input", Input).value)
         self._update_status()
+
+    def action_toggle_selection(self) -> None:
+        """Keep the action available to extensions while the table owns keys."""
+        self.toggle_focused_selection()
+
+    def action_toggle_all_selection(self) -> None:
+        """Keep the action available to extensions while the table owns keys."""
+        self.toggle_all_selection()
 
     def action_toggle_detail(self) -> None:
         """Cycle the selected device detail pane between basic and extended metadata."""
