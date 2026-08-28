@@ -1,0 +1,1871 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Modular network automation utilities for telco operations">
+      
+      
+      
+        <link rel="canonical" href="https://plures.github.io/netops-toolkit/guides/cli-reference/">
+      
+      
+        <link rel="prev" href="../tui-screens/">
+      
+      
+        <link rel="next" href="../config-collector/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>CLI Reference - netops-toolkit</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#cli-reference" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="netops-toolkit" class="md-header__button md-logo" aria-label="netops-toolkit" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            netops-toolkit
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              CLI Reference
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/plures/netops-toolkit" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    plures/netops-toolkit
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../getting-started/" class="md-tabs__link">
+          
+  
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="netops-toolkit" class="md-nav__button md-logo" aria-label="netops-toolkit" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    netops-toolkit
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/plures/netops-toolkit" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    plures/netops-toolkit
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Terminal UI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tui-screens/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TUI Screen Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Reference
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#dispatcher" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dispatcher
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#discovery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Discovery
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#health-and-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Health and checks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#collection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Collection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#diffs-and-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Diffs and changes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#credential-vault-and-inventory-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Credential vault and inventory export
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#active-bastion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Active bastion
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tui-reports-and-ansible-helpers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TUI, reports, and Ansible helpers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TUI, reports, and Ansible helpers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#terminal-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Terminal compatibility
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config-collector/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Config Collector
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interface-checker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interface Checker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../inventory-management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventory Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../auto-inventory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Auto-Inventory Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vendor-support/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vendor Support Profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Network Scanner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../active-bastion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Active Bastion Routing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../jump-host-tunnel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SSH Jump-Host Tunneling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config-diff/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Config Diff Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cisco-health/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cisco Health Checks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../brocade/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Brocade Support
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../paloalto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Palo Alto Support
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../juniper/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Juniper Support
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/core/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/check/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Check
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/change/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Change
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/collect/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collect
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/parsers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parsers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/playbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Playbooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/ansible/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ansible
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/inventory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#dispatcher" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dispatcher
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#discovery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Discovery
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#health-and-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Health and checks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#collection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Collection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#diffs-and-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Diffs and changes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#credential-vault-and-inventory-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Credential vault and inventory export
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#active-bastion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Active bastion
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tui-reports-and-ansible-helpers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TUI, reports, and Ansible helpers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TUI, reports, and Ansible helpers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#terminal-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Terminal compatibility
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="cli-reference">CLI Reference<a class="headerlink" href="#cli-reference" title="Permanent link">&para;</a></h1>
+<p>This reference follows the commands implemented in the current source tree.
+Use <code>--help</code> on the installed version for the authoritative, version-specific
+argument list.</p>
+<h2 id="dispatcher">Dispatcher<a class="headerlink" href="#dispatcher" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>netops &lt;command&gt; [options]
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Delegates to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>scan</code></td>
+<td><code>netops.inventory.scan</code></td>
+</tr>
+<tr>
+<td><code>health</code></td>
+<td><code>netops.check.health</code></td>
+</tr>
+<tr>
+<td><code>backup</code></td>
+<td><code>netops.collect.backup</code></td>
+</tr>
+<tr>
+<td><code>push</code></td>
+<td><code>netops.change.push</code></td>
+</tr>
+<tr>
+<td><code>diff</code></td>
+<td><code>netops.change.diff</code></td>
+</tr>
+<tr>
+<td><code>tui</code></td>
+<td>Optional Textual TUI</td>
+</tr>
+<tr>
+<td><code>bastion</code></td>
+<td>Active bastion management</td>
+</tr>
+</tbody>
+</table>
+<p><code>netops report</code> is currently not a working command-line entry point. Use the
+<a href="../../api/report/">report Python API</a> or <code>python -m netops.report.health_dashboard</code>.</p>
+<h2 id="discovery">Discovery<a class="headerlink" href="#discovery" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>netops<span class="w"> </span>scan<span class="w"> </span>--subnet<span class="w"> </span><span class="m">10</span>.0.0.0/24<span class="w"> </span>--community<span class="w"> </span><span class="s1">'community-string'</span><span class="w"> </span>--output<span class="w"> </span>discovered.json
+</code></pre></div>
+<p>At least one target source is required. <code>--subnet</code> cannot be combined with <code>--csv</code> or <code>--hosts-file</code>; if both file options are supplied, <code>--csv</code> takes precedence.</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--subnet CIDR</code></td>
+<td>Scan a CIDR network</td>
+</tr>
+<tr>
+<td><code>--csv FILE</code></td>
+<td>Read addresses from a CSV <code>ip</code>, <code>host</code>, <code>hostname</code>, or <code>address</code> column</td>
+</tr>
+<tr>
+<td><code>--hosts-file FILE</code></td>
+<td>Read one address per line; CSV is also accepted</td>
+</tr>
+<tr>
+<td><code>--community STRING</code></td>
+<td>SNMPv2c community; default is <code>public</code></td>
+</tr>
+<tr>
+<td><code>--output FILE</code></td>
+<td>Write the discovered inventory fragment</td>
+</tr>
+<tr>
+<td><code>--format {json,csv}</code></td>
+<td>Output format; default <code>json</code></td>
+</tr>
+<tr>
+<td><code>--merge FILE</code></td>
+<td>Merge discovery results into an existing inventory</td>
+</tr>
+<tr>
+<td><code>--skip-ping</code> / <code>--skip-snmp</code></td>
+<td>Suppress the corresponding discovery phase</td>
+</tr>
+<tr>
+<td><code>--user</code>, <code>--password</code>, <code>--password-stdin</code></td>
+<td>Enable deep SSH enrichment after discovery</td>
+</tr>
+<tr>
+<td><code>--event-stream</code></td>
+<td>Emit app-facing JSON Lines; cannot be combined with <code>--output</code> or <code>--merge</code></td>
+</tr>
+</tbody>
+</table>
+<p>The scanner requires the <code>snmp</code> extra for SNMP identification. Under an active
+bastion it switches to TCP/SSH discovery and does not send local ICMP or UDP
+SNMP traffic to the remote network.</p>
+<h2 id="health-and-checks">Health and checks<a class="headerlink" href="#health-and-checks" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>netops<span class="w"> </span>health<span class="w"> </span>--inventory<span class="w"> </span>inventory.yaml<span class="w"> </span>--threshold<span class="w"> </span><span class="nv">cpu</span><span class="o">=</span><span class="m">80</span>,mem<span class="o">=</span><span class="m">85</span><span class="w"> </span>--fail-on-alert
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.check.bgp<span class="w"> </span>--inventory<span class="w"> </span>inventory.yaml<span class="w"> </span>--expected-prefixes<span class="w"> </span><span class="m">10</span>.0.0.2<span class="o">=</span><span class="m">100</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.check.vlan<span class="w"> </span>--inventory<span class="w"> </span>inventory.yaml<span class="w"> </span>--expected-vlans<span class="w"> </span><span class="m">10</span>,20,30-50
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.check.interfaces<span class="w"> </span>--host<span class="w"> </span><span class="m">10</span>.0.0.1<span class="w"> </span>--vendor<span class="w"> </span>cisco_ios<span class="w"> </span>--down-only
+</code></pre></div>
+<p><code>netops health</code> accepts exactly one of <code>--inventory</code> or <code>--host</code>, plus
+<code>--group</code>, <code>--vendor</code>, <code>--user</code>, <code>--password</code>, <code>--threshold</code>, <code>--json</code>, and
+<code>--fail-on-alert</code>.</p>
+<p>The BGP module also supports <code>--flap-min-uptime</code> and <code>--prefix-deviation</code>. The
+VLAN module requires one of <code>--expected-vlans</code> or <code>--vlan-db</code>, with optional
+<code>--ignore-vlans</code>, <code>--check-trunks</code>, <code>--json</code>, and <code>--fail-on-alert</code>.</p>
+<p><code>netops.check.interfaces</code> is single-host only; it does not accept <code>--inventory</code>.</p>
+<p>Vendor-specific commands are available as modules:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.check.arista<span class="w"> </span>--inventory<span class="w"> </span>inventory.yaml
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.check.juniper<span class="w"> </span>--inventory<span class="w"> </span>inventory.yaml
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.check.paloalto<span class="w"> </span>--host<span class="w"> </span><span class="m">10</span>.0.4.1<span class="w"> </span>--audit
+</code></pre></div>
+<h2 id="collection">Collection<a class="headerlink" href="#collection" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.collect.config<span class="w"> </span>--host<span class="w"> </span><span class="m">10</span>.0.0.1<span class="w"> </span>--vendor<span class="w"> </span>cisco_ios<span class="w"> </span>--user<span class="w"> </span>admin
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>netops<span class="w"> </span>backup<span class="w"> </span>--inventory<span class="w"> </span>inventory.yaml<span class="w"> </span>--output<span class="w"> </span>./backups<span class="w"> </span>--workers<span class="w"> </span><span class="m">10</span>
+</code></pre></div>
+<p><code>netops.collect.config</code> accepts <code>--inventory</code> or <code>--host</code> (the code does not
+enforce mutual exclusion), with <code>--group</code>, <code>--vendor</code>, <code>--user</code>, <code>--password</code>,
+<code>--transport {ssh,telnet}</code>, <code>--output</code>, and <code>--json</code>.</p>
+<p><code>netops backup</code> requires both <code>--inventory</code> and <code>--output</code>. Optional flags are
+<code>--group</code>, <code>--user</code>, <code>--password</code>, <code>--workers</code>, <code>--git</code>, <code>--no-alert</code>, and
+<code>--json</code>. Use <code>--output</code>, not the obsolete <code>--output-dir</code> spelling.</p>
+<h2 id="diffs-and-changes">Diffs and changes<a class="headerlink" href="#diffs-and-changes" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>netops<span class="w"> </span>diff<span class="w"> </span>--before<span class="w"> </span>before.cfg<span class="w"> </span>--after<span class="w"> </span>after.cfg<span class="w"> </span>--format<span class="w"> </span>semantic
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>netops<span class="w"> </span>push<span class="w"> </span>--host<span class="w"> </span><span class="m">10</span>.0.0.1<span class="w"> </span>--commands<span class="w"> </span>changes.txt
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>netops<span class="w"> </span>push<span class="w"> </span>--host<span class="w"> </span><span class="m">10</span>.0.0.1<span class="w"> </span>--commands<span class="w"> </span>changes.txt<span class="w"> </span>--commit<span class="w"> </span>--confirm-timer<span class="w"> </span><span class="m">5</span>
+</code></pre></div>
+<p><code>netops push</code> is dry-run/read-only unless <code>--commit</code> is supplied. Its required
+arguments are <code>--host</code> and <code>--commands</code>; the latter is one device command per
+line. Supported safety and connection flags include <code>--confirm-timer</code>,
+<code>--vendor</code>, <code>--user</code>, <code>--password</code>, <code>--transport</code>, <code>--port</code>, <code>--operator</code>,
+<code>--changelog</code>, and <code>--json</code>. Use <code>--commands</code>, not the obsolete <code>--config</code>.</p>
+<p>For health-validated rollback behavior, use the separate rollback module:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.change.rollback<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span>--host<span class="w"> </span><span class="m">10</span>.0.0.1<span class="w"> </span>--commands<span class="w"> </span>changes.txt<span class="w"> </span>--commit<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span>--rollback-on-failure<span class="w"> </span>--validate-health
+</code></pre></div>
+<p>Create a reviewable plan before an approved change:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.change.plan<span class="w"> </span>plan<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span>--host<span class="w"> </span><span class="m">10</span>.0.0.1<span class="w"> </span>--desired<span class="w"> </span>desired.cfg<span class="w"> </span>--current<span class="w"> </span>running.cfg<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span>--export<span class="w"> </span>plan.json
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.change.plan<span class="w"> </span>apply<span class="w"> </span>--plan<span class="w"> </span>plan.json<span class="w"> </span>--approve
+</code></pre></div>
+<p><code>plan</code> requires <code>--host</code> and <code>--desired</code>; <code>apply</code> requires <code>--plan</code> and only
+makes a device change with <code>--approve</code>.</p>
+<h2 id="credential-vault-and-inventory-export">Credential vault and inventory export<a class="headerlink" href="#credential-vault-and-inventory-export" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.core.vault<span class="w"> </span>init
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.core.vault<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--default<span class="w"> </span>--user<span class="w"> </span>admin
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.core.vault<span class="w"> </span>get<span class="w"> </span>--device<span class="w"> </span>core-rtr-01<span class="w"> </span>--groups<span class="w"> </span>routers,core
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.core.inventory<span class="w"> </span><span class="nb">export</span><span class="w"> </span>--inventory<span class="w"> </span>inventory.yaml<span class="w"> </span>--format<span class="w"> </span>ansible<span class="w"> </span>--output<span class="w"> </span>hosts.yaml
+</code></pre></div>
+<p>The vault commands are <code>init</code>, <code>set</code>, <code>get</code>, and <code>delete</code>; there is no <code>store</code>
+subcommand. Store passwords interactively; use <code>NETOPS_VAULT_PASSWORD</code> only in
+an appropriately protected non-interactive environment. Per-device environment
+variables use <code>NETOPS_CRED_&lt;NORMALIZED_HOST&gt;_USER</code>, <code>_PASS</code>, and <code>_ENABLE</code>.</p>
+<p>Inventory export formats are <code>ansible</code>, <code>ansible-json</code>, <code>ansible-yaml</code>, <code>json</code>,
+and <code>yaml</code>.</p>
+<h2 id="active-bastion">Active bastion<a class="headerlink" href="#active-bastion" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">netops</span> <span class="n">bastion</span> <span class="n">connect</span> <span class="p">-</span><span class="n">-host</span> <span class="n">bastion</span><span class="p">.</span><span class="n">example</span><span class="p">.</span><span class="n">com</span> <span class="p">-</span><span class="n">-username</span> <span class="n">netops</span> <span class="p">-</span><span class="n">-password-stdin</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">netops</span> <span class="n">bastion</span> <span class="n">status</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="n">netops</span> <span class="n">bastion</span> <span class="n">disconnect</span>
+</code></pre></div>
+<p><code>connect</code> requires <code>--host</code> and <code>--username</code>; optional arguments are <code>--port</code>,
+<code>--key-file</code>, <code>--password-stdin</code>, and <code>--key-passphrase-stdin</code>. This selection
+is workstation-wide for toolkit TCP connections. See <a href="../active-bastion/">Active Bastion
+Routing</a> for security and protocol limitations.</p>
+<h2 id="tui-reports-and-ansible-helpers">TUI, reports, and Ansible helpers<a class="headerlink" href="#tui-reports-and-ansible-helpers" title="Permanent link">&para;</a></h2>
+<p>Launch the optional Textual TUI with <code>netops tui</code> or <code>netops-tui</code> after
+installing <code>.[tui]</code> on Python 3.10+.</p>
+<p>The TUI calls the same public scan, health, backup, push, diff, and active
+bastion operations as the command line. It provides the following shortcuts:</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>TUI operation</th>
+<th>CLI-equivalent controls</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>s</code></td>
+<td>Scan</td>
+<td>Saved SNMP/SSH and concurrency defaults, skip-ping/skip-SNMP, JSON/CSV export</td>
+</tr>
+<tr>
+<td><code>h</code></td>
+<td>Health</td>
+<td>Saved CPU/memory thresholds, single host or inventory/group, vendor, JSON report, fail-on-alert status</td>
+</tr>
+<tr>
+<td><code>b</code></td>
+<td>Backup</td>
+<td>Saved worker default, inventory/group filtering, selected hosts, change alerts, local Git history</td>
+</tr>
+<tr>
+<td><code>p</code></td>
+<td>Config push</td>
+<td>Safe pre/post snapshot and diff, SSH/Telnet, port, operator, and JSON-lines audit log</td>
+</tr>
+<tr>
+<td><code>f</code></td>
+<td>Config diff</td>
+<td>Semantic, unified, or JSON output; Cisco, Junos, or flat syntax</td>
+</tr>
+<tr>
+<td><code>j</code></td>
+<td>Active bastion</td>
+<td>Connect, status, and disconnect the workstation-wide SSH bastion</td>
+</tr>
+<tr>
+<td><code>v</code></td>
+<td>Credential vault</td>
+<td>Unlock/create an encrypted session vault; save device, group, or global credentials</td>
+</tr>
+<tr>
+<td><code>o</code></td>
+<td>Settings</td>
+<td>Persist non-secret scan, health, and backup defaults under <code>~/.netops/tui-settings.json</code>; <code>Ctrl+O</code> opens it from Scan, Health, and Backup</td>
+</tr>
+</tbody>
+</table>
+<p>The main view follows the TUI redesign: a selection-aware device table above a
+basic/extended detail pane. With the device table focused, <code>Space</code> or <code>x</code>
+selects the focused row, and <code>Ctrl+A</code> toggles all devices. Keeping those keys
+on the table prevents selection from falling through to an application-wide
+shortcut. Bulk push/backup operations use the selection when present.
+<code>Enter</code> toggles extended metadata and <code>c</code> fetches a running configuration on
+demand without storing it in inventory. Credential resolution is device →
+group → global for the current unlocked vault session.</p>
+<p>Inputs and command editors use Textual's native <code>Ctrl+C</code>/<code>Ctrl+V</code> and bracketed
+paste handling. A terminal emulator or remote client must support bracketed
+paste for external clipboard paste to reach the TUI.</p>
+<h3 id="terminal-compatibility">Terminal compatibility<a class="headerlink" href="#terminal-compatibility" title="Permanent link">&para;</a></h3>
+<p>The TUI automatically chooses a conservative display for terminal types such
+as <code>vt100</code>, <code>vt102</code>, and <code>dumb</code>. If a terminal advertises itself as <code>xterm</code> but
+still renders checkbox glyphs or colours poorly, launch it once with:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>netops-tui<span class="w"> </span>--compat
+</code></pre></div>
+<p>This uses ASCII selection markers (<code>[ ]</code> and <code>[x]</code>) and asks Textual to use the
+standard ANSI colour palette. The equivalent setting for a shell profile or
+saved SecureCRT session is <code>NETOPS_TUI_COMPAT=1</code>. It does not change device
+connections or inventory data. <code>textual&gt;=8.2.8</code> is required because that
+release line supports Python 3.14.</p>
+<p>The TUI intentionally does not offer the CLI's confirmation timer: it requires
+a separate terminal-stdin confirmation after a live change. Use <code>netops push
+--confirm-timer ... --commit</code> when that safety control is required.</p>
+<p>The report generator is a Python API. The executable report interface is the
+health dashboard:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.report.health_dashboard<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span>--inventory<span class="w"> </span>inventory.yaml<span class="w"> </span>--format<span class="w"> </span>html<span class="w"> </span>--output<span class="w"> </span>dashboard.html
+</code></pre></div>
+<p>Generate remediation playbooks from a saved health report:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>python<span class="w"> </span>-m<span class="w"> </span>netops.playbooks.generator<span class="w"> </span>generate<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span>--from-health-report<span class="w"> </span>health.json<span class="w"> </span>--output-dir<span class="w"> </span>playbooks
+</code></pre></div>
+<p>The generator uses dry-run values by default; <code>--live</code> changes the generated
+playbook variables and should be reviewed before execution.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
