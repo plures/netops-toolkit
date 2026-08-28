@@ -89,7 +89,7 @@ can write a JSON or CSV fragment.
 
 Text fields accept normal keyboard input and terminal paste. Every text field,
 including credential scope and target in the vault, has its own full-width
-line with an explicit border and contrast. This avoids terminal renderers
+line with an explicit high-contrast input area. This avoids terminal renderers
 collapsing adjacent input boxes into unreadable controls. Do not paste
 passwords into a shared terminal transcript. For reusable credentials, open
 the credentials screen with `v` and use the encrypted vault instead.
