@@ -174,8 +174,10 @@ bastion operations as the command line. It provides the following shortcuts:
 | `o` | Settings | Persist non-secret scan and backup defaults under `~/.netops/tui-settings.json` |
 
 The main view follows the TUI redesign: a selection-aware device table above a
-basic/extended detail pane. `Space` selects the focused row, `Ctrl+A` toggles
-all devices, and bulk push/backup operations use the selection when present.
+basic/extended detail pane. With the device table focused, `Space` or `x`
+selects the focused row, and `Ctrl+A` toggles all devices. Keeping those keys
+on the table prevents selection from falling through to an application-wide
+shortcut. Bulk push/backup operations use the selection when present.
 `Enter` toggles extended metadata and `c` fetches a running configuration on
 demand without storing it in inventory. Credential resolution is device →
 group → global for the current unlocked vault session.
@@ -183,6 +185,22 @@ group → global for the current unlocked vault session.
 Inputs and command editors use Textual's native `Ctrl+C`/`Ctrl+V` and bracketed
 paste handling. A terminal emulator or remote client must support bracketed
 paste for external clipboard paste to reach the TUI.
+
+### Terminal compatibility
+
+The TUI automatically chooses a conservative display for terminal types such
+as `vt100`, `vt102`, and `dumb`. If a terminal advertises itself as `xterm` but
+still renders checkbox glyphs or colours poorly, launch it once with:
+
+```bash
+netops-tui --compat
+```
+
+This uses ASCII selection markers (`[ ]` and `[x]`) and asks Textual to use the
+standard ANSI colour palette. The equivalent setting for a shell profile or
+saved SecureCRT session is `NETOPS_TUI_COMPAT=1`. It does not change device
+connections or inventory data. `textual>=8.2.8` is required because that
+release line supports Python 3.14.
 
 The TUI intentionally does not offer the CLI's confirmation timer: it requires
 a separate terminal-stdin confirmation after a live change. Use `netops push

@@ -1,5 +1,9 @@
 """Smoke tests for the TUI launching and basic interaction."""
 
+import os
+import subprocess
+import sys
+
 import pytest
 
 
@@ -43,6 +47,59 @@ async def test_typing_in_input_doesnt_trigger_bindings():
         assert search.value == "pshb"
         # No modals pushed
         assert len(app.screen_stack) == 1
+
+
+@pytest.mark.asyncio
+async def test_space_selects_from_the_focused_table_without_exiting():
+    """Space selection remains inside the focused table and leaves the TUI alive."""
+    from textual.widgets import DataTable
+
+    from netops.tui import NetopsTUI
+
+    app = NetopsTUI()
+    app.inventory = {"devices": {"edge-01": {"host": "10.0.0.1", "vendor": "cisco_ios"}}}
+    async with app.run_test(size=(120, 40)) as pilot:
+        table = app.query_one("#device-table", DataTable)
+        table.focus()
+        await pilot.press("space")
+        await pilot.pause()
+        assert app.is_running
+        assert app._selected_hosts == {"edge-01"}
+
+
+def test_compat_flag_configures_textual_before_the_app_imports():
+    """Console-script imports honour --compat before Textual reads its settings."""
+    environment = os.environ.copy()
+    environment.pop("NETOPS_TUI_COMPAT", None)
+    environment.pop("TEXTUAL_COLOR_SYSTEM", None)
+    script = (
+        "import sys; "
+        "sys.argv = ['netops-tui', '--compat']; "
+        "import netops.tui; "
+        "from textual.constants import COLOR_SYSTEM; "
+        "print(COLOR_SYSTEM)"
+    )
+
+    result = subprocess.run(
+        [sys.executable, "-c", script],
+        check=True,
+        capture_output=True,
+        env=environment,
+        text=True,
+    )
+
+    assert result.stdout.strip() == "standard"
+
+
+def test_compatibility_profile_uses_ascii_selection_markers(monkeypatch):
+    """Compatibility terminals never need checkbox glyph support."""
+    monkeypatch.setenv("NETOPS_TUI_COMPAT", "1")
+
+    from netops.terminal import terminal_profile
+
+    profile = terminal_profile()
+    assert profile.compatibility_mode
+    assert (profile.selected_marker, profile.unselected_marker) == ("[x]", "[ ]")
 
 
 @pytest.mark.asyncio

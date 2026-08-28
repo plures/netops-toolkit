@@ -15,6 +15,8 @@ Usage:
     python -m netops.tui
 """
 
+# ruff: noqa: E402
+
 from __future__ import annotations
 
 import asyncio
@@ -22,8 +24,23 @@ import csv
 import json
 import logging
 import os
+import sys
 from pathlib import Path
 from typing import cast
+
+from netops.terminal import (
+    TerminalProfile,
+    configure_terminal_environment,
+    terminal_profile,
+    terminal_text,
+)
+
+# A console-script entry point imports this package before ``__main__`` can
+# parse --compat. Honour the flag here as well, before Textual reads its
+# environment-based colour settings.
+if "--compat" in sys.argv:
+    os.environ["NETOPS_TUI_COMPAT"] = "1"
+configure_terminal_environment(os.environ)
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
@@ -118,6 +135,30 @@ def netops_app(screen: ModalScreen) -> NetopsTUI:
     return cast("NetopsTUI", screen.app)
 
 
+class DeviceTable(DataTable):
+    """Device list with table-scoped selection keys.
+
+    Keeping Space on the focused table prevents it from falling through to an
+    application-wide action while Textual is dispatching a terminal key event.
+    That is safer for terminal emulators and avoids mutating a table from a
+    parent binding during its own key handling.
+    """
+
+    BINDINGS = [
+        *DataTable.BINDINGS,
+        Binding("space,x", "toggle_selection", "Select"),
+        Binding("ctrl+a", "toggle_all_selection", "Select all"),
+    ]
+
+    def action_toggle_selection(self) -> None:
+        """Toggle the row under this table's cursor."""
+        cast("NetopsTUI", self.app).toggle_focused_selection()
+
+    def action_toggle_all_selection(self) -> None:
+        """Toggle all inventory rows without falling through to the App."""
+        cast("NetopsTUI", self.app).toggle_all_selection()
+
+
 # ---------------------------------------------------------------------------
 # Scan Screen
 # ---------------------------------------------------------------------------
@@ -131,7 +172,7 @@ class ScanScreen(ModalScreen):
         """Compose the inventory scan modal."""
         settings = netops_app(self).settings
         with Vertical(id="scan-modal"):
-            yield Label("🔍 Inventory Scan", id="scan-title")
+            yield Label(terminal_text("🔍 Inventory Scan"), id="scan-title")
             yield Input(placeholder="Subnets (e.g. 10.0.0.0/24, 192.168.1.0/24)", id="scan-subnet")
             yield Input(placeholder="Or path to hosts file (hosts.csv or ips.txt)", id="scan-hosts-file")
             yield Input(placeholder="SNMP communities (comma-sep, or leave blank for registry)", id="scan-community")
@@ -370,7 +411,7 @@ class HealthScreen(ModalScreen):
     def compose(self) -> ComposeResult:
         """Compose the health check modal."""
         with Vertical(id="health-modal"):
-            yield Label("🏥 Health Check", id="health-title")
+            yield Label(terminal_text("🏥 Health Check"), id="health-title")
             yield Input(placeholder="Hostname or IP", id="health-host",
                         value=self._selected_host or "")
             yield Input(placeholder="Optional inventory file (instead of a single host)", id="health-inventory")
@@ -555,7 +596,7 @@ class DiffScreen(ModalScreen):
     def compose(self) -> ComposeResult:
         """Compose the configuration diff modal."""
         with Vertical(id="diff-modal"):
-            yield Label("🔎 Configuration Diff", id="diff-title")
+            yield Label(terminal_text("🔎 Configuration Diff"), id="diff-title")
             yield Input(placeholder="Before (original) config file", id="diff-before")
             yield Input(placeholder="After (new) config file", id="diff-after")
             with Horizontal(classes="advanced-row"):
@@ -638,7 +679,7 @@ class BastionScreen(ModalScreen):
     def compose(self) -> ComposeResult:
         """Compose the active bastion management modal."""
         with Vertical(id="bastion-modal"):
-            yield Label("🔐 Active SSH Bastion", id="bastion-title")
+            yield Label(terminal_text("🔐 Active SSH Bastion"), id="bastion-title")
             yield Input(placeholder="Bastion host", id="bastion-host")
             yield Input(placeholder="Bastion username", id="bastion-user")
             yield Input(value="22", placeholder="SSH port", id="bastion-port")
@@ -730,7 +771,7 @@ class SettingsScreen(ModalScreen):
         """Compose the user-scoped settings form."""
         settings = netops_app(self).settings
         with Vertical(id="settings-modal"):
-            yield Label("⚙️ TUI Settings", id="settings-title")
+            yield Label(terminal_text("⚙️ TUI Settings"), id="settings-title")
             yield Label("Scan defaults")
             with Horizontal(classes="advanced-row"):
                 yield Input(value=str(settings["snmp_port"]), id="settings-snmp-port")
@@ -795,7 +836,7 @@ class VaultScreen(ModalScreen):
         from netops.core.vault import CredentialVault
 
         with Vertical(id="vault-modal"):
-            yield Label("🔑 Credential Vault", id="vault-title")
+            yield Label(terminal_text("🔑 Credential Vault"), id="vault-title")
             yield Label("Vault path and session unlock")
             yield Input(value=str(CredentialVault.DEFAULT_VAULT_PATH), id="vault-path")
             yield Input(placeholder="Vault master password (session only)", password=True, id="vault-master-password")
@@ -872,7 +913,7 @@ class ConfigPushScreen(ModalScreen):
     def compose(self) -> ComposeResult:
         """Compose the configuration push modal."""
         with Vertical(id="push-modal"):
-            yield Label("⚙️ Config Push", id="push-title")
+            yield Label(terminal_text("⚙️ Config Push"), id="push-title")
             yield Input(placeholder="Hostname or IP (comma-separated for bulk)", id="push-hosts",
                         value=self._selected_host or "")
             yield Input(placeholder="SSH user (vault if blank)", id="push-user")
@@ -1032,7 +1073,7 @@ class BackupScreen(ModalScreen):
     def compose(self) -> ComposeResult:
         """Compose the configuration backup modal."""
         with Vertical(id="backup-modal"):
-            yield Label("💾 Config Backup", id="backup-title")
+            yield Label(terminal_text("💾 Config Backup"), id="backup-title")
             yield Input(placeholder="Hostnames (comma-separated, or 'all' for inventory)", id="backup-hosts",
                         value=self._selected_host or "")
             yield Input(placeholder="SSH user (vault if blank)", id="backup-user")
@@ -1254,8 +1295,6 @@ class NetopsTUI(App):
         Binding("h", "health", "Health"),
         Binding("p", "push", "Config Push"),
         Binding("b", "backup", "Backup"),
-        Binding("space", "toggle_selection", "Select"),
-        Binding("ctrl+a", "toggle_all_selection", "Select all"),
         Binding("enter", "toggle_detail", "More detail"),
         Binding("c", "running_config", "Running config"),
         Binding("v", "vault", "Credentials"),
@@ -1276,6 +1315,7 @@ class NetopsTUI(App):
         self._log_file = setup_logging()
         self.inventory = load_inventory()
         self.settings = load_settings()
+        self.terminal_profile: TerminalProfile = terminal_profile()
         self._selected_host: str | None = None
         self._selected_hosts: set[str] = set()
         self._detail_extended = False
@@ -1287,8 +1327,8 @@ class NetopsTUI(App):
         yield Header()
         with Vertical(id="workspace"):
             with Vertical(id="main-panel"):
-                yield Input(placeholder="🔍 Search devices...", id="search-input")
-                yield DataTable(id="device-table", cursor_type="row")
+                yield Input(placeholder=terminal_text("🔍 Search devices..."), id="search-input")
+                yield DeviceTable(id="device-table", cursor_type="row")
             with Vertical(id="detail-panel"):
                 yield Static("Select a device to view details", id="detail-content")
         yield Static(
@@ -1334,7 +1374,9 @@ class NetopsTUI(App):
             if q and q not in row_text:
                 continue
             table.add_row(
-                "☑" if hostname in self._selected_hosts else "☐",
+                self.terminal_profile.selected_marker
+                if hostname in self._selected_hosts
+                else self.terminal_profile.unselected_marker,
                 hostname,
                 info.get("host", ""),
                 info.get("vendor", ""),
@@ -1389,7 +1431,7 @@ class NetopsTUI(App):
         if len(lines) == 1:
             lines.append("No inventory details are available yet. Run a deep scan to collect them.")
         hint = "Enter: basic detail" if self._detail_extended else "Enter: more detail"
-        lines.extend(("", f"[dim]{hint} · c: running config · Space: select · Esc: close[/dim]"))
+        lines.extend(("", terminal_text(f"[dim]{hint} · c: running config · Space/x: select · Esc: close[/dim]")))
         self.query_one("#detail-panel", Vertical).display = True
         self.query_one("#detail-content", Static).update("\n".join(lines))
 
@@ -1455,7 +1497,7 @@ class NetopsTUI(App):
         focused = self._focused_hostname()
         return [focused] if focused else []
 
-    def action_toggle_selection(self) -> None:
+    def toggle_focused_selection(self) -> None:
         """Toggle the selected flag for the focused device row."""
         if self._input_focused():
             return
@@ -1467,10 +1509,9 @@ class NetopsTUI(App):
             self._selected_hosts.remove(hostname)
         else:
             self._selected_hosts.add(hostname)
-        self._populate_table(self.query_one("#search-input", Input).value)
-        self._update_status()
+        self.call_after_refresh(self._refresh_selection_view)
 
-    def action_toggle_all_selection(self) -> None:
+    def toggle_all_selection(self) -> None:
         """Select every inventory device, or clear the current selection."""
         if self._input_focused():
             return
@@ -1479,8 +1520,20 @@ class NetopsTUI(App):
             if isinstance(info, dict)
         }
         self._selected_hosts = set() if devices and self._selected_hosts == devices else devices
+        self.call_after_refresh(self._refresh_selection_view)
+
+    def _refresh_selection_view(self) -> None:
+        """Refresh selection indicators after the current key event completes."""
         self._populate_table(self.query_one("#search-input", Input).value)
         self._update_status()
+
+    def action_toggle_selection(self) -> None:
+        """Keep the action available to extensions while the table owns keys."""
+        self.toggle_focused_selection()
+
+    def action_toggle_all_selection(self) -> None:
+        """Keep the action available to extensions while the table owns keys."""
+        self.toggle_all_selection()
 
     def action_toggle_detail(self) -> None:
         """Cycle the selected device detail pane between basic and extended metadata."""
