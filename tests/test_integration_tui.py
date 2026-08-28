@@ -119,9 +119,9 @@ async def test_tui_scan_modal_cancel_dismisses(inv_file):
 
 
 @pytest.mark.asyncio
-async def test_tui_scan_exposes_cli_tuning_controls(inv_file):
-    """Scan modal exposes the timeout, concurrency, and probe controls from the CLI."""
-    from textual.widgets import Checkbox, Input
+async def test_tui_scan_exposes_cli_tuning_defaults(inv_file):
+    """Scan uses persistent timeout and concurrency defaults instead of per-run fields."""
+    from textual.widgets import Checkbox, Input, Label
 
     from netops.tui import NetopsTUI, ScanScreen
 
@@ -130,8 +130,9 @@ async def test_tui_scan_exposes_cli_tuning_controls(inv_file):
         app.push_screen(ScanScreen())
         await pilot.pause()
         screen = app.screen
-        assert screen.query_one("#scan-snmp-port", Input).value == "161"
-        assert screen.query_one("#scan-ssh-concurrency", Input).value == "5"
+        assert app.settings["snmp_port"] == 161
+        assert app.settings["ssh_concurrency"] == 5
+        assert "SNMP port 161" in str(screen.query_one("#scan-defaults-summary", Label).render())
         assert screen.query_one("#scan-skip-ping", Checkbox) is not None
         assert screen.query_one("#scan-output", Input) is not None
 
@@ -160,7 +161,7 @@ async def test_tui_opens_diff_and_bastion_tools(inv_file):
 @pytest.mark.asyncio
 async def test_tui_forms_expose_cli_equivalent_options(inv_file):
     """Health, backup, and push forms retain their CLI safety and scope options."""
-    from textual.widgets import Checkbox, Input
+    from textual.widgets import Checkbox, Input, Label
 
     from netops.tui import BackupScreen, ConfigPushScreen, HealthScreen, NetopsTUI
 
@@ -169,7 +170,7 @@ async def test_tui_forms_expose_cli_equivalent_options(inv_file):
         app.push_screen(HealthScreen())
         await pilot.pause()
         assert app.screen.query_one("#health-inventory", Input) is not None
-        assert app.screen.query_one("#health-threshold", Input) is not None
+        assert "Health defaults:" in str(app.screen.query_one("#health-defaults-summary", Label).render())
         assert app.screen.query_one("#health-fail-on-alert", Checkbox) is not None
         await pilot.press("escape")
         await pilot.pause()

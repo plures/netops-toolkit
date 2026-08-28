@@ -153,83 +153,108 @@ async def test_paste_works_in_all_scan_fields():
 
 
 @pytest.mark.asyncio
-async def test_scan_advanced_fields_and_actions_have_visible_labels():
-    """Advanced scan settings use full-width, high-contrast, editable inputs."""
+async def test_operation_forms_show_defaults_and_open_settings():
+    """Persistent tuning is summarized on forms and edited only in Settings."""
+    from textual.widgets import Label
+
+    from netops.tui import BackupScreen, HealthScreen, NetopsTUI, ScanScreen, SettingsScreen
+
+    form_cases = (
+        (ScanScreen, "#scan-defaults-summary", "Scan defaults:", "#scan-snmp-port"),
+        (HealthScreen, "#health-defaults-summary", "Health defaults:", "#health-threshold"),
+        (BackupScreen, "#backup-defaults-summary", "Backup defaults:", "#backup-workers"),
+    )
+    for screen_type, summary_id, expected_prefix, removed_field_id in form_cases:
+        app = NetopsTUI()
+        async with app.run_test(size=(100, 80)) as pilot:
+            app.push_screen(screen_type())
+            await pilot.pause()
+            screen = app.screen
+            summary = screen.query_one(summary_id, Label)
+            assert str(summary.render()).startswith(expected_prefix)
+            assert "Ctrl+O" in str(summary.render())
+            assert not list(screen.query(removed_field_id))
+
+            await pilot.press("ctrl+o")
+            await pilot.pause()
+            assert isinstance(app.screen, SettingsScreen)
+            await pilot.press("escape")
+            await pilot.pause()
+            assert isinstance(app.screen, screen_type)
+
+
+@pytest.mark.asyncio
+async def test_settings_is_the_labelled_visible_home_for_tuning_defaults():
+    """All persistent operation defaults are visible and editable in Settings."""
     from textual.widgets import Input, Label
 
-    from netops.tui import NetopsTUI, ScanScreen
+    from netops.tui import NetopsTUI, SettingsScreen
 
     app = NetopsTUI()
-    async with app.run_test(size=(80, 80)) as pilot:
-        app.push_screen(ScanScreen())
+    async with app.run_test(size=(100, 100)) as pilot:
+        app.push_screen(SettingsScreen())
         await pilot.pause()
         screen = app.screen
-        scan_modal = screen.query_one("#scan-modal")
-        expected_labels = {
-            "#scan-snmp-port-label": "SNMP port",
-            "#scan-snmp-timeout-label": "SNMP timeout (seconds)",
-            "#scan-ping-workers-label": "Ping workers",
-            "#scan-snmp-concurrency-label": "SNMP concurrency",
-            "#scan-ssh-timeout-label": "SSH timeout (seconds)",
-            "#scan-ssh-concurrency-label": "SSH concurrency",
-        }
-        input_ids = {
-            "#scan-snmp-port-label": "#scan-snmp-port",
-            "#scan-snmp-timeout-label": "#scan-snmp-timeout",
-            "#scan-ping-workers-label": "#scan-ping-workers",
-            "#scan-snmp-concurrency-label": "#scan-snmp-concurrency",
-            "#scan-ssh-timeout-label": "#scan-ssh-timeout",
-            "#scan-ssh-concurrency-label": "#scan-ssh-concurrency",
-        }
-        for label_id, expected in expected_labels.items():
-            label = screen.query_one(label_id, Label)
-            field = screen.query_one(input_ids[label_id], Input)
-            assert str(label.render()) == expected
-            assert label.region.width >= len(expected)
-            assert "scan-setting-input" in field.classes
-            assert field.parent is scan_modal
-            assert field.region.width >= 50
+        assert str(screen.query_one("#settings-title", Label).render()) == "⚙️ TUI Settings"
+        for field_id in (
+            "#settings-snmp-port",
+            "#settings-snmp-timeout",
+            "#settings-ping-workers",
+            "#settings-snmp-concurrency",
+            "#settings-ssh-timeout",
+            "#settings-ssh-concurrency",
+            "#settings-health-cpu-threshold",
+            "#settings-health-mem-threshold",
+            "#settings-backup-workers",
+        ):
+            field = screen.query_one(field_id, Input)
+            assert "default-setting-input" in field.classes
             assert field.region.height == 3
-            assert field.region.y == label.region.bottom
+            assert field.styles.background != screen.query_one("#settings-modal").styles.background
 
-            original_value = field.value
-            unfocused_border = field.styles.border_top
-            unfocused_color = field.styles.color
-            unfocused_background = field.styles.background
-            assert unfocused_border[0] == "solid"
-            assert field.styles.border_left == unfocused_border
-            assert field.styles.border_right == unfocused_border
-            assert field.styles.border_bottom == unfocused_border
-            assert field.styles.border_top == unfocused_border
-            assert unfocused_color != unfocused_background
-            assert unfocused_background != scan_modal.styles.background
-            assert unfocused_color.a > 0.5
 
-            field.focus()
+@pytest.mark.asyncio
+async def test_modal_inputs_are_visible_in_all_operation_forms():
+    """Terminal themes cannot make operation-specific inputs disappear."""
+    from textual.containers import Horizontal
+    from textual.widgets import Input
+
+    from netops.tui import (
+        BackupScreen,
+        BastionScreen,
+        ConfigPushScreen,
+        DiffScreen,
+        HealthScreen,
+        NetopsTUI,
+        ScanScreen,
+        SettingsScreen,
+        VaultScreen,
+    )
+
+    for screen_type in (
+        ScanScreen,
+        HealthScreen,
+        DiffScreen,
+        BastionScreen,
+        SettingsScreen,
+        VaultScreen,
+        ConfigPushScreen,
+        BackupScreen,
+    ):
+        app = NetopsTUI()
+        async with app.run_test(size=(120, 100)) as pilot:
+            app.push_screen(screen_type())
             await pilot.pause()
-            focused_border = field.styles.border_top
-            assert focused_border[0] == "solid"
-            assert focused_border[1] != unfocused_border[1]
-            assert field.styles.color == unfocused_color
-            assert field.styles.background != unfocused_background
-            field.blur()
-            await pilot.pause()
-            field.value = original_value
-
-        snmp_port = screen.query_one("#scan-snmp-port", Input)
-        snmp_port.focus()
-        snmp_port.select_all()
-        await pilot.press("1", "6", "2")
-        assert snmp_port.value == "162"
-
-        assert {
-            button.id: str(button.label)
-            for button in screen.query("#scan-actions Button")
-        } == {
-            "btn-scan": "Scan",
-            "btn-ping": "Ping Only",
-            "btn-cancel-scan": "Cancel",
-        }
+            inputs = list(app.screen.query(Input))
+            assert inputs, f"{screen_type.__name__} must expose an editable input when applicable"
+            for field in inputs:
+                assert field.region.height == 3, f"{field.id} is not tall enough to show a border"
+                assert field.styles.border_top[0] == "solid"
+                assert field.styles.color != field.styles.background
+            for row in app.screen.query(Horizontal):
+                assert len(list(row.query(Input))) <= 1, (
+                    f"{screen_type.__name__} places multiple inputs in one row: {row.id}"
+                )
 
 
 @pytest.mark.asyncio

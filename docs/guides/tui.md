@@ -67,14 +67,15 @@ CIDR subnets, or the path to a hosts/CSV file. Then enter SNMP communities if
 your devices require them. Credentials are optional: blank SSH credentials
 use the configured vault default when available.
 
-![The inventory scan form with clearly labelled SNMP and SSH controls, discovery options, and action buttons.](../images/tui-scan-form.svg)
+![The inventory scan form with scan defaults, discovery options, and action buttons.](../images/tui-scan-form.svg)
 
-The advanced controls are labelled so their current values remain clear:
+The scan form shows a compact summary of its saved defaults rather than asking
+for the same tuning values on every run. Press `Ctrl+O` from Scan, Health, or
+Backup to open **TUI Settings**. That screen is the single persistent place to
+set SNMP port/timeout/concurrency, ping workers, SSH timeout/concurrency,
+health CPU and memory alert thresholds, and backup workers. The summary updates
+after you return from Settings.
 
-- **SNMP port** and **SNMP timeout** control SNMP probing.
-- **Ping workers** and **SNMP concurrency** limit parallel discovery work.
-- **SSH timeout** and **SSH concurrency** control optional deep SSH
-  enrichment after discovery.
 - **Probe every address** skips ICMP first. Use it only when ICMP is blocked
   and the target range is suitably small.
 - **Ping only** skips SNMP identification. The **Ping Only** button enables
@@ -86,7 +87,10 @@ can write a JSON or CSV fragment.
 
 ## Input and terminal behavior
 
-Text fields accept normal keyboard input and terminal paste. Do not paste
+Text fields accept normal keyboard input and terminal paste. Every text field,
+including credential scope and target in the vault, has its own full-width
+line with an explicit border and contrast. This avoids terminal renderers
+collapsing adjacent input boxes into unreadable controls. Do not paste
 passwords into a shared terminal transcript. For reusable credentials, open
 the credentials screen with `v` and use the encrypted vault instead.
 

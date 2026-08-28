@@ -85,6 +85,8 @@ DEFAULT_SETTINGS = {
     "ssh_timeout": 15,
     "ssh_concurrency": 5,
     "backup_workers": 5,
+    "health_cpu_threshold": 80.0,
+    "health_mem_threshold": 85.0,
 }
 
 
@@ -175,7 +177,21 @@ class DeviceTable(DataTable):
 class ScanScreen(ModalScreen):
     """Modal for running an inventory scan."""
 
-    BINDINGS = [Binding("escape", "dismiss", "Close")]
+    BINDINGS = [
+        Binding("escape", "dismiss", "Close"),
+        Binding("ctrl+o", "open_defaults", "Defaults"),
+    ]
+
+    @staticmethod
+    def _defaults_summary(settings: dict) -> str:
+        """Return a compact, readable summary of the scan defaults."""
+        return (
+            "Scan defaults: "
+            f"SNMP port {settings['snmp_port']}, timeout {settings['snmp_timeout']}s, "
+            f"ping workers {settings['ping_workers']}, SNMP concurrency {settings['snmp_concurrency']}; "
+            f"SSH timeout {settings['ssh_timeout']}s, SSH concurrency {settings['ssh_concurrency']}. "
+            "Press Ctrl+O to edit defaults."
+        )
 
     def compose(self) -> ComposeResult:
         """Compose the inventory scan modal."""
@@ -185,52 +201,9 @@ class ScanScreen(ModalScreen):
             yield Input(placeholder="Subnets (e.g. 10.0.0.0/24, 192.168.1.0/24)", id="scan-subnet")
             yield Input(placeholder="Or path to hosts file (hosts.csv or ips.txt)", id="scan-hosts-file")
             yield Input(placeholder="SNMP communities (comma-sep, or leave blank for registry)", id="scan-community")
-            yield Label("SNMP scan controls", classes="form-section-title")
-            yield Label("SNMP port", id="scan-snmp-port-label", classes="field-label")
-            yield Input(
-                value=str(settings["snmp_port"]),
-                placeholder="Enter SNMP port",
-                id="scan-snmp-port",
-                classes="scan-setting-input",
-            )
-            yield Label("SNMP timeout (seconds)", id="scan-snmp-timeout-label", classes="field-label")
-            yield Input(
-                value=str(settings["snmp_timeout"]),
-                placeholder="Enter SNMP timeout in seconds",
-                id="scan-snmp-timeout",
-                classes="scan-setting-input",
-            )
-            yield Label("Ping workers", id="scan-ping-workers-label", classes="field-label")
-            yield Input(
-                value=str(settings["ping_workers"]),
-                placeholder="Enter concurrent ping workers",
-                id="scan-ping-workers",
-                classes="scan-setting-input",
-            )
-            yield Label("SNMP concurrency", id="scan-snmp-concurrency-label", classes="field-label")
-            yield Input(
-                value=str(settings["snmp_concurrency"]),
-                placeholder="Enter concurrent SNMP probes",
-                id="scan-snmp-concurrency",
-                classes="scan-setting-input",
-            )
+            yield Label(self._defaults_summary(settings), id="scan-defaults-summary", classes="defaults-summary")
             yield Input(placeholder="SSH user (vault default if blank)", id="scan-user")
             yield Input(placeholder="SSH password (vault default if blank)", password=True, id="scan-password")
-            yield Label("SSH scan controls", classes="form-section-title")
-            yield Label("SSH timeout (seconds)", id="scan-ssh-timeout-label", classes="field-label")
-            yield Input(
-                value=str(settings["ssh_timeout"]),
-                placeholder="Enter SSH timeout in seconds",
-                id="scan-ssh-timeout",
-                classes="scan-setting-input",
-            )
-            yield Label("SSH concurrency", id="scan-ssh-concurrency-label", classes="field-label")
-            yield Input(
-                value=str(settings["ssh_concurrency"]),
-                placeholder="Enter SSH concurrency",
-                id="scan-ssh-concurrency",
-                classes="scan-setting-input",
-            )
             with Horizontal(classes="advanced-row"):
                 with Vertical(classes="advanced-options"):
                     yield Label("Discovery options", classes="field-label")
@@ -243,6 +216,15 @@ class ScanScreen(ModalScreen):
                 yield Button("Cancel", variant="error", id="btn-cancel-scan")
             yield Label("[dim]Tip: separate multiple subnets with commas[/dim]")
             yield TerminalLog(id="scan-log", highlight=True)
+
+    def action_open_defaults(self) -> None:
+        """Open persistent defaults and refresh the summary on return."""
+        self.app.push_screen(SettingsScreen(), self._refresh_defaults_summary)
+
+    def _refresh_defaults_summary(self, _result: object = None) -> None:
+        """Reflect saved settings after the Settings screen is dismissed."""
+        summary = self.query_one("#scan-defaults-summary", Label)
+        summary.update(self._defaults_summary(netops_app(self).settings))
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle scan modal button presses."""
@@ -275,13 +257,14 @@ class ScanScreen(ModalScreen):
             password = password or str(vault_credentials.get("password", ""))
             output = self.query_one("#scan-output", Input).value.strip()
             log = self.query_one("#scan-log", Log)
+            settings = netops_app(self).settings
             try:
-                snmp_port = self._positive_int("#scan-snmp-port", "SNMP port")
-                snmp_timeout = self._positive_int("#scan-snmp-timeout", "SNMP timeout")
-                ping_workers = self._positive_int("#scan-ping-workers", "ping workers")
-                snmp_concurrency = self._positive_int("#scan-snmp-concurrency", "SNMP concurrency")
-                ssh_timeout = self._positive_int("#scan-ssh-timeout", "SSH timeout")
-                ssh_concurrency = self._positive_int("#scan-ssh-concurrency", "SSH concurrency")
+                snmp_port = self._positive_default(settings, "snmp_port", "SNMP port")
+                snmp_timeout = self._positive_default(settings, "snmp_timeout", "SNMP timeout")
+                ping_workers = self._positive_default(settings, "ping_workers", "ping workers")
+                snmp_concurrency = self._positive_default(settings, "snmp_concurrency", "SNMP concurrency")
+                ssh_timeout = self._positive_default(settings, "ssh_timeout", "SSH timeout")
+                ssh_concurrency = self._positive_default(settings, "ssh_concurrency", "SSH concurrency")
             except ValueError as exc:
                 log.write_line(f"❌ {exc}")
                 return
@@ -294,14 +277,15 @@ class ScanScreen(ModalScreen):
                 ssh_timeout, ssh_concurrency, output, log,
             )
 
-    def _positive_int(self, field_id: str, label: str) -> int:
-        """Return a positive integer from an advanced scan field."""
+    @staticmethod
+    def _positive_default(settings: dict, key: str, label: str) -> int:
+        """Return a positive integer from the saved scan defaults."""
         try:
-            value = int(self.query_one(field_id, Input).value.strip())
-        except ValueError as exc:
-            raise ValueError(f"{label} must be a whole number") from exc
+            value = int(settings[key])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError(f"Saved {label} default must be a whole number") from exc
         if value < 1:
-            raise ValueError(f"{label} must be at least 1")
+            raise ValueError(f"Saved {label} default must be at least 1")
         return value
 
     def run_scan(
@@ -450,11 +434,22 @@ class ScanScreen(ModalScreen):
 class HealthScreen(ModalScreen):
     """Modal for running health checks."""
 
-    BINDINGS = [Binding("escape", "dismiss", "Close")]
+    BINDINGS = [
+        Binding("escape", "dismiss", "Close"),
+        Binding("ctrl+o", "open_defaults", "Defaults"),
+    ]
 
     def __init__(self, selected_host: str | None = None):
         super().__init__()
         self._selected_host = selected_host
+
+    @staticmethod
+    def _defaults_summary(settings: dict) -> str:
+        """Return the health defaults shown before a run."""
+        return (
+            f"Health defaults: CPU alert {settings['health_cpu_threshold']}%, "
+            f"memory alert {settings['health_mem_threshold']}%. Press Ctrl+O to edit defaults."
+        )
 
     def compose(self) -> ComposeResult:
         """Compose the health check modal."""
@@ -463,10 +458,13 @@ class HealthScreen(ModalScreen):
             yield Input(placeholder="Hostname or IP", id="health-host",
                         value=self._selected_host or "")
             yield Input(placeholder="Optional inventory file (instead of a single host)", id="health-inventory")
-            with Horizontal(classes="advanced-row"):
-                yield Input(placeholder="Inventory group filter", id="health-group")
-                yield Input(placeholder="Vendor for a single host (auto-detect when blank)", id="health-vendor")
-                yield Input(placeholder="Thresholds, e.g. cpu=80,mem=85", id="health-threshold")
+            yield Label(
+                self._defaults_summary(netops_app(self).settings),
+                id="health-defaults-summary",
+                classes="defaults-summary",
+            )
+            yield Input(placeholder="Inventory group filter", id="health-group")
+            yield Input(placeholder="Vendor for a single host (auto-detect when blank)", id="health-vendor")
             yield Input(placeholder="SSH user (vault if blank)", id="health-user")
             yield Input(placeholder="SSH password (vault if blank)", password=True, id="health-pass")
             yield Input(placeholder="Optional JSON report output file", id="health-output")
@@ -475,6 +473,15 @@ class HealthScreen(ModalScreen):
                 yield Button("Check", variant="primary", id="btn-health-run")
                 yield Button("Close", id="btn-health-close")
             yield TerminalLog(id="health-log", highlight=True)
+
+    def action_open_defaults(self) -> None:
+        """Open persistent defaults and refresh the summary on return."""
+        self.app.push_screen(SettingsScreen(), self._refresh_defaults_summary)
+
+    def _refresh_defaults_summary(self, _result: object = None) -> None:
+        """Reflect saved health defaults after leaving Settings."""
+        summary = self.query_one("#health-defaults-summary", Label)
+        summary.update(self._defaults_summary(netops_app(self).settings))
 
     def on_error(self, event) -> None:
         """Global error handler — display errors, never crash."""
@@ -508,7 +515,6 @@ class HealthScreen(ModalScreen):
             inventory_path = self.query_one("#health-inventory", Input).value.strip()
             group = self.query_one("#health-group", Input).value.strip()
             vendor_input = self.query_one("#health-vendor", Input).value.strip()
-            threshold_text = self.query_one("#health-threshold", Input).value.strip()
             output = self.query_one("#health-output", Input).value.strip()
             fail_on_alert = self.query_one("#health-fail-on-alert", Checkbox).value
             user = self.query_one("#health-user", Input).value.strip()
@@ -516,6 +522,16 @@ class HealthScreen(ModalScreen):
             log = self.query_one("#health-log", Log)
             if not inventory_path and not host:
                 log.write_line("❌ Enter a host or an inventory file")
+                return
+            settings = netops_app(self).settings
+            try:
+                cpu_threshold = float(settings["health_cpu_threshold"])
+                mem_threshold = float(settings["health_mem_threshold"])
+            except (KeyError, TypeError, ValueError):
+                log.write_line("❌ Saved health thresholds must be numbers")
+                return
+            if not 1 <= cpu_threshold <= 100 or not 1 <= mem_threshold <= 100:
+                log.write_line("❌ Saved health thresholds must be percentages between 1 and 100")
                 return
 
             log.write_line(
@@ -526,9 +542,6 @@ class HealthScreen(ModalScreen):
             async def _check():
                 try:
                     from netops.check.health import (
-                        DEFAULT_CPU_THRESHOLD,
-                        DEFAULT_MEM_THRESHOLD,
-                        _parse_thresholds,
                         run_health_check,
                     )
                     from netops.core.connection import (
@@ -538,9 +551,6 @@ class HealthScreen(ModalScreen):
                     )
                     from netops.core.inventory import Inventory
 
-                    thresholds = _parse_thresholds(threshold_text)
-                    cpu_threshold = thresholds.get("cpu", DEFAULT_CPU_THRESHOLD)
-                    mem_threshold = thresholds.get("mem", DEFAULT_MEM_THRESHOLD)
                     if inventory_path:
                         inv = Inventory.from_file(inventory_path)
                         devices = inv.filter(group=group or None) if group else list(inv.devices.values())
@@ -647,9 +657,8 @@ class DiffScreen(ModalScreen):
             yield Label(terminal_text("🔎 Configuration Diff"), id="diff-title")
             yield Input(placeholder="Before (original) config file", id="diff-before")
             yield Input(placeholder="After (new) config file", id="diff-after")
-            with Horizontal(classes="advanced-row"):
-                yield Input(value="semantic", placeholder="Format: semantic, unified, json", id="diff-format")
-                yield Input(placeholder="Style: auto, cisco, junos, flat", id="diff-style")
+            yield Input(value="semantic", placeholder="Format: semantic, unified, json", id="diff-format")
+            yield Input(placeholder="Style: auto, cisco, junos, flat", id="diff-style")
             yield Input(placeholder="Optional output file", id="diff-output")
             with Horizontal(classes="modal-actions"):
                 yield Button("Compare", variant="primary", id="btn-diff-run")
@@ -820,20 +829,27 @@ class SettingsScreen(ModalScreen):
         settings = netops_app(self).settings
         with Vertical(id="settings-modal"):
             yield Label(terminal_text("⚙️ TUI Settings"), id="settings-title")
-            yield Label("Scan defaults")
-            with Horizontal(classes="advanced-row"):
-                yield Input(value=str(settings["snmp_port"]), id="settings-snmp-port")
-                yield Input(value=str(settings["snmp_timeout"]), id="settings-snmp-timeout")
-                yield Input(value=str(settings["ping_workers"]), id="settings-ping-workers")
-            yield Label("SNMP port · SNMP timeout (seconds) · ping workers")
-            with Horizontal(classes="advanced-row"):
-                yield Input(value=str(settings["snmp_concurrency"]), id="settings-snmp-concurrency")
-                yield Input(value=str(settings["ssh_timeout"]), id="settings-ssh-timeout")
-                yield Input(value=str(settings["ssh_concurrency"]), id="settings-ssh-concurrency")
-            yield Label("SNMP concurrency · SSH timeout (seconds) · SSH concurrency")
-            yield Label("Backup defaults")
-            yield Input(value=str(settings["backup_workers"]), id="settings-backup-workers")
-            yield Label("Concurrent backup workers")
+            yield Label("Scan defaults", classes="form-section-title")
+            yield Label("SNMP port", classes="field-label")
+            yield Input(value=str(settings["snmp_port"]), id="settings-snmp-port", classes="default-setting-input")
+            yield Label("SNMP timeout (seconds)", classes="field-label")
+            yield Input(value=str(settings["snmp_timeout"]), id="settings-snmp-timeout", classes="default-setting-input")
+            yield Label("Ping workers", classes="field-label")
+            yield Input(value=str(settings["ping_workers"]), id="settings-ping-workers", classes="default-setting-input")
+            yield Label("SNMP concurrency", classes="field-label")
+            yield Input(value=str(settings["snmp_concurrency"]), id="settings-snmp-concurrency", classes="default-setting-input")
+            yield Label("SSH timeout (seconds)", classes="field-label")
+            yield Input(value=str(settings["ssh_timeout"]), id="settings-ssh-timeout", classes="default-setting-input")
+            yield Label("SSH concurrency", classes="field-label")
+            yield Input(value=str(settings["ssh_concurrency"]), id="settings-ssh-concurrency", classes="default-setting-input")
+            yield Label("Health defaults", classes="form-section-title")
+            yield Label("CPU alert threshold (percent)", classes="field-label")
+            yield Input(value=str(settings["health_cpu_threshold"]), id="settings-health-cpu-threshold", classes="default-setting-input")
+            yield Label("Memory alert threshold (percent)", classes="field-label")
+            yield Input(value=str(settings["health_mem_threshold"]), id="settings-health-mem-threshold", classes="default-setting-input")
+            yield Label("Backup defaults", classes="form-section-title")
+            yield Label("Concurrent backup workers", classes="field-label")
+            yield Input(value=str(settings["backup_workers"]), id="settings-backup-workers", classes="default-setting-input")
             with Horizontal(classes="modal-actions"):
                 yield Button("Save", variant="primary", id="btn-settings-save")
                 yield Button("Cancel", id="btn-settings-cancel")
@@ -861,8 +877,21 @@ class SettingsScreen(ModalScreen):
         except ValueError:
             log.write_line("❌ All settings must be whole numbers")
             return
+        try:
+            updated["health_cpu_threshold"] = float(
+                self.query_one("#settings-health-cpu-threshold", Input).value.strip()
+            )
+            updated["health_mem_threshold"] = float(
+                self.query_one("#settings-health-mem-threshold", Input).value.strip()
+            )
+        except ValueError:
+            log.write_line("❌ Health thresholds must be numbers")
+            return
         if any(value < 1 for value in updated.values()) or not 1 <= updated["snmp_port"] <= 65535:
             log.write_line("❌ Values must be positive and the SNMP port must be 1–65535")
+            return
+        if any(updated[key] > 100 for key in ("health_cpu_threshold", "health_mem_threshold")):
+            log.write_line("❌ Health thresholds must be percentages between 1 and 100")
             return
         app = netops_app(self)
         app.settings = {**app.settings, **updated}
@@ -899,10 +928,10 @@ class VaultScreen(ModalScreen):
             with Horizontal(classes="modal-actions"):
                 yield Button("Unlock saved vault", variant="primary", id="btn-vault-unlock")
                 yield Button("Create new vault", id="btn-vault-create")
-            yield Label("Credential scope: default, group, or device")
-            with Horizontal(classes="advanced-row"):
-                yield Input(value="default", id="vault-scope")
-                yield Input(placeholder="Group or device name (not needed for default)", id="vault-target")
+            yield Label("Credential scope: default, group, or device", classes="field-label")
+            yield Input(value="default", id="vault-scope")
+            yield Label("Group or device name (not needed for default)", classes="field-label")
+            yield Input(placeholder="Group or device name", id="vault-target")
             yield Input(placeholder="SSH username", id="vault-user")
             yield Input(placeholder="SSH password", password=True, id="vault-password")
             yield Input(placeholder="Optional enable password", password=True, id="vault-enable-password")
@@ -976,13 +1005,11 @@ class ConfigPushScreen(ModalScreen):
             yield Input(placeholder="SSH user (vault if blank)", id="push-user")
             yield Input(placeholder="SSH password (vault if blank)", password=True, id="push-pass")
             yield Input(placeholder="Vendor (cisco_ios, nokia_sros, etc. — leave blank to auto-detect)", id="push-vendor")
-            with Horizontal(classes="advanced-row"):
-                yield Input(value="ssh", placeholder="Transport: ssh or telnet", id="push-transport")
-                yield Input(placeholder="Optional port override", id="push-port")
-                yield Input(value="0", placeholder="Confirm timer minutes", id="push-confirm-timer")
-            with Horizontal(classes="advanced-row"):
-                yield Input(placeholder="Operator name (defaults to SSH user)", id="push-operator")
-                yield Input(value="~/.netops/changelog.jsonl", placeholder="Change log path", id="push-changelog")
+            yield Input(value="ssh", placeholder="Transport: ssh or telnet", id="push-transport")
+            yield Input(placeholder="Optional port override", id="push-port")
+            yield Input(value="0", placeholder="Confirm timer minutes", id="push-confirm-timer")
+            yield Input(placeholder="Operator name (defaults to SSH user)", id="push-operator")
+            yield Input(value="~/.netops/changelog.jsonl", placeholder="Change log path", id="push-changelog")
             yield Label("[dim]Commands (one per line):[/dim]")
             yield TextArea(id="push-commands")
             with Horizontal(classes="modal-actions"):
@@ -1121,11 +1148,19 @@ class ConfigPushScreen(ModalScreen):
 class BackupScreen(ModalScreen):
     """Modal for backing up device configs."""
 
-    BINDINGS = [Binding("escape", "dismiss", "Close")]
+    BINDINGS = [
+        Binding("escape", "dismiss", "Close"),
+        Binding("ctrl+o", "open_defaults", "Defaults"),
+    ]
 
     def __init__(self, selected_host: str | None = None):
         super().__init__()
         self._selected_host = selected_host
+
+    @staticmethod
+    def _defaults_summary(settings: dict) -> str:
+        """Return the backup defaults shown before a run."""
+        return f"Backup defaults: {settings['backup_workers']} concurrent workers. Press Ctrl+O to edit defaults."
 
     def compose(self) -> ComposeResult:
         """Compose the configuration backup modal."""
@@ -1141,15 +1176,27 @@ class BackupScreen(ModalScreen):
                 placeholder="Inventory file (YAML or JSON)",
                 id="backup-inventory",
             )
-            with Horizontal(classes="advanced-row"):
-                yield Input(placeholder="Optional inventory group", id="backup-group")
-                yield Input(value=str(netops_app(self).settings["backup_workers"]), placeholder="Concurrent workers", id="backup-workers")
-                yield Checkbox("Commit changes to a local git repository", id="backup-git")
-                yield Checkbox("Suppress change alerts", id="backup-no-alert")
+            yield Label(
+                self._defaults_summary(netops_app(self).settings),
+                id="backup-defaults-summary",
+                classes="defaults-summary",
+            )
+            yield Input(placeholder="Optional inventory group", id="backup-group")
+            yield Checkbox("Commit changes to a local git repository", id="backup-git")
+            yield Checkbox("Suppress change alerts", id="backup-no-alert")
             with Horizontal(classes="modal-actions"):
                 yield Button("Backup", variant="primary", id="btn-backup-run")
                 yield Button("Cancel", id="btn-backup-cancel")
             yield TerminalLog(id="backup-log", highlight=True)
+
+    def action_open_defaults(self) -> None:
+        """Open persistent defaults and refresh the summary on return."""
+        self.app.push_screen(SettingsScreen(), self._refresh_defaults_summary)
+
+    def _refresh_defaults_summary(self, _result: object = None) -> None:
+        """Reflect saved backup defaults after leaving Settings."""
+        summary = self.query_one("#backup-defaults-summary", Label)
+        summary.update(self._defaults_summary(netops_app(self).settings))
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle backup modal button presses."""
@@ -1171,11 +1218,11 @@ class BackupScreen(ModalScreen):
             log.write_line("❌ An inventory file is required")
             return
         try:
-            workers = int(self.query_one("#backup-workers", Input).value.strip())
+            workers = int(netops_app(self).settings["backup_workers"])
             if workers < 1:
                 raise ValueError
-        except ValueError:
-            log.write_line("❌ Concurrent workers must be at least 1")
+        except (KeyError, TypeError, ValueError):
+            log.write_line("❌ Saved backup worker default must be at least 1")
             return
 
         log.write_line(f"💾 Backing up inventory from {inventory_path} to {backup_dir}/")
@@ -1331,28 +1378,28 @@ class NetopsTUI(App):
         color: $text;
         padding: 0 1;
     }
-    #scan-modal Input {
+    #scan-modal Input, #health-modal Input, #push-modal Input, #backup-modal Input, #diff-modal Input, #bastion-modal Input, #settings-modal Input, #vault-modal Input {
         /* Do not rely on a terminal theme to distinguish editable fields. */
-        height: 3;
-        color: $text;
-        background: $surface;
-        border: solid $accent;
-    }
-    #scan-modal Input:focus {
-        border: solid $primary;
-    }
-    #scan-modal .scan-setting-input {
-        /* Keep numeric scan controls obvious in ANSI and low-colour terminals. */
-        width: 100%;
         height: 3;
         color: #ffffff;
         background: #1f2937;
         border: solid #38bdf8;
         padding: 0 1;
     }
-    #scan-modal .scan-setting-input:focus {
+    #scan-modal Input:focus, #health-modal Input:focus, #push-modal Input:focus, #backup-modal Input:focus, #diff-modal Input:focus, #bastion-modal Input:focus, #settings-modal Input:focus, #vault-modal Input:focus {
         background: #172554;
         border: solid #facc15;
+    }
+    #settings-modal .default-setting-input {
+        /* Defaults are the sole persistent tuning controls, so make them unmistakable. */
+        width: 100%;
+    }
+    .defaults-summary {
+        margin-top: 1;
+        padding: 0 1;
+        color: $text;
+        background: $primary 20%;
+        border: solid $accent;
     }
     .advanced-row Input {
         width: 1fr;

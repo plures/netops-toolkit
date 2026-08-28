@@ -164,14 +164,14 @@ bastion operations as the command line. It provides the following shortcuts:
 
 | Key | TUI operation | CLI-equivalent controls |
 | --- | --- | --- |
-| `s` | Scan | SNMP port/timeout/concurrency, ping workers, skip-ping/skip-SNMP, SSH timeout/concurrency, JSON/CSV export |
-| `h` | Health | Single host or inventory/group, vendor, CPU/memory thresholds, JSON report, fail-on-alert status |
-| `b` | Backup | Inventory/group filtering, selected hosts, workers, change alerts, local Git history |
+| `s` | Scan | Saved SNMP/SSH and concurrency defaults, skip-ping/skip-SNMP, JSON/CSV export |
+| `h` | Health | Saved CPU/memory thresholds, single host or inventory/group, vendor, JSON report, fail-on-alert status |
+| `b` | Backup | Saved worker default, inventory/group filtering, selected hosts, change alerts, local Git history |
 | `p` | Config push | Safe pre/post snapshot and diff, SSH/Telnet, port, operator, and JSON-lines audit log |
 | `f` | Config diff | Semantic, unified, or JSON output; Cisco, Junos, or flat syntax |
 | `j` | Active bastion | Connect, status, and disconnect the workstation-wide SSH bastion |
 | `v` | Credential vault | Unlock/create an encrypted session vault; save device, group, or global credentials |
-| `o` | Settings | Persist non-secret scan and backup defaults under `~/.netops/tui-settings.json` |
+| `o` | Settings | Persist non-secret scan, health, and backup defaults under `~/.netops/tui-settings.json`; `Ctrl+O` opens it from Scan, Health, and Backup |
 
 The main view follows the TUI redesign: a selection-aware device table above a
 basic/extended detail pane. With the device table focused, `Space` or `x`
