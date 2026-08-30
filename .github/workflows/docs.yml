@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
@@ -27,8 +27,4 @@ jobs:
         run: pip install -e ".[docs]"
 
       - name: Build docs
-        run: python -m mkdocs build
-
-      - name: Deploy to GitHub Pages
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: python -m mkdocs gh-deploy --force
+        run: python -m mkdocs build --strict

@@ -31,6 +31,11 @@ source ~/.venv/netops/bin/activate
 netops --help
 ```
 
+The installer also builds the full documentation site locally at
+`~/.local/share/netops-toolkit/docs/index.html`. Set `NETOPS_DOCS_DIR` before
+running the installer to choose another user-writable location. On Windows,
+the installed site is at `%LOCALAPPDATA%\netops-toolkit\docs\index.html`.
+
 Or clone the repository and use the same virtual-environment steps as above.
 
 ## 2. Create a local inventory

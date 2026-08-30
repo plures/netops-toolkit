@@ -108,6 +108,7 @@ jobs:
           cp -r examples/   "/tmp/${NAME}/"
           cp -r tests/      "/tmp/${NAME}/"
           cp README.md      "/tmp/${NAME}/"
+          cp mkdocs.yml     "/tmp/${NAME}/"
           cp pyproject.toml "/tmp/${NAME}/"
           cp install.sh     "/tmp/${NAME}/"
           cp install.ps1    "/tmp/${NAME}/"
@@ -121,13 +122,14 @@ jobs:
           sha256sum "${NAME}.tar.gz" > "${NAME}.tar.gz.sha256"
           sha256sum "${NAME}.zip" > "${NAME}.zip.sha256"
           tar tzf "${NAME}.tar.gz" | grep -F "${NAME}/install.sh"
+          tar tzf "${NAME}.tar.gz" | grep -F "${NAME}/mkdocs.yml"
           unzip -l "${NAME}.zip" | grep -F "${NAME}/install.ps1"
 
           echo "### 📦 Release archive" >> "$GITHUB_STEP_SUMMARY"
           echo "- \`${NAME}.tar.gz\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- \`${NAME}.zip\`" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "Contents: netops/ (with TUI), docs/, examples/, tests/, README, pyproject.toml" >> "$GITHUB_STEP_SUMMARY"
+          echo "Contents: netops/ (with TUI), docs/, mkdocs.yml, examples/, tests/, README, pyproject.toml" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Commit + tag
         if: steps.existing_tag.outputs.exists != 'true'
@@ -176,7 +178,7 @@ jobs:
           powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\\${NAME}\\install.ps1"
           \`\`\`
 
-          The installer creates a per-user virtual environment under \`%LOCALAPPDATA%\\netops-toolkit\` and adds a Start menu shortcut for \`netops-tui\`.
+          The installer creates a per-user virtual environment under \`%LOCALAPPDATA%\\netops-toolkit\`, builds offline documentation at \`%LOCALAPPDATA%\\netops-toolkit\\docs\\index.html\`, and adds a Start menu shortcut for \`netops-tui\`.
 
           ### 📥 Air-gapped / offline
 
@@ -190,6 +192,10 @@ jobs:
 
           - Python >= 3.9
           - No sudo needed (installs to ~/.venv/netops)
+
+          ### 📚 Offline documentation
+
+          The installer builds local documentation at \`~/.local/share/netops-toolkit/docs/index.html\` on Linux and macOS. Set \`NETOPS_DOCS_DIR\` before installing to choose another user-writable location.
 
           **Full Changelog**: https://github.com/plures/netops-toolkit/compare/$(git describe --tags --abbrev=0 "${TAG}^")...${TAG}
           EOF
@@ -213,3 +219,15 @@ jobs:
 
           echo "Could not create or repair GitHub release ${TAG}." >&2
           exit 1
+
+      - name: Set up Python for documentation deployment
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install documentation dependencies
+        run: pip install -e ".[docs]"
+
+      - name: Deploy release documentation to GitHub Pages
+        run: python -m mkdocs gh-deploy --force

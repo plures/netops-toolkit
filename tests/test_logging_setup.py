@@ -1,16 +1,20 @@
 """Tests for logging setup and friendly vendor names."""
 
+import logging
 import os
 import tempfile
 from pathlib import Path
 
 from netops.logging_setup import (
     VENDOR_FRIENDLY_NAMES,
+    CappedFileHandler,
     friendly_vendor_name,
     get_log_dir,
+    load_log_settings,
     setup_logging,
     shutdown_logging,
 )
+from netops.logging_setup import main as logs_main
 
 
 def test_friendly_vendor_names_known():
@@ -85,3 +89,47 @@ def test_setup_logging_creates_file():
             shutdown_logging()
             del os.environ["NETOPS_LOG_DIR"]
             assert mod._FILE_HANDLER is None
+
+
+def test_capped_file_handler_drops_oldest_complete_entries_before_writing(tmp_path):
+    """The configured cap retains recent complete entries instead of rotating forever."""
+    path = tmp_path / "bounded.log"
+    handler = CappedFileHandler(path, max_bytes=180)
+    handler.setFormatter(logging.Formatter("%(message)s"))
+    logger = logging.getLogger("netops.tests.bounded-log")
+    previous_handlers = list(logger.handlers)
+    previous_level = logger.level
+    previous_propagate = logger.propagate
+    logger.handlers = [handler]
+    logger.setLevel(logging.INFO)
+    logger.propagate = False
+    try:
+        logger.info("oldest-entry %s", "a" * 65)
+        logger.info("middle-entry %s", "b" * 65)
+        logger.info("newest-entry %s", "c" * 65)
+    finally:
+        handler.flush()
+        handler.close()
+        logger.handlers = previous_handlers
+        logger.setLevel(previous_level)
+        logger.propagate = previous_propagate
+
+    content = path.read_text(encoding="utf-8")
+    assert path.stat().st_size <= 180
+    assert "newest-entry" in content
+    assert "oldest-entry" not in content
+
+
+def test_logging_cli_saves_shared_size_and_verbosity_defaults(tmp_path, monkeypatch, capsys):
+    """TUI and scripts consume the same user-configurable logging defaults."""
+    monkeypatch.setenv("NETOPS_LOG_SETTINGS", str(tmp_path / "logging.json"))
+
+    assert logs_main(["configure", "--max-size-mb", "25", "--level", "warning"]) == 0
+
+    assert load_log_settings() == {"max_bytes": 25 * 1024 * 1024, "level": "WARNING"}
+    assert "25 MiB at WARNING" in capsys.readouterr().out
+
+    assert logs_main(["show"]) == 0
+    display = capsys.readouterr().out
+    assert "Log cap: 25 MiB" in display
+    assert "Log level: WARNING" in display

@@ -32,7 +32,9 @@ Use the exact device type expected by Netmiko in `vendor` fields.
 ### Linux and macOS
 
 The maintained installer creates a user-local environment at `~/.venv/netops`
-and installs the TUI, scanning, and HTML report extras. It selects the newest
+and installs the TUI, scanning, HTML report, and documentation build extras.
+It also builds an offline documentation site at
+`~/.local/share/netops-toolkit/docs/index.html`. It selects the newest
 compatible installed Python (3.9+) for that environment, so `netops` and
 `netops-tui` use the same interpreter. If no compatible Python is installed,
 `uv` provisions one. It does not require `sudo`.
@@ -100,7 +102,7 @@ Download the ZIP from [Releases](https://github.com/plures/netops-toolkit/releas
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\netops-toolkit-<version>\install.ps1"
 ```
 
-The installer finds the newest compatible Python (3.9+) registered on the machine, then creates a virtual environment under `%LOCALAPPDATA%\netops-toolkit`. Both `netops` and `netops-tui` run from that same environment. It adds a per-user Start menu shortcut and does not require administrator rights.
+The installer finds the newest compatible Python (3.9+) registered on the machine, then creates a virtual environment under `%LOCALAPPDATA%\netops-toolkit`. Both `netops` and `netops-tui` run from that same environment. It builds offline documentation at `%LOCALAPPDATA%\netops-toolkit\docs\index.html`, adds a per-user Start menu shortcut, and does not require administrator rights.
 
 To see which interpreter the installer will use without making changes:
 

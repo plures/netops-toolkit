@@ -140,6 +140,7 @@ try {
     }
 
     $venv = Join-Path $InstallRoot "venv"
+    $docsRoot = Join-Path $InstallRoot "docs"
     $venvPython = Join-Path $venv "Scripts\\python.exe"
     $cliExecutable = Join-Path $venv "Scripts\\netops.exe"
     $tuiExecutable = Join-Path $venv "Scripts\\netops-tui.exe"
@@ -150,10 +151,25 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "Failed to create the virtual environment." }
     & $venvPython -m pip install --upgrade pip
     if ($LASTEXITCODE -ne 0) { throw "Failed to upgrade pip in the virtual environment." }
-    & $venvPython -m pip install "$SourcePath[tui,snmp,report]"
+    & $venvPython -m pip install "$SourcePath[tui,snmp,report,docs]"
     if ($LASTEXITCODE -ne 0) { throw "Failed to install netops-toolkit and its TUI dependencies." }
     if (-not (Test-Path $cliExecutable) -or -not (Test-Path $tuiExecutable)) {
         throw "Installation completed without both netops.exe and netops-tui.exe."
+    }
+
+    $docsStaging = Join-Path $InstallRoot ("docs-staging-" + [guid]::NewGuid().ToString("N"))
+    try {
+        Write-Host "Building local documentation at $docsRoot"
+        & $venvPython -m mkdocs build --strict --config-file (Join-Path $SourcePath "mkdocs.yml") --site-dir $docsStaging --quiet
+        if ($LASTEXITCODE -ne 0) { throw "Failed to build local documentation." }
+        if (Test-Path $docsRoot) {
+            Remove-Item -LiteralPath $docsRoot -Recurse -Force
+        }
+        Move-Item -LiteralPath $docsStaging -Destination $docsRoot
+    } finally {
+        if (Test-Path $docsStaging) {
+            Remove-Item -LiteralPath $docsStaging -Recurse -Force
+        }
     }
 
     try {
@@ -172,6 +188,7 @@ try {
     Write-Host "netops-toolkit installed for the current user."
     Write-Host "Command line: $cliExecutable"
     Write-Host "Start it from the Start menu, or run: $tuiExecutable"
+    Write-Host "Local documentation: $(Join-Path $docsRoot 'index.html')"
 } finally {
     if ($temporaryRoot -and (Test-Path $temporaryRoot)) {
         Remove-Item -LiteralPath $temporaryRoot -Recurse -Force

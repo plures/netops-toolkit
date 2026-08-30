@@ -22,6 +22,7 @@ COMMANDS = {
     "report": "Generate network reports",
     "tui": "Launch interactive TUI (requires Python 3.10+)",
     "bastion": "Connect or disconnect the workstation-wide SSH bastion",
+    "logs": "Inspect or configure bounded local logging",
 }
 
 
@@ -56,6 +57,14 @@ def main() -> int:
 
     # Rewrite sys.argv so the delegate module sees itself as the entry point
     sys.argv = [f"netops {command}"] + sys.argv[2:]
+
+    if command != "logs":
+        # Keep the shared retention and verbosity policy active for every
+        # unified CLI command. Individual commands can still add console-only
+        # verbosity.
+        from netops.logging_setup import setup_logging
+
+        setup_logging()
 
     if command == "scan":
         from netops.inventory import scan
@@ -92,6 +101,11 @@ def main() -> int:
         from netops.core.bastion import main as bastion_main
 
         return bastion_main(sys.argv[1:])
+
+    elif command == "logs":
+        from netops.logging_setup import main as logs_main
+
+        return logs_main(sys.argv[1:])
 
     return 0
 
