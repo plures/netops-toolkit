@@ -1537,6 +1537,10 @@ Python 3.9+; install the optional TUI only on Python 3.10+.</p>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nb">source</span><span class="w"> </span>~/.venv/netops/bin/activate
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>netops<span class="w"> </span>--help
 </code></pre></div>
+<p>The installer also builds the full documentation site locally at
+<code>~/.local/share/netops-toolkit/docs/index.html</code>. Set <code>NETOPS_DOCS_DIR</code> before
+running the installer to choose another user-writable location. On Windows,
+the installed site is at <code>%LOCALAPPDATA%\netops-toolkit\docs\index.html</code>.</p>
 <p>Or clone the repository and use the same virtual-environment steps as above.</p>
 <h2 id="2-create-a-local-inventory">2. Create a local inventory<a class="headerlink" href="#2-create-a-local-inventory" title="Permanent link">&para;</a></h2>
 <p>Copy the example before adding any device-specific data:</p>
