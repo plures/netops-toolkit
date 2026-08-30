@@ -120,6 +120,12 @@ def save_log_settings(*, max_bytes: int, level: str | int) -> dict[str, int | st
 class CappedFileHandler(logging.FileHandler):
     """Append UTF-8 logs while removing oldest complete entries before a write."""
 
+    # Fraction of max_bytes retained when trimming. Trimming to a lower
+    # watermark (instead of exactly to the cap) leaves headroom so that
+    # pruning is amortized over many emits rather than rewriting the nearly
+    # full file on every single write once the cap is reached.
+    TRIM_WATERMARK = 0.9
+
     def __init__(self, filename: Path, *, max_bytes: int) -> None:
         if max_bytes < 1:
             raise ValueError("Log size cap must be positive")
@@ -142,7 +148,11 @@ class CappedFileHandler(logging.FileHandler):
         current_size = Path(self.baseFilename).stat().st_size if Path(self.baseFilename).exists() else 0
         if current_size + len(incoming_bytes) <= self.max_bytes:
             return incoming
-        retained_limit = self.max_bytes - len(incoming_bytes)
+        # Trim down to a watermark below the cap (not just to the cap) so
+        # subsequent emits have headroom and don't re-trigger a full rewrite
+        # until enough new bytes accumulate.
+        watermark = int(self.max_bytes * self.TRIM_WATERMARK)
+        retained_limit = max(watermark - len(incoming_bytes), 0)
         existing = Path(self.baseFilename).read_text(encoding="utf-8", errors="replace")
         retained: list[str] = []
         retained_size = 0
