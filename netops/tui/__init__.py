@@ -1482,10 +1482,13 @@ class InventoryEditorScreen(ModalScreen):
             "groups": self._groups(self._value("groups")),
             "tags": self._tags(self._value("tags")),
         }
+        transport = self._value("transport").lower() or "ssh"
+        if transport not in {"ssh", "telnet"}:
+            raise ValueError("Transport must be ssh or telnet")
         return hostname, {
             "host": host,
             "vendor": self._value("vendor") or "autodetect",
-            "transport": self._value("transport") or "ssh",
+            "transport": transport,
             **optional_fields,
         }
 
