@@ -162,9 +162,13 @@ class CappedFileHandler(logging.FileHandler):
                 break
             retained.append(line)
             retained_size += line_size
-        self.stream.seek(0)
-        self.stream.truncate()
-        self.stream.write("".join(reversed(retained)))
+        stream = self.stream
+        if stream is None:
+            stream = self._open()
+            self.stream = stream
+        stream.seek(0)
+        stream.truncate()
+        stream.write("".join(reversed(retained)))
         self.flush()
         return incoming
 
@@ -172,7 +176,12 @@ class CappedFileHandler(logging.FileHandler):
         """Trim first, then append one formatted entry without exceeding the cap."""
         try:
             message = self.format(record).replace("\r", "\\r").replace("\n", "\\n") + self.terminator
-            self.stream.write(self._trim_before_write(message))
+            incoming = self._trim_before_write(message)
+            stream = self.stream
+            if stream is None:
+                stream = self._open()
+                self.stream = stream
+            stream.write(incoming)
             self.flush()
         except Exception:
             self.handleError(record)
