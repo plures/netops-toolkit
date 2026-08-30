@@ -130,10 +130,14 @@ class CappedFileHandler(logging.FileHandler):
         """Keep the newest complete existing lines so ``incoming`` fits the cap."""
         incoming_bytes = incoming.encode("utf-8")
         if len(incoming_bytes) > self.max_bytes:
-            marker = "[netops log entry truncated to fit configured cap]\n"
-            budget = max(0, self.max_bytes - len(marker.encode("utf-8")))
-            incoming = marker + incoming[-budget:]
-            incoming_bytes = incoming.encode("utf-8")
+            marker_bytes = b"[netops log entry truncated to fit configured cap]\n"
+            if len(marker_bytes) >= self.max_bytes:
+                incoming_bytes = marker_bytes[: self.max_bytes]
+            else:
+                budget = self.max_bytes - len(marker_bytes)
+                tail = incoming_bytes[-budget:].decode("utf-8", errors="ignore").encode("utf-8")
+                incoming_bytes = marker_bytes + tail
+            incoming = incoming_bytes.decode("utf-8")
         self.flush()
         current_size = Path(self.baseFilename).stat().st_size if Path(self.baseFilename).exists() else 0
         if current_size + len(incoming_bytes) <= self.max_bytes:
