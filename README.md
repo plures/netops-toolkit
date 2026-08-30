@@ -5,7 +5,7 @@
 [![License: BSL-1.1](https://img.shields.io/badge/License-BSL--1.1-blue.svg)](LICENSE) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE-MIT)
 [![CI](https://github.com/plures/netops-toolkit/actions/workflows/release.yml/badge.svg)](https://github.com/plures/netops-toolkit/actions/workflows/release.yml)
 [![interrogate](https://img.shields.io/badge/interrogate-100%25-brightgreen.svg)](https://interrogate.readthedocs.io)
-[![docs](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://plures.github.io/netops-toolkit/)
+[![docs](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://plures.io/netops-toolkit/)
 
 Network automation utilities for discovery, inventory, configuration collection,
 health checks, safe configuration changes, and vendor-aware parsing. The core
@@ -183,8 +183,8 @@ python -m netops.change.plan plan --host 10.0.0.1 --desired desired.cfg --export
 python -m netops.core.vault init
 ```
 
-See the [CLI reference](docs/guides/cli-reference.md) for the verified flags
-and safe change workflow.
+See the [online CLI reference](https://plures.io/netops-toolkit/guides/cli-reference/)
+for the verified flags and safe change workflow.
 
 ## Active bastion routing
 
@@ -202,8 +202,8 @@ longer required. SSH forwarding is TCP-only: scan traffic behind an active
 bastion uses SSH discovery rather than local ICMP/UDP SNMP probing.
 
 For a per-device compatibility configuration, see [SSH jump-host
-tunneling](docs/guides/jump-host-tunnel.md). For the recommended
-workstation-wide mode, see [Active Bastion Routing](docs/guides/active-bastion.md).
+tunneling](https://plures.io/netops-toolkit/guides/jump-host-tunnel/). For the
+recommended workstation-wide mode, see [Active Bastion Routing](https://plures.io/netops-toolkit/guides/active-bastion/).
 
 ## Inventory format
 
@@ -221,19 +221,17 @@ devices:
     groups: [routers, core]
 ```
 
-The [inventory guide](docs/guides/inventory-management.md) explains all
-available fields and exports. Never commit passwords or SNMP community strings
-to a shared repository; use local inventory files, environment variables, or
-the encrypted vault as appropriate.
+The [online inventory guide](https://plures.io/netops-toolkit/guides/inventory-management/)
+explains all available fields and exports. Never commit passwords or SNMP
+community strings to a shared repository; use local inventory files,
+environment variables, or the encrypted vault as appropriate.
 
 ## Documentation
 
-- [Getting started](docs/guides/getting-started.md)
-- [CLI reference](docs/guides/cli-reference.md)
-- [Scanner guide](docs/guides/scan.md)
-- [Active bastion routing](docs/guides/active-bastion.md)
-- [Configuration changes](docs/api/change.md)
-- [Python API reference](docs/api/README.md)
+Browse the complete, release-matched documentation at
+[plures.io/netops-toolkit](https://plures.io/netops-toolkit/), including
+getting started, command reference, scanner and bastion guides, configuration
+changes, and the Python API.
 
 Build the documentation site locally with `pip install -e ".[docs]"` followed
 by `mkdocs build --strict`.
