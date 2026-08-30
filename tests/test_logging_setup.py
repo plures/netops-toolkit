@@ -120,6 +120,36 @@ def test_capped_file_handler_drops_oldest_complete_entries_before_writing(tmp_pa
     assert "oldest-entry" not in content
 
 
+def test_capped_file_handler_keeps_multiline_entries_whole_when_trimming(tmp_path):
+    """Multiline records are encoded so trimming cannot preserve traceback fragments."""
+    path = tmp_path / "bounded.log"
+    handler = CappedFileHandler(path, max_bytes=110)
+    handler.setFormatter(logging.Formatter("%(message)s"))
+    logger = logging.getLogger("netops.tests.multiline-bounded-log")
+    previous_handlers = list(logger.handlers)
+    previous_level = logger.level
+    previous_propagate = logger.propagate
+    logger.handlers = [handler]
+    logger.setLevel(logging.INFO)
+    logger.propagate = False
+    try:
+        logger.info("oldest-entry\ntraceback-frame-1\ntraceback-frame-2")
+        logger.info("middle-entry %s", "m" * 55)
+        logger.info("newest-entry")
+    finally:
+        handler.flush()
+        handler.close()
+        logger.handlers = previous_handlers
+        logger.setLevel(previous_level)
+        logger.propagate = previous_propagate
+
+    content = path.read_text(encoding="utf-8")
+    assert "middle-entry" in content
+    assert "newest-entry" in content
+    assert "traceback-frame-1" not in content
+    assert "traceback-frame-2" not in content
+
+
 def test_logging_cli_saves_shared_size_and_verbosity_defaults(tmp_path, monkeypatch, capsys):
     """TUI and scripts consume the same user-configurable logging defaults."""
     monkeypatch.setenv("NETOPS_LOG_SETTINGS", str(tmp_path / "logging.json"))

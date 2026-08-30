@@ -161,7 +161,7 @@ class CappedFileHandler(logging.FileHandler):
     def emit(self, record: logging.LogRecord) -> None:
         """Trim first, then append one formatted entry without exceeding the cap."""
         try:
-            message = self.format(record) + self.terminator
+            message = self.format(record).replace("\r", "\\r").replace("\n", "\\n") + self.terminator
             self.stream.write(self._trim_before_write(message))
             self.flush()
         except Exception:
