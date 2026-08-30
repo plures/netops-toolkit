@@ -215,6 +215,7 @@ async def test_settings_is_the_labelled_visible_home_for_tuning_defaults():
     """All persistent operation defaults are visible and editable in Settings."""
     from textual.widgets import Input, Label
 
+    from netops.terminal import terminal_text
     from netops.tui import NetopsTUI, SettingsScreen
 
     app = NetopsTUI()
@@ -222,7 +223,7 @@ async def test_settings_is_the_labelled_visible_home_for_tuning_defaults():
         app.push_screen(SettingsScreen())
         await pilot.pause()
         screen = app.screen
-        assert str(screen.query_one("#settings-title", Label).render()) == "⚙️ TUI Settings"
+        assert str(screen.query_one("#settings-title", Label).render()) == terminal_text("⚙️ TUI Settings")
         for field_id in (
             "#settings-snmp-port",
             "#settings-snmp-timeout",
@@ -233,6 +234,8 @@ async def test_settings_is_the_labelled_visible_home_for_tuning_defaults():
             "#settings-health-cpu-threshold",
             "#settings-health-mem-threshold",
             "#settings-backup-workers",
+            "#settings-log-max-megabytes",
+            "#settings-log-level",
         ):
             field = screen.query_one(field_id, Input)
             assert "default-setting-input" in field.classes

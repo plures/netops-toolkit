@@ -54,11 +54,31 @@ focused device.
 | `v` | Manage credentials |
 | `o` | Open settings |
 | `j` | Manage the active bastion |
+| `a` | Add a device to the inventory manually |
+| `e` | Edit the focused inventory device |
+| `Ctrl+E` | Export inventory to CSV |
 | `/` | Focus device search |
 | `Enter` | Show more device detail |
 | `c` | Fetch the focused device's running configuration |
 | `Esc` | Close a detail pane or modal |
 | `q` | Quit |
+
+## Add or correct inventory manually
+
+Press `a` to add a device without first running a scan. The editor uses one
+labelled field per line so it remains readable in remote terminal clients.
+Enter a device name and address or FQDN, then add any connection and identity
+metadata you know: vendor, transport, port, model, serial, version, site,
+role, groups, and tags. Press `e` from a focused device to correct the same
+fields later.
+
+The editor preserves scan-collected fields it does not own, such as uptime,
+MAC address, neighbors, memory, flash, and any existing collected community
+data. It does not accept or add SSH passwords, private keys, enable passwords,
+or SNMP community strings. Use `v` to manage reusable encrypted credentials
+instead.
+
+![The manual inventory editor with clear labels for connection and identity metadata.](../images/tui-inventory-editor.svg)
 
 ## Discover devices
 
@@ -75,6 +95,19 @@ Backup to open **TUI Settings**. That screen is the single persistent place to
 set SNMP port/timeout/concurrency, ping workers, SSH timeout/concurrency,
 health CPU and memory alert thresholds, and backup workers. The summary updates
 after you return from Settings.
+
+**TUI Settings** also controls local logging. By default, the current daily
+log file is capped at 10 MiB and records `INFO` and higher. When the cap is
+reached, netops-toolkit removes the oldest complete entries before adding each
+new entry, so a long session does not grow the log without limit. Change the
+cap or choose `DEBUG`, `INFO`, `WARNING`, or `ERROR` in **TUI Settings**.
+
+The same shared setting is available to scripts and automation:
+
+```bash
+netops logs show
+netops logs configure --max-size-mb 25 --level WARNING
+```
 
 - **Probe every address** skips ICMP first. Use it only when ICMP is blocked
   and the target range is suitably small.

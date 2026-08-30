@@ -12,6 +12,10 @@ python scripts/capture_tui_docs.py
 
 ![The netops-toolkit workspace with inventory table, detail pane, and footer shortcuts.](../images/tui-workspace.svg)
 
+## Manual inventory editor
+
+![The full-width manual inventory editor, with one labelled field per line.](../images/tui-inventory-editor.svg)
+
 ## Inventory scan
 
 ![The inventory scan form with labelled SNMP and SSH controls.](../images/tui-scan-form.svg)

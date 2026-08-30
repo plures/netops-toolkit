@@ -12,7 +12,17 @@
 set -euo pipefail
 
 VENV_DIR="${NETOPS_VENV_DIR:-$HOME/.venv/netops}"
+DOCS_DIR="${NETOPS_DOCS_DIR:-$HOME/.local/share/netops-toolkit/docs}"
 REPO="https://github.com/plures/netops-toolkit"
+SOURCE_DIR=""
+SOURCE_PATH=""
+
+cleanup_source() {
+  if [ -n "$SOURCE_DIR" ] && [ -d "$SOURCE_DIR" ]; then
+    rm -rf "$SOURCE_DIR"
+  fi
+}
+trap cleanup_source EXIT
 
 # Allow constrained jump boxes to place the virtual environment and uv cache
 # on a filesystem with sufficient user quota without requiring sudo.
@@ -111,14 +121,25 @@ create_venv() {
 install_package() {
   local package
 
-  # If we're running from inside an extracted tarball, install local
+  # An extracted release archive already contains the package source and docs.
   if [ -f "pyproject.toml" ] && grep -q "netops-toolkit" pyproject.toml 2>/dev/null; then
     echo "→ Installing from local source..."
-    package=".[tui,snmp,report]"
+    SOURCE_PATH="$(pwd)"
   else
-    echo "→ Installing netops-toolkit@${TAG} from GitHub..."
-    package="netops-toolkit[tui,snmp,report] @ git+${REPO}@${TAG}"
+    echo "→ Downloading netops-toolkit@${TAG} source and local documentation..."
+    SOURCE_DIR="$(mktemp -d)"
+    if ! curl -fsSL "${REPO}/archive/${TAG}.tar.gz" | tar -xz -C "$SOURCE_DIR"; then
+      echo "Unable to download source documentation for ${TAG}." >&2
+      return 1
+    fi
+    SOURCE_PATH="$(find "$SOURCE_DIR" -mindepth 1 -maxdepth 1 -type d -exec test -f '{}/pyproject.toml' \; -print -quit)"
+    if [ -z "$SOURCE_PATH" ]; then
+      echo "Downloaded source did not contain a netops-toolkit package." >&2
+      return 1
+    fi
   fi
+
+  package="${SOURCE_PATH}[tui,snmp,report,docs]"
 
   if ! $UV pip install --python "$VENV_DIR/bin/python" "$package" --quiet; then
     cat >&2 <<EOF
@@ -140,6 +161,34 @@ Or choose paths on a filesystem with available quota, then retry:
 EOF
     return 1
   fi
+}
+
+build_local_docs() {
+  local docs_parent docs_staging
+  case "$DOCS_DIR" in
+    ""|/|"$HOME"|"$VENV_DIR")
+      echo "NETOPS_DOCS_DIR must be a dedicated documentation directory, not $DOCS_DIR." >&2
+      return 1
+      ;;
+  esac
+  if [ ! -f "$SOURCE_PATH/mkdocs.yml" ]; then
+    echo "Source documentation configuration was not found at $SOURCE_PATH/mkdocs.yml." >&2
+    return 1
+  fi
+
+  docs_parent="$(dirname "$DOCS_DIR")"
+  mkdir -p "$docs_parent"
+  docs_staging="$(mktemp -d "$docs_parent/.netops-docs.XXXXXX")"
+
+  echo "→ Building local documentation at $DOCS_DIR..."
+  if ! "$VENV_DIR/bin/python" -m mkdocs build --strict --config-file "$SOURCE_PATH/mkdocs.yml" --site-dir "$docs_staging/site" --quiet; then
+    rm -rf "$docs_staging"
+    echo "Local documentation build failed; netops-toolkit was not installed completely." >&2
+    return 1
+  fi
+  rm -rf "$DOCS_DIR"
+  mv "$docs_staging/site" "$DOCS_DIR"
+  rmdir "$docs_staging"
 }
 
 # ── Shell activation helper ───────────────────────────────────────────────────
@@ -179,6 +228,7 @@ install_uv
 select_python
 create_venv
 install_package
+build_local_docs
 setup_activation
 
 echo ""
@@ -194,4 +244,9 @@ echo "     netops-tui"
 echo ""
 echo "   Or run directly without activating:"
 echo "     $VENV_DIR/bin/netops-tui"
+echo ""
+echo "   Local documentation:"
+echo "     $DOCS_DIR/index.html"
+echo "   Open it with your preferred browser, or serve it with:"
+echo "     $VENV_DIR/bin/python -m http.server --directory $DOCS_DIR"
 echo ""

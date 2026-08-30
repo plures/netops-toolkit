@@ -59,7 +59,7 @@ from textual.widgets import (
     TextArea,
 )
 
-from netops.logging_setup import setup_logging
+from netops.logging_setup import load_log_settings, save_log_settings, setup_logging
 
 
 class TerminalLog(Log):
@@ -87,6 +87,8 @@ DEFAULT_SETTINGS = {
     "backup_workers": 5,
     "health_cpu_threshold": 80.0,
     "health_mem_threshold": 85.0,
+    "log_max_megabytes": 10,
+    "log_level": "INFO",
 }
 
 
@@ -110,11 +112,19 @@ def load_settings() -> dict:
         saved = {}
     if not isinstance(saved, dict):
         saved = {}
-    return {**DEFAULT_SETTINGS, **saved}
+    settings = {**DEFAULT_SETTINGS, **saved}
+    logging_settings = load_log_settings()
+    settings["log_max_megabytes"] = max(1, int(logging_settings["max_bytes"]) // (1024 * 1024))
+    settings["log_level"] = str(logging_settings["level"])
+    return settings
 
 
 def save_settings(settings: dict) -> None:
     """Persist non-secret TUI defaults without storing credentials."""
+    save_log_settings(
+        max_bytes=int(settings["log_max_megabytes"]) * 1024 * 1024,
+        level=str(settings["log_level"]),
+    )
     SETTINGS_FILE.parent.mkdir(parents=True, exist_ok=True)
     SETTINGS_FILE.write_text(json.dumps(settings, indent=2), encoding="utf-8")
 
@@ -850,6 +860,11 @@ class SettingsScreen(ModalScreen):
             yield Label("Backup defaults", classes="form-section-title")
             yield Label("Concurrent backup workers", classes="field-label")
             yield Input(value=str(settings["backup_workers"]), id="settings-backup-workers", classes="default-setting-input")
+            yield Label("Logging", classes="form-section-title")
+            yield Label("Maximum daily log size (MiB)", classes="field-label")
+            yield Input(value=str(settings["log_max_megabytes"]), id="settings-log-max-megabytes", classes="default-setting-input")
+            yield Label("Log verbosity", classes="field-label")
+            yield Input(value=str(settings["log_level"]), placeholder="DEBUG, INFO, WARNING, or ERROR", id="settings-log-level", classes="default-setting-input")
             with Horizontal(classes="modal-actions"):
                 yield Button("Save", variant="primary", id="btn-settings-save")
                 yield Button("Cancel", id="btn-settings-cancel")
@@ -873,7 +888,7 @@ class SettingsScreen(ModalScreen):
             "backup_workers": "#settings-backup-workers",
         }
         try:
-            updated: dict[str, int | float] = {
+            updated: dict[str, int | float | str] = {
                 key: int(self.query_one(field_id, Input).value.strip())
                 for key, field_id in fields.items()
             }
@@ -890,11 +905,37 @@ class SettingsScreen(ModalScreen):
         except ValueError:
             log.write_line("❌ Health thresholds must be numbers")
             return
-        if any(value < 1 for value in updated.values()) or not 1 <= updated["snmp_port"] <= 65535:
+        try:
+            updated["log_max_megabytes"] = int(
+                self.query_one("#settings-log-max-megabytes", Input).value.strip()
+            )
+        except ValueError:
+            log.write_line("❌ Maximum daily log size must be a whole number")
+            return
+        updated["log_level"] = self.query_one("#settings-log-level", Input).value.strip().upper()
+        numeric_fields = (
+            "snmp_port",
+            "snmp_timeout",
+            "ping_workers",
+            "snmp_concurrency",
+            "ssh_timeout",
+            "ssh_concurrency",
+            "backup_workers",
+            "health_cpu_threshold",
+            "health_mem_threshold",
+            "log_max_megabytes",
+        )
+        if any(float(updated[key]) < 1 for key in numeric_fields) or not 1 <= int(updated["snmp_port"]) <= 65535:
             log.write_line("❌ Values must be positive and the SNMP port must be 1–65535")
             return
-        if any(not 1 <= updated[key] <= 100 for key in ("health_cpu_threshold", "health_mem_threshold")):
+        if any(not 1 <= float(updated[key]) <= 100 for key in ("health_cpu_threshold", "health_mem_threshold")):
             log.write_line("❌ Health thresholds must be percentages between 1 and 100")
+            return
+        if not 1 <= int(updated["log_max_megabytes"]) <= 1024:
+            log.write_line("❌ Maximum daily log size must be between 1 and 1024 MiB")
+            return
+        if updated["log_level"] not in {"DEBUG", "INFO", "WARNING", "ERROR"}:
+            log.write_line("❌ Log verbosity must be DEBUG, INFO, WARNING, or ERROR")
             return
         app = netops_app(self)
         app.settings = {**app.settings, **updated}
@@ -903,6 +944,10 @@ class SettingsScreen(ModalScreen):
         except OSError as exc:
             log.write_line(f"❌ Could not save settings: {exc}")
             return
+        setup_logging(
+            level=str(app.settings["log_level"]),
+            max_bytes=int(app.settings["log_max_megabytes"]) * 1024 * 1024,
+        )
         log.write_line(f"✅ Saved settings to {SETTINGS_FILE}")
 
 
@@ -1299,6 +1344,175 @@ class BackupScreen(ModalScreen):
 
 
 # ---------------------------------------------------------------------------
+# Manual Inventory Editor
+# ---------------------------------------------------------------------------
+
+
+class InventoryEditorScreen(ModalScreen):
+    """Create or edit the non-secret metadata for one inventory device."""
+
+    BINDINGS = [Binding("escape", "dismiss", "Close")]
+
+    def __init__(self, hostname: str | None = None, info: dict | None = None) -> None:
+        super().__init__()
+        self._original_hostname = hostname
+        self._info = dict(info or {})
+
+    @property
+    def _is_editing(self) -> bool:
+        return self._original_hostname is not None
+
+    @staticmethod
+    def _list_value(value: object) -> str:
+        """Render stored group values as a compact editable list."""
+        return ", ".join(str(item) for item in value) if isinstance(value, list) else ""
+
+    @staticmethod
+    def _tag_value(value: object) -> str:
+        """Render stored tags as comma-separated key=value values."""
+        if not isinstance(value, dict):
+            return ""
+        return ", ".join(f"{key}={item}" for key, item in sorted(value.items()))
+
+    def compose(self) -> ComposeResult:
+        """Compose a one-field-per-line editor that survives constrained terminals."""
+        title = "Edit inventory device" if self._is_editing else "Add inventory device"
+        with Vertical(id="inventory-editor-modal"):
+            yield Label(title, id="inventory-editor-title")
+            yield Label(
+                "Connection and identity metadata only. Use v for encrypted credentials.",
+                classes="inventory-editor-guidance",
+            )
+            yield Label("Device name *", classes="field-label")
+            yield Input(
+                value=self._original_hostname or "",
+                placeholder="e.g. branch-rtr-01",
+                id="inventory-editor-hostname",
+            )
+            yield Label("Address or FQDN *", classes="field-label")
+            yield Input(
+                value=str(self._info.get("host", "")),
+                placeholder="e.g. 10.20.30.1 or router.example.net",
+                id="inventory-editor-host",
+            )
+            yield Label("Vendor", classes="field-label")
+            yield Input(
+                value=str(self._info.get("vendor", "autodetect")),
+                placeholder="autodetect, cisco_ios, juniper_junos…",
+                id="inventory-editor-vendor",
+            )
+            yield Label("Transport", classes="field-label")
+            yield Input(
+                value=str(self._info.get("transport", "ssh")),
+                placeholder="ssh or telnet",
+                id="inventory-editor-transport",
+            )
+            yield Label("Port", classes="field-label")
+            yield Input(
+                value="" if self._info.get("port") is None else str(self._info["port"]),
+                placeholder="optional; default is transport-specific",
+                id="inventory-editor-port",
+            )
+            yield Label("Model", classes="field-label")
+            yield Input(value=str(self._info.get("model", "")), id="inventory-editor-model")
+            yield Label("Serial", classes="field-label")
+            yield Input(value=str(self._info.get("serial", "")), id="inventory-editor-serial")
+            yield Label("Version", classes="field-label")
+            yield Input(value=str(self._info.get("version", "")), id="inventory-editor-version")
+            yield Label("Site", classes="field-label")
+            yield Input(value=str(self._info.get("site", "")), id="inventory-editor-site")
+            yield Label("Role", classes="field-label")
+            yield Input(value=str(self._info.get("role", "")), id="inventory-editor-role")
+            yield Label("Groups (comma-separated)", classes="field-label")
+            yield Input(value=self._list_value(self._info.get("groups")), id="inventory-editor-groups")
+            yield Label("Tags (key=value, comma-separated)", classes="field-label")
+            yield Input(value=self._tag_value(self._info.get("tags")), id="inventory-editor-tags")
+            yield Label("", id="inventory-editor-validation")
+            with Horizontal(classes="modal-actions"):
+                yield Button("Save device", variant="primary", id="btn-inventory-save")
+                yield Button("Cancel", variant="error", id="btn-inventory-cancel")
+
+    def _value(self, field: str) -> str:
+        """Return a trimmed editor field without exposing widget details to parsing."""
+        return self.query_one(f"#inventory-editor-{field}", Input).value.strip()
+
+    @staticmethod
+    def _groups(raw: str) -> list[str]:
+        """Parse a human-friendly comma-separated group list."""
+        return list(dict.fromkeys(group.strip() for group in raw.split(",") if group.strip()))
+
+    @staticmethod
+    def _tags(raw: str) -> dict[str, str]:
+        """Parse comma-separated key=value tags with an actionable validation error."""
+        tags: dict[str, str] = {}
+        for item in (part.strip() for part in raw.split(",") if part.strip()):
+            key, separator, value = item.partition("=")
+            if not separator or not key.strip() or not value.strip():
+                raise ValueError("Tags must use key=value entries separated by commas")
+            tags[key.strip()] = value.strip()
+        return tags
+
+    def _draft(self) -> tuple[str, dict]:
+        """Validate and return the editor-owned inventory fields."""
+        hostname = self._value("hostname")
+        host = self._value("host")
+        if not hostname:
+            raise ValueError("Device name is required")
+        if any(character.isspace() for character in hostname):
+            raise ValueError("Device name cannot contain spaces")
+        if not host:
+            raise ValueError("Address or FQDN is required")
+        port_text = self._value("port")
+        if port_text:
+            try:
+                port = int(port_text)
+            except ValueError as exc:
+                raise ValueError("Port must be a whole number") from exc
+            if not 1 <= port <= 65535:
+                raise ValueError("Port must be between 1 and 65535")
+        else:
+            port = None
+        optional_fields = {
+            "port": port,
+            "model": self._value("model") or None,
+            "serial": self._value("serial") or None,
+            "version": self._value("version") or None,
+            "site": self._value("site") or None,
+            "role": self._value("role") or None,
+            "groups": self._groups(self._value("groups")),
+            "tags": self._tags(self._value("tags")),
+        }
+        transport = self._value("transport").lower() or "ssh"
+        if transport not in {"ssh", "telnet"}:
+            raise ValueError("Transport must be ssh or telnet")
+        return hostname, {
+            "host": host,
+            "vendor": self._value("vendor") or "autodetect",
+            "transport": transport,
+            **optional_fields,
+        }
+
+    def _validation_error(self, message: str) -> None:
+        """Show the current validation result without retaining stale errors."""
+        self.query_one("#inventory-editor-validation", Label).update(f"⚠️ {message}")
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Save a validated edit or dismiss without changing the inventory."""
+        if event.button.id == "btn-inventory-cancel":
+            self.dismiss(False)
+            return
+        if event.button.id != "btn-inventory-save":
+            return
+        try:
+            hostname, fields = self._draft()
+            netops_app(self).save_inventory_item(self._original_hostname, hostname, fields)
+        except ValueError as exc:
+            self._validation_error(str(exc))
+            return
+        self.dismiss(True)
+
+
+# ---------------------------------------------------------------------------
 # Running Config View
 # ---------------------------------------------------------------------------
 
@@ -1356,7 +1570,7 @@ class NetopsTUI(App):
         border-top: solid $primary;
         padding: 1;
     }
-    #scan-modal, #health-modal, #push-modal, #backup-modal, #diff-modal, #bastion-modal, #settings-modal, #vault-modal, #config-view-modal {
+    #scan-modal, #health-modal, #push-modal, #backup-modal, #diff-modal, #bastion-modal, #settings-modal, #vault-modal, #inventory-editor-modal, #config-view-modal {
         width: 70;
         height: 90%;
         overflow-y: auto;
@@ -1364,7 +1578,7 @@ class NetopsTUI(App):
         background: $surface;
         padding: 1 2;
     }
-    #scan-title, #health-title, #push-title, #backup-title, #diff-title, #bastion-title, #settings-title, #vault-title, #config-view-title {
+    #scan-title, #health-title, #push-title, #backup-title, #diff-title, #bastion-title, #settings-title, #vault-title, #inventory-editor-title, #config-view-title {
         text-style: bold;
         color: $text;
         margin-bottom: 1;
@@ -1381,7 +1595,7 @@ class NetopsTUI(App):
         color: $text;
         padding: 0 1;
     }
-    #scan-modal Input, #health-modal Input, #push-modal Input, #backup-modal Input, #diff-modal Input, #bastion-modal Input, #settings-modal Input, #vault-modal Input {
+    #scan-modal Input, #health-modal Input, #push-modal Input, #backup-modal Input, #diff-modal Input, #bastion-modal Input, #settings-modal Input, #vault-modal Input, #inventory-editor-modal Input {
         height: 3;
         min-height: 3;
         color: #ffffff;
@@ -1389,7 +1603,7 @@ class NetopsTUI(App):
         border: solid $accent;
         padding: 0 1;
     }
-    #scan-modal Input:focus, #health-modal Input:focus, #push-modal Input:focus, #backup-modal Input:focus, #diff-modal Input:focus, #bastion-modal Input:focus, #settings-modal Input:focus, #vault-modal Input:focus {
+    #scan-modal Input:focus, #health-modal Input:focus, #push-modal Input:focus, #backup-modal Input:focus, #diff-modal Input:focus, #bastion-modal Input:focus, #settings-modal Input:focus, #vault-modal Input:focus, #inventory-editor-modal Input:focus {
         background: #172554;
         border: solid #facc15;
         color: #facc15;
@@ -1450,6 +1664,14 @@ class NetopsTUI(App):
         color: $warning;
         text-style: bold;
     }
+    .inventory-editor-guidance {
+        color: $warning;
+        margin-bottom: 1;
+    }
+    #inventory-editor-validation {
+        color: $error;
+        min-height: 1;
+    }
     #btn-scan {
         background: $primary;
         color: $text;
@@ -1483,7 +1705,9 @@ class NetopsTUI(App):
         Binding("o", "settings", "Settings"),
         Binding("f", "diff", "Config Diff"),
         Binding("j", "bastion", "Bastion"),
-        Binding("e", "export", "Export CSV"),
+        Binding("a", "add_inventory", "Add device"),
+        Binding("e", "edit_inventory", "Edit device"),
+        Binding("ctrl+e", "export", "Export CSV"),
         Binding("r", "refresh", "Refresh"),
         Binding("/", "search", "Search"),
         Binding("d", "delete", "Delete"),
@@ -1494,9 +1718,12 @@ class NetopsTUI(App):
 
     def __init__(self):
         super().__init__()
-        self._log_file = setup_logging()
         self.inventory = load_inventory()
         self.settings = load_settings()
+        self._log_file = setup_logging(
+            level=str(self.settings["log_level"]),
+            max_bytes=int(self.settings["log_max_megabytes"]) * 1024 * 1024,
+        )
         self.terminal_profile: TerminalProfile = terminal_profile()
         self._selected_host: str | None = None
         self._selected_hosts: set[str] = set()
@@ -1614,7 +1841,10 @@ class NetopsTUI(App):
         info = self.inventory.get("devices", {}).get(self._selected_host, {})
         if not isinstance(info, dict):
             return
-        basic_fields = ("host", "vendor", "model", "serial", "version", "uptime", "community", "mac_address")
+        basic_fields = (
+            "host", "vendor", "transport", "port", "model", "serial", "version", "uptime",
+            "community", "mac_address",
+        )
         extended_fields = (
             "memory", "flash", "interfaces", "reload_reason", "domain", "neighbors",
             "image", "site", "role", "groups", "tags",
@@ -1639,7 +1869,7 @@ class NetopsTUI(App):
         if len(lines) == 1:
             lines.append("No inventory details are available yet. Run a deep scan to collect them.")
         hint = "Enter: basic detail" if self._detail_extended else "Enter: more detail"
-        lines.extend(("", terminal_text(f"[dim]{hint} · c: running config · Space/x: select · Esc: close[/dim]")))
+        lines.extend(("", terminal_text(f"[dim]{hint} · e: edit · a: add · c: running config · Space/x: select · Esc: close[/dim]")))
         self.query_one("#detail-panel", Vertical).display = True
         self.query_one("#detail-content", Static).update(terminal_text("\n".join(lines)))
 
@@ -1679,6 +1909,25 @@ class NetopsTUI(App):
         if self._input_focused():
             return
         self.push_screen(ScanScreen())
+
+    def action_add_inventory(self) -> None:
+        """Open a safe, manual inventory entry form without requiring a scan."""
+        if not self._input_focused():
+            self.push_screen(InventoryEditorScreen())
+
+    def action_edit_inventory(self) -> None:
+        """Edit the focused device while retaining scan fields the form does not own."""
+        if self._input_focused():
+            return
+        hostname = self._focused_hostname()
+        if not hostname:
+            self.notify("Select a device to edit, or press a to add one", severity="warning")
+            return
+        info = self.inventory.get("devices", {}).get(hostname)
+        if not isinstance(info, dict):
+            self.notify("Selected inventory data is invalid", severity="error")
+            return
+        self.push_screen(InventoryEditorScreen(hostname, info))
 
     def action_health(self) -> None:
         """Open the health check modal."""
@@ -1902,10 +2151,12 @@ class NetopsTUI(App):
   Enter — Toggle basic and extended device detail
   c  — Fetch the selected device running config
   v  — Unlock and manage credential vault entries
-  o  — Set non-secret scan and backup defaults
+  o  — Set non-secret scan, backup, and logging defaults
   f  — Compare configuration files
   j  — Connect, inspect, or disconnect the active bastion
-  e  — Export inventory to CSV
+  a  — Add a device to the inventory manually
+  e  — Edit the focused inventory device
+  Ctrl+E — Export inventory to CSV
   /  — Search/filter devices
   d  — Delete selected device
   r  — Refresh table from file
@@ -1956,6 +2207,51 @@ Press Escape to close this help.
             return
         count = export_csv(self.inventory)
         self.notify(f"Exported {count} devices to inventory.csv")
+
+    def save_inventory_item(self, original_hostname: str | None, hostname: str, fields: dict) -> None:
+        """Persist a manual inventory edit without erasing discovery-only metadata."""
+        devices = self.inventory.setdefault("devices", {})
+        if not isinstance(devices, dict):
+            raise ValueError("Inventory devices section is invalid")
+        if original_hostname is None:
+            if hostname in devices:
+                raise ValueError(f"A device named {hostname} already exists")
+            updated: dict = {}
+        else:
+            current = devices.get(original_hostname)
+            if not isinstance(current, dict):
+                raise ValueError("Selected inventory data is invalid")
+            if hostname != original_hostname and hostname in devices:
+                raise ValueError(f"A device named {hostname} already exists")
+            updated = dict(current)
+            if hostname != original_hostname:
+                del devices[original_hostname]
+                if original_hostname in self._selected_hosts:
+                    self._selected_hosts.remove(original_hostname)
+                    self._selected_hosts.add(hostname)
+
+        for field in ("port", "model", "serial", "version", "site", "role"):
+            value = fields[field]
+            if value is None:
+                updated.pop(field, None)
+            else:
+                updated[field] = value
+        for field in ("groups", "tags"):
+            value = fields[field]
+            if value:
+                updated[field] = value
+            else:
+                updated.pop(field, None)
+        for field in ("host", "vendor", "transport"):
+            updated[field] = fields[field]
+        devices[hostname] = updated
+        save_inventory(self.inventory)
+        self._selected_host = hostname
+        self._detail_extended = False
+        self._populate_table(self.query_one("#search-input", Input).value)
+        self._render_detail()
+        self._update_status()
+        self.notify(f"Saved inventory device {hostname}")
 
     def action_refresh(self) -> None:
         """Refresh the device table."""

@@ -25,6 +25,7 @@ from netops.tui import (
     ConfigViewScreen,
     DiffScreen,
     HealthScreen,
+    InventoryEditorScreen,
     NetopsTUI,
     ScanScreen,
     SettingsScreen,
@@ -36,6 +37,7 @@ Capture = tuple[str, str, Callable[[], ModalScreen] | None, bool]
 OUTPUT_DIR = REPOSITORY_ROOT / "docs" / "images"
 CAPTURES: tuple[Capture, ...] = (
     ("tui-workspace.svg", "netops-toolkit TUI workspace", None, False),
+    ("tui-inventory-editor.svg", "netops-toolkit manual inventory editor", InventoryEditorScreen, False),
     ("tui-scan-form.svg", "netops-toolkit inventory scan form", ScanScreen, False),
     ("tui-health-check.svg", "netops-toolkit health check", HealthScreen, False),
     ("tui-config-push.svg", "netops-toolkit configuration push", ConfigPushScreen, False),

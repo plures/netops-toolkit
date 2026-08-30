@@ -247,6 +247,122 @@ async def test_tui_detail_cycles_basic_and_extended_fields(inv_file):
         assert "memory" in str(detail).lower()
 
 
+@pytest.mark.asyncio
+async def test_tui_manual_inventory_editor_adds_a_device_without_a_scan(inv_file):
+    """Operators can add an inventory target through the labelled TUI editor."""
+    from textual.widgets import DataTable, Input, Label
+
+    from netops.tui import InventoryEditorScreen, NetopsTUI
+
+    app = NetopsTUI()
+    async with app.run_test(size=(120, 100)) as pilot:
+        app.action_add_inventory()
+        await pilot.pause()
+        assert isinstance(app.screen, InventoryEditorScreen)
+        assert "Add inventory device" in str(app.screen.query_one("#inventory-editor-title", Label).render())
+
+        values = {
+            "#inventory-editor-hostname": "branch-rtr-01",
+            "#inventory-editor-host": "192.0.2.44",
+            "#inventory-editor-vendor": "cisco_ios",
+            "#inventory-editor-transport": "ssh",
+            "#inventory-editor-port": "2222",
+            "#inventory-editor-model": "ISR4451",
+            "#inventory-editor-site": "branch-01",
+            "#inventory-editor-role": "edge",
+            "#inventory-editor-groups": "routers, branch-01, routers",
+            "#inventory-editor-tags": "environment=production,owner=noc",
+        }
+        for selector, value in values.items():
+            app.screen.query_one(selector, Input).value = value
+
+        await pilot.click("#btn-inventory-save")
+        await pilot.pause()
+
+        device = app.inventory["devices"]["branch-rtr-01"]
+        assert device == {
+            "host": "192.0.2.44",
+            "vendor": "cisco_ios",
+            "transport": "ssh",
+            "port": 2222,
+            "model": "ISR4451",
+            "site": "branch-01",
+            "role": "edge",
+            "groups": ["routers", "branch-01"],
+            "tags": {"environment": "production", "owner": "noc"},
+        }
+        assert json.loads(inv_file.read_text())["devices"]["branch-rtr-01"] == device
+        assert app.query_one("#device-table", DataTable).row_count == 1
+        assert app._selected_host == "branch-rtr-01"
+
+
+@pytest.mark.asyncio
+async def test_tui_manual_inventory_edit_retains_scan_metadata_and_renames_selection(inv_file):
+    """Editing owned fields cannot discard discovery detail the editor does not show."""
+    from textual.widgets import Input
+
+    from netops.tui import InventoryEditorScreen, NetopsTUI
+
+    app = NetopsTUI()
+    app.inventory = {
+        "devices": {
+            "branch-rtr-01": {
+                "host": "192.0.2.44",
+                "vendor": "cisco_ios",
+                "transport": "ssh",
+                "memory": "4 GB",
+                "mac_address": "00:11:22:33:44:55",
+                "neighbors": ["branch-sw-01"],
+                "community": "discovered-value",
+            }
+        }
+    }
+    app._selected_hosts = {"branch-rtr-01"}
+    async with app.run_test(size=(120, 100)) as pilot:
+        app.action_edit_inventory()
+        await pilot.pause()
+        assert isinstance(app.screen, InventoryEditorScreen)
+        app.screen.query_one("#inventory-editor-hostname", Input).value = "branch-rtr-primary"
+        app.screen.query_one("#inventory-editor-site", Input).value = "branch-01"
+        app.screen.query_one("#inventory-editor-tags", Input).value = "owner=noc"
+
+        await pilot.click("#btn-inventory-save")
+        await pilot.pause()
+
+        assert "branch-rtr-01" not in app.inventory["devices"]
+        device = app.inventory["devices"]["branch-rtr-primary"]
+        assert device["site"] == "branch-01"
+        assert device["tags"] == {"owner": "noc"}
+        assert device["memory"] == "4 GB"
+        assert device["mac_address"] == "00:11:22:33:44:55"
+        assert device["neighbors"] == ["branch-sw-01"]
+        assert device["community"] == "discovered-value"
+        assert app._selected_host == "branch-rtr-primary"
+        assert app._selected_hosts == {"branch-rtr-primary"}
+
+
+@pytest.mark.asyncio
+async def test_tui_manual_inventory_editor_reports_current_validation_error(inv_file):
+    """Invalid manual metadata stays in the editor with one current explanation."""
+    from textual.widgets import Input, Label
+
+    from netops.tui import NetopsTUI
+
+    app = NetopsTUI()
+    async with app.run_test(size=(120, 100)) as pilot:
+        app.action_add_inventory()
+        await pilot.pause()
+        app.screen.query_one("#inventory-editor-hostname", Input).value = "branch router"
+        app.screen.query_one("#inventory-editor-host", Input).value = "192.0.2.44"
+
+        await pilot.click("#btn-inventory-save")
+        await pilot.pause()
+
+        validation = app.screen.query_one("#inventory-editor-validation", Label)
+        assert "cannot contain spaces" in str(validation.render())
+        assert app.inventory["devices"] == {}
+
+
 def test_tui_settings_are_non_secret_and_persist(tmp_path, monkeypatch):
     """Settings store operational defaults only and retain them across launches."""
     import netops.tui as tui_mod
