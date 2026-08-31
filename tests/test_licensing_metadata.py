@@ -16,4 +16,11 @@ def test_public_license_surfaces_consistently_declare_busl() -> None:
     assert 'license = "BUSL-1.1"' in package_metadata
     assert 'license-files = ["LICENSE"]' in package_metadata
     assert "LICENSE-MIT" not in readme
-    assert "BUSL--1.1" in readme
+    assert "BUSL-1.1" in readme
+
+    for role in ("netops_acl", "netops_backup", "netops_health", "netops_ntp", "netops_update"):
+        role_meta = REPOSITORY_ROOT / "netops" / "ansible" / "roles" / role / "meta" / "main.yml"
+        role_readme = REPOSITORY_ROOT / "netops" / "ansible" / "roles" / role / "README.md"
+
+        assert 'license: BUSL-1.1' in role_meta.read_text(encoding="utf-8")
+        assert "BUSL-1.1" in role_readme.read_text(encoding="utf-8")

@@ -8,7 +8,7 @@ galaxy_info:
     Back up the running configuration of network devices and enforce a
     configurable retention policy on the Ansible control node.
   company: ""
-  license: MIT
+  license: BUSL-1.1
   min_ansible_version: "2.16"
   platforms:
     - name: all

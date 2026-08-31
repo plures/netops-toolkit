@@ -8,7 +8,7 @@ galaxy_info:
     Upgrade the OS of network devices with pre/post validation and automatic
     rollback on failure.
   company: ""
-  license: MIT
+  license: BUSL-1.1
   min_ansible_version: "2.16"
   platforms:
     - name: all
