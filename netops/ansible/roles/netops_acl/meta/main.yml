@@ -8,7 +8,7 @@ galaxy_info:
     Deploy Access Control Lists to network devices with an optional diff
     preview and safety checks to prevent unintentional ACL removal.
   company: ""
-  license: MIT
+  license: BUSL-1.1
   min_ansible_version: "2.16"
   platforms:
     - name: all

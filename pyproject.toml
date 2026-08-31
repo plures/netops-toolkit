@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68.0"]
+requires = ["setuptools>=77.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,7 +7,8 @@ name = "netops-toolkit"
 version = "0.52.1"
 description = "Modular network automation utilities for telco operations"
 requires-python = ">=3.9"
-license = {text = "MIT"}
+license = "BUSL-1.1"
+license-files = ["LICENSE"]
 
 dependencies = [
     "netmiko>=4.3.0,<4.5.0",

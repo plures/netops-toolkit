@@ -82,4 +82,4 @@ molecule test
 
 ## License
 
-MIT
+BUSL-1.1

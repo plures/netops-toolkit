@@ -102,9 +102,9 @@ def test_galaxy_meta_role_name_matches(role: str) -> None:
 
 
 @pytest.mark.parametrize("role", ROLE_NAMES)
-def test_galaxy_meta_license_is_mit(role: str) -> None:
+def test_galaxy_meta_license_is_busl(role: str) -> None:
     meta = _load_yaml(ROLES_ROOT / role / "meta/main.yml")
-    assert meta["galaxy_info"]["license"] == "MIT", f"{role}/meta/main.yml license should be MIT"
+    assert meta["galaxy_info"]["license"] == "BUSL-1.1", f"{role}/meta/main.yml license should be BUSL-1.1"
 
 
 # ---------------------------------------------------------------------------

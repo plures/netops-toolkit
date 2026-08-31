@@ -8,7 +8,7 @@ galaxy_info:
     Standardise NTP configuration on network devices: add/remove servers,
     configure authentication keys and timezone, and validate synchronisation.
   company: ""
-  license: MIT
+  license: BUSL-1.1
   min_ansible_version: "2.16"
   platforms:
     - name: all
