@@ -251,6 +251,6 @@ require their corresponding extras.
 
 netops-toolkit is source-available under the [Business Source License 1.1](LICENSE).
 Personal and non-commercial use is permitted under its Additional Use Grant;
-production use requires a commercial license from Plures. Each released version
+production use outside that grant requires a commercial license from Plures. Each released version
 changes to Apache License 2.0 no later than four years after its first public
 distribution. For commercial terms, contact `licensing@plures.io`.
