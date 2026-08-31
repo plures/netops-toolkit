@@ -2,7 +2,7 @@
 
 [![Version](https://img.shields.io/github/v/release/plures/netops-toolkit?display_name=tag&sort=semver)](https://github.com/plures/netops-toolkit/releases)
 [![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/downloads/)
-[![License: BSL-1.1](https://img.shields.io/badge/License-BSL--1.1-blue.svg)](LICENSE) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE-MIT)
+[![License: BUSL-1.1](https://img.shields.io/badge/License-BUSL--1.1-blue.svg)](LICENSE)
 [![CI](https://github.com/plures/netops-toolkit/actions/workflows/release.yml/badge.svg)](https://github.com/plures/netops-toolkit/actions/workflows/release.yml)
 [![interrogate](https://img.shields.io/badge/interrogate-100%25-brightgreen.svg)](https://interrogate.readthedocs.io)
 [![docs](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://plures.io/netops-toolkit/)
@@ -249,4 +249,8 @@ require their corresponding extras.
 
 ## License
 
-See [LICENSE](LICENSE).
+netops-toolkit is source-available under the [Business Source License 1.1](LICENSE).
+Personal and non-commercial use is permitted under its Additional Use Grant;
+production use requires a commercial license from Plures. Each released version
+changes to Apache License 2.0 no later than four years after its first public
+distribution. For commercial terms, contact `licensing@plures.io`.
