@@ -92,6 +92,8 @@ def check_cpu(conn: DeviceConnection, device_type: str, threshold: float) -> dic
             data = parse_cpu_cisco(output)
             utilization = data.get("one_minute", 0.0)
 
+        if not data:
+            raise ValueError("CPU parser returned no measurements")
         return {
             "utilization": utilization,
             "threshold": threshold,
@@ -119,7 +121,9 @@ def check_memory(conn: DeviceConnection, device_type: str, threshold: float) -> 
             output = conn.send("show processes memory")
             data = parse_memory_cisco(output)
 
-        utilization = data.get("utilization", 0.0)
+        if not data or "utilization" not in data:
+            raise ValueError("Memory parser returned no utilization measurement")
+        utilization = data["utilization"]
         return {
             "utilization": utilization,
             "threshold": threshold,
@@ -144,6 +148,8 @@ def check_interface_errors(conn: DeviceConnection, device_type: str) -> dict:
             output = conn.send("show interfaces")
             interfaces = parse_interface_errors_cisco(output)
 
+        if not interfaces:
+            raise ValueError("Interface parser returned no interfaces")
         errored = [i for i in interfaces if i["has_errors"]]
         return {
             "interfaces": interfaces,
@@ -224,6 +230,8 @@ def run_health_check(
         "success": False,
         "checks": {},
         "overall_alert": False,
+        "overall_unknown": True,
+        "status": "UNKNOWN",
         "error": None,
     }
 
@@ -240,6 +248,11 @@ def run_health_check(
         return result
 
     result["overall_alert"] = any(result["checks"][k].get("alert", False) for k in result["checks"])
+    result["overall_unknown"] = any(bool(check.get("error")) for check in result["checks"].values())
+    result["status"] = (
+        "ALERT" if result["overall_alert"] else
+        "UNKNOWN" if result["overall_unknown"] else "HEALTHY"
+    )
     return result
 
 
@@ -276,11 +289,18 @@ def build_health_report(results: list[dict]) -> dict:
     )
     log_alerts = sum(1 for r in reachable if r.get("checks", {}).get("logs", {}).get("alert"))
     devices_with_alerts = sum(1 for r in reachable if r.get("overall_alert"))
+    devices_unknown = sum(
+        1 for r in results
+        if not r.get("success") or r.get("overall_unknown")
+        or any(bool(check.get("error")) for check in r.get("checks", {}).values())
+    )
 
     return {
         "devices": len(results),
         "devices_reachable": len(reachable),
         "devices_with_alerts": devices_with_alerts,
+        "devices_unknown": devices_unknown,
+        "overall_unknown": devices_unknown > 0,
         "cpu_alerts": cpu_alerts,
         "memory_alerts": memory_alerts,
         "interface_error_alerts": interface_error_alerts,
@@ -314,7 +334,7 @@ def _parse_thresholds(raw: str | None) -> dict[str, float]:
 
 def _print_result(result: dict) -> None:
     """Pretty-print a single device health result."""
-    icon = "🚨" if result.get("overall_alert") else ("✅" if result.get("success") else "❌")
+    icon = "🚨" if result.get("overall_alert") else ("❌" if result.get("overall_unknown") else "✅")
     print(f"{icon} {result['host']} [{result['timestamp']}]")
 
     if not result.get("success"):
@@ -322,6 +342,9 @@ def _print_result(result: dict) -> None:
         return
 
     checks = result.get("checks", {})
+    for name, check in checks.items():
+        if check.get("error"):
+            print(f"   UNKNOWN {name}: {check['error']}")
 
     # CPU
     cpu = checks.get("cpu", {})
@@ -373,7 +396,10 @@ def main() -> None:
         help="Alert thresholds, e.g. cpu=80,mem=85",
     )
     parser.add_argument("--json", action="store_true", help="Output results as JSON")
-    parser.add_argument("--fail-on-alert", action="store_true", help="Exit 1 if any alert fires")
+    parser.add_argument(
+        "--fail-on-alert", action="store_true",
+        help="Exit 1 if any alert fires or required health data is unknown",
+    )
     args = parser.parse_args()
 
     thresholds = _parse_thresholds(args.threshold)
@@ -422,7 +448,10 @@ def main() -> None:
         for r in results:
             _print_result(r)
 
-    if args.fail_on_alert and any(r.get("overall_alert") for r in results):
+    if args.fail_on_alert and any(
+        r.get("overall_alert") or r.get("overall_unknown") or not r.get("success")
+        for r in results
+    ):
         sys.exit(1)
 
 
