@@ -188,3 +188,80 @@ def test_post_change_unknown_fails_validation_and_requests_rollback():
     assert result.validation_passed is False
     assert result.rolled_back
     do_rollback.assert_called_once()
+
+
+
+# Second-pass safety review: missing metrics and empty target sets must not pass.
+@pytest.mark.parametrize(
+    "vendor,parser,payload",
+    [
+        ("cisco_ios", "parse_cpu_cisco", {"five_seconds": 18.0}),
+        ("nokia_sros", "parse_cpu_nokia", {"peak": 18.0}),
+        ("brocade", "parse_cpu_brocade", {"five_minutes": 18.0}),
+        ("paloalto", "parse_cpu_paloalto", {"average": 18.0}),
+    ],
+)
+def test_nonempty_cpu_payload_without_expected_metric_is_unknown(
+    monkeypatch, vendor, parser, payload
+):
+    monkeypatch.setattr("netops.check.health." + parser, lambda *_: payload)
+    result = check_cpu(EmptyConn(), vendor, threshold=80)
+    assert result["utilization"] is None
+    assert result["error"]
+    assert result["alert"] is False
+
+
+@pytest.mark.parametrize("invalid", [None, True, "0", float("nan"), float("inf"), -1, 101])
+def test_invalid_cpu_measurement_does_not_pass_as_healthy(monkeypatch, invalid):
+    monkeypatch.setattr(
+        "netops.check.health.parse_cpu_cisco",
+        lambda *_: {"one_minute": invalid},
+    )
+    result = check_cpu(EmptyConn(), "cisco_ios", threshold=80)
+    assert result["utilization"] is None
+    assert result["error"]
+
+
+def test_zero_cpu_percent_is_valid_observation(monkeypatch):
+    monkeypatch.setattr(
+        "netops.check.health.parse_cpu_cisco",
+        lambda *_: {"one_minute": 0.0},
+    )
+    result = check_cpu(EmptyConn(), "cisco_ios", threshold=80)
+    assert result["utilization"] == 0.0
+    assert "error" not in result
+
+
+def test_memory_total_zero_cannot_pass_health_gate(monkeypatch):
+    monkeypatch.setattr(
+        "netops.check.health.parse_memory_cisco",
+        lambda *_: {"utilization": 0.0, "total": 0, "used": 0, "free": 0},
+    )
+    result = check_memory(EmptyConn(), "cisco_ios", threshold=85)
+    assert result["utilization"] is None
+    assert result["error"]
+
+
+def test_empty_target_set_is_aggregate_unknown():
+    report = build_health_report([])
+    assert report["devices"] == 0
+    assert report["devices_unknown"] == 0
+    assert report["overall_unknown"] is True
+
+
+def test_empty_inventory_cli_fail_closed(monkeypatch, capsys):
+    from netops.check.health import main
+
+    monkeypatch.setattr(
+        "netops.check.health.Inventory.from_file",
+        lambda *_: type("EmptyInventory", (), {"devices": {}})(),
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["netops-health", "--inventory", "empty.yaml", "--json", "--fail-on-alert"],
+    )
+    with pytest.raises(SystemExit) as exited:
+        main()
+    assert exited.value.code == 1
+    assert capsys.readouterr().out.strip() == "[]"
