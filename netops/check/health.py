@@ -100,7 +100,7 @@ def check_cpu(conn: DeviceConnection, device_type: str, threshold: float) -> dic
             data = parse_cpu_cisco(output)
             utilization = data.get("one_minute")
 
-        if not data or not _valid_percent(utilization):
+        if utilization is None or not data or not _valid_percent(utilization):
             raise ValueError("CPU parser returned no valid utilization percentage")
         return {
             "utilization": utilization,
