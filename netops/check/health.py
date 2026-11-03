@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import math
 import os
 import sys
 from datetime import datetime, timezone
@@ -72,26 +73,35 @@ def _is_paloalto(device_type: str) -> bool:
     return "paloalto" in device_type.lower() or "panos" in device_type.lower()
 
 
+def _valid_percent(value: object) -> bool:
+    """Reject missing, nonnumeric, nonfinite or out-of-range observations."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    return math.isfinite(value) and 0 <= value <= 100
+
+
 def check_cpu(conn: DeviceConnection, device_type: str, threshold: float) -> dict:
     """Return CPU utilisation check result."""
     try:
         if _is_nokia(device_type):
             output = conn.send("show system cpu")
             data = parse_cpu_nokia(output)
-            utilization = data.get("avg", 0.0)
+            utilization = data.get("avg")
         elif _is_brocade(device_type):
             output = conn.send("show cpu")
             data = parse_cpu_brocade(output)
-            utilization = data.get("one_minute", data.get("five_seconds", 0.0))
+            utilization = data.get("one_minute", data.get("five_seconds"))
         elif _is_paloalto(device_type):
             output = conn.send("show system resources follow duration 1")
             data = parse_cpu_paloalto(output)
-            utilization = data.get("utilization", 0.0)
+            utilization = data.get("utilization")
         else:
             output = conn.send("show processes cpu")
             data = parse_cpu_cisco(output)
-            utilization = data.get("one_minute", 0.0)
+            utilization = data.get("one_minute")
 
+        if utilization is None or not data or not _valid_percent(utilization):
+            raise ValueError("CPU parser returned no valid utilization percentage")
         return {
             "utilization": utilization,
             "threshold": threshold,
@@ -119,7 +129,11 @@ def check_memory(conn: DeviceConnection, device_type: str, threshold: float) -> 
             output = conn.send("show processes memory")
             data = parse_memory_cisco(output)
 
-        utilization = data.get("utilization", 0.0)
+        if not data or not _valid_percent(data.get("utilization")):
+            raise ValueError("Memory parser returned no valid utilization percentage")
+        if "total" in data and (not isinstance(data["total"], (int, float)) or data["total"] <= 0):
+            raise ValueError("Memory parser returned invalid total capacity")
+        utilization = data["utilization"]
         return {
             "utilization": utilization,
             "threshold": threshold,
@@ -144,6 +158,8 @@ def check_interface_errors(conn: DeviceConnection, device_type: str) -> dict:
             output = conn.send("show interfaces")
             interfaces = parse_interface_errors_cisco(output)
 
+        if not interfaces:
+            raise ValueError("Interface parser returned no interfaces")
         errored = [i for i in interfaces if i["has_errors"]]
         return {
             "interfaces": interfaces,
@@ -224,6 +240,8 @@ def run_health_check(
         "success": False,
         "checks": {},
         "overall_alert": False,
+        "overall_unknown": True,
+        "status": "UNKNOWN",
         "error": None,
     }
 
@@ -240,6 +258,11 @@ def run_health_check(
         return result
 
     result["overall_alert"] = any(result["checks"][k].get("alert", False) for k in result["checks"])
+    result["overall_unknown"] = any(bool(check.get("error")) for check in result["checks"].values())
+    result["status"] = (
+        "ALERT" if result["overall_alert"] else
+        "UNKNOWN" if result["overall_unknown"] else "HEALTHY"
+    )
     return result
 
 
@@ -276,11 +299,18 @@ def build_health_report(results: list[dict]) -> dict:
     )
     log_alerts = sum(1 for r in reachable if r.get("checks", {}).get("logs", {}).get("alert"))
     devices_with_alerts = sum(1 for r in reachable if r.get("overall_alert"))
+    devices_unknown = sum(
+        1 for r in results
+        if not r.get("success") or r.get("overall_unknown")
+        or any(bool(check.get("error")) for check in r.get("checks", {}).values())
+    )
 
     return {
         "devices": len(results),
         "devices_reachable": len(reachable),
         "devices_with_alerts": devices_with_alerts,
+        "devices_unknown": devices_unknown,
+        "overall_unknown": not results or devices_unknown > 0,
         "cpu_alerts": cpu_alerts,
         "memory_alerts": memory_alerts,
         "interface_error_alerts": interface_error_alerts,
@@ -314,7 +344,7 @@ def _parse_thresholds(raw: str | None) -> dict[str, float]:
 
 def _print_result(result: dict) -> None:
     """Pretty-print a single device health result."""
-    icon = "🚨" if result.get("overall_alert") else ("✅" if result.get("success") else "❌")
+    icon = "🚨" if result.get("overall_alert") else ("❌" if result.get("overall_unknown") else "✅")
     print(f"{icon} {result['host']} [{result['timestamp']}]")
 
     if not result.get("success"):
@@ -322,6 +352,9 @@ def _print_result(result: dict) -> None:
         return
 
     checks = result.get("checks", {})
+    for name, check in checks.items():
+        if check.get("error"):
+            print(f"   UNKNOWN {name}: {check['error']}")
 
     # CPU
     cpu = checks.get("cpu", {})
@@ -373,7 +406,10 @@ def main() -> None:
         help="Alert thresholds, e.g. cpu=80,mem=85",
     )
     parser.add_argument("--json", action="store_true", help="Output results as JSON")
-    parser.add_argument("--fail-on-alert", action="store_true", help="Exit 1 if any alert fires")
+    parser.add_argument(
+        "--fail-on-alert", action="store_true",
+        help="Exit 1 if any alert fires or required health data is unknown",
+    )
     args = parser.parse_args()
 
     thresholds = _parse_thresholds(args.threshold)
@@ -416,13 +452,18 @@ def main() -> None:
     ]
 
     if args.json:
-        json.dump(results if len(results) > 1 else results[0], sys.stdout, indent=2)
+        json.dump(results[0] if len(results) == 1 else results, sys.stdout, indent=2)
         print()
     else:
         for r in results:
             _print_result(r)
 
-    if args.fail_on_alert and any(r.get("overall_alert") for r in results):
+    if args.fail_on_alert and (
+        not results or any(
+            r.get("overall_alert") or r.get("overall_unknown") or not r.get("success")
+            for r in results
+        )
+    ):
         sys.exit(1)
 
 

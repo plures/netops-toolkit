@@ -93,6 +93,18 @@ class RollbackRecord:
 # ---------------------------------------------------------------------------
 
 
+def _health_unknown(health: dict | None) -> bool:
+    """Return True when a health sample cannot establish measured safety."""
+    if not health or not health.get("success"):
+        return True
+    if health.get("overall_unknown"):
+        return True
+    checks = health.get("checks", {})
+    if not {"cpu", "memory", "interface_errors", "logs"}.issubset(checks):
+        return True
+    return any(bool(check.get("error")) for check in checks.values())
+
+
 def _health_degraded(pre: dict | None, post: dict) -> tuple[bool, str]:
     """Compare pre/post health-check results and identify degradation.
 
@@ -108,6 +120,8 @@ def _health_degraded(pre: dict | None, post: dict) -> tuple[bool, str]:
     """
     if not post.get("success", False):
         return True, "device unreachable after change"
+    if _health_unknown(post):
+        return True, "post-change health unknown or incomplete"
 
     pre_checks = (pre or {}).get("checks", {})
     post_checks = post.get("checks", {})
@@ -236,8 +250,8 @@ def run_rollback_push(
                 cpu_threshold=cpu_threshold,
                 mem_threshold=mem_threshold,
             )
-            if not record.pre_health.get("success"):
-                record.error = "Pre-change health check failed: device unreachable"
+            if _health_unknown(record.pre_health):
+                record.error = "Pre-change health check failed: device unreachable or evidence unknown"
                 logger.error("[%s] %s", change_id, record.error)
                 return record
 
