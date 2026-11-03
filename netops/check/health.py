@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import math
 import os
 import sys
 from datetime import datetime, timezone
@@ -72,28 +73,35 @@ def _is_paloalto(device_type: str) -> bool:
     return "paloalto" in device_type.lower() or "panos" in device_type.lower()
 
 
+def _valid_percent(value: object) -> bool:
+    """Reject missing, nonnumeric, nonfinite or out-of-range observations."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    return math.isfinite(value) and 0 <= value <= 100
+
+
 def check_cpu(conn: DeviceConnection, device_type: str, threshold: float) -> dict:
     """Return CPU utilisation check result."""
     try:
         if _is_nokia(device_type):
             output = conn.send("show system cpu")
             data = parse_cpu_nokia(output)
-            utilization = data.get("avg", 0.0)
+            utilization = data.get("avg")
         elif _is_brocade(device_type):
             output = conn.send("show cpu")
             data = parse_cpu_brocade(output)
-            utilization = data.get("one_minute", data.get("five_seconds", 0.0))
+            utilization = data.get("one_minute", data.get("five_seconds"))
         elif _is_paloalto(device_type):
             output = conn.send("show system resources follow duration 1")
             data = parse_cpu_paloalto(output)
-            utilization = data.get("utilization", 0.0)
+            utilization = data.get("utilization")
         else:
             output = conn.send("show processes cpu")
             data = parse_cpu_cisco(output)
-            utilization = data.get("one_minute", 0.0)
+            utilization = data.get("one_minute")
 
-        if not data:
-            raise ValueError("CPU parser returned no measurements")
+        if not data or not _valid_percent(utilization):
+            raise ValueError("CPU parser returned no valid utilization percentage")
         return {
             "utilization": utilization,
             "threshold": threshold,
@@ -121,8 +129,10 @@ def check_memory(conn: DeviceConnection, device_type: str, threshold: float) -> 
             output = conn.send("show processes memory")
             data = parse_memory_cisco(output)
 
-        if not data or "utilization" not in data:
-            raise ValueError("Memory parser returned no utilization measurement")
+        if not data or not _valid_percent(data.get("utilization")):
+            raise ValueError("Memory parser returned no valid utilization percentage")
+        if "total" in data and (not isinstance(data["total"], (int, float)) or data["total"] <= 0):
+            raise ValueError("Memory parser returned invalid total capacity")
         utilization = data["utilization"]
         return {
             "utilization": utilization,
@@ -300,7 +310,7 @@ def build_health_report(results: list[dict]) -> dict:
         "devices_reachable": len(reachable),
         "devices_with_alerts": devices_with_alerts,
         "devices_unknown": devices_unknown,
-        "overall_unknown": devices_unknown > 0,
+        "overall_unknown": not results or devices_unknown > 0,
         "cpu_alerts": cpu_alerts,
         "memory_alerts": memory_alerts,
         "interface_error_alerts": interface_error_alerts,
@@ -442,15 +452,17 @@ def main() -> None:
     ]
 
     if args.json:
-        json.dump(results if len(results) > 1 else results[0], sys.stdout, indent=2)
+        json.dump(results[0] if len(results) == 1 else results, sys.stdout, indent=2)
         print()
     else:
         for r in results:
             _print_result(r)
 
-    if args.fail_on_alert and any(
-        r.get("overall_alert") or r.get("overall_unknown") or not r.get("success")
-        for r in results
+    if args.fail_on_alert and (
+        not results or any(
+            r.get("overall_alert") or r.get("overall_unknown") or not r.get("success")
+            for r in results
+        )
     ):
         sys.exit(1)
 
