@@ -160,13 +160,25 @@ def check_interface_errors(conn: DeviceConnection, device_type: str) -> dict:
 
         if not interfaces:
             raise ValueError("Interface parser returned no interfaces")
+        # Header-only or partial CLI output is not proof of zero errors.
+        # Both directions must be observed for every interface in the sample.
+        incomplete = [
+            i.get("name", "<unnamed>")
+            for i in interfaces
+            if not (i.get("input_errors_observed") and i.get("output_errors_observed"))
+        ]
         errored = [i for i in interfaces if i["has_errors"]]
-        return {
+        report = {
             "interfaces": interfaces,
             "total": len(interfaces),
             "with_errors": len(errored),
             "alert": len(errored) > 0,
         }
+        if incomplete:
+            sample = ", ".join(incomplete[:5])
+            remaining = f" (+{len(incomplete) - 5} more)" if len(incomplete) > 5 else ""
+            report["error"] = f"Incomplete interface error-counter evidence: {sample}{remaining}"
+        return report
     except Exception as exc:  # noqa: BLE001
         logger.warning("Interface-errors check failed: %s", exc)
         return {"interfaces": [], "total": 0, "with_errors": 0, "alert": False, "error": str(exc)}

@@ -212,6 +212,7 @@ def parse_interface_errors_cisco(output: str) -> list[dict]:
         in_err = re.search(r"(\d+) input errors", line)
         if in_err:
             current["input_errors"] = int(in_err.group(1))
+            current["input_errors_observed"] = True
         crc_match = re.search(r"(\d+) CRC", line)
         if crc_match:
             current["crc"] = int(crc_match.group(1))
@@ -220,6 +221,7 @@ def parse_interface_errors_cisco(output: str) -> list[dict]:
         out_err = re.search(r"(\d+) output errors", line)
         if out_err:
             current["output_errors"] = int(out_err.group(1))
+            current["output_errors_observed"] = True
 
         # Input drops: "0 input drops" or "Input queue: 0/75/0/0 (size/max/drops/flushes)"
         in_drops = re.search(r"(\d+) input drops", line)
@@ -292,10 +294,12 @@ def parse_interface_errors_nokia(output: str) -> list[dict]:
         in_err = re.search(r"Input Errors\s*:\s+(\d+)", line, re.IGNORECASE)
         if in_err:
             current["input_errors"] = int(in_err.group(1))
+            current["input_errors_observed"] = True
 
         out_err = re.search(r"Output Errors\s*:\s+(\d+)", line, re.IGNORECASE)
         if out_err:
             current["output_errors"] = int(out_err.group(1))
+            current["output_errors_observed"] = True
 
         drops_match = re.search(r"(?:Ingress|Egress)\s+Drop\w*\s*:\s+(\d+)", line, re.IGNORECASE)
         if drops_match:
@@ -521,6 +525,7 @@ def parse_interface_errors_brocade(output: str) -> list[dict]:
         in_err = re.search(r"(\d+) input errors", line)
         if in_err:
             current["input_errors"] = int(in_err.group(1))
+            current["input_errors_observed"] = True
 
         crc_match = re.search(r"(\d+) CRC", line)
         if crc_match:
@@ -529,6 +534,7 @@ def parse_interface_errors_brocade(output: str) -> list[dict]:
         out_err = re.search(r"(\d+) output errors", line)
         if out_err:
             current["output_errors"] = int(out_err.group(1))
+            current["output_errors_observed"] = True
 
         # Brocade calls drops "discards"
         in_disc = re.search(r"(\d+) input discards?", line)
