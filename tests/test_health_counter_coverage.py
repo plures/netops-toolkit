@@ -102,3 +102,39 @@ def test_parser_never_marks_missing_counters_as_observed(parser, header):
     assert parsed[0]["has_errors"] is False
     assert not parsed[0].get("input_errors_observed")
     assert not parsed[0].get("output_errors_observed")
+
+
+def test_composite_gate_marks_header_only_interface_data_unknown(monkeypatch):
+    from netops.check.health import run_health_check
+    from netops.core.connection import ConnectionParams
+
+    class CM:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            return False
+
+    monkeypatch.setattr("netops.check.health.DeviceConnection", lambda _p: CM())
+    monkeypatch.setattr(
+        "netops.check.health.check_cpu",
+        lambda *_: {"utilization": 10, "alert": False},
+    )
+    monkeypatch.setattr(
+        "netops.check.health.check_memory",
+        lambda *_: {"utilization": 20, "alert": False},
+    )
+    monkeypatch.setattr(
+        "netops.check.health.check_interface_errors",
+        lambda *_: check_interface_errors(FixtureConnection(CISCO_HEADER), "cisco_ios"),
+    )
+    monkeypatch.setattr(
+        "netops.check.health.check_logs",
+        lambda *_: {"critical_count": 0, "alert": False},
+    )
+    params = ConnectionParams(host="192.0.2.10", username="test", device_type="cisco_ios")
+    result = run_health_check(params)
+    assert result["success"] is True
+    assert result["overall_alert"] is False
+    assert result["overall_unknown"] is True
+    assert result["status"] == "UNKNOWN"
