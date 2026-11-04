@@ -44,12 +44,7 @@ from netops.parsers.cisco import (
     parse_ospf_neighbors,
     parse_version_cisco,
 )
-from netops.parsers.health import (
-    parse_cpu_cisco,
-    parse_interface_errors_cisco,
-    parse_logs_cisco,
-    parse_memory_cisco,
-)
+from netops.parsers.health import parse_logs_cisco
 
 logger = logging.getLogger(__name__)
 
