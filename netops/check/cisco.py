@@ -30,6 +30,11 @@ import os
 import sys
 from datetime import datetime, timezone
 
+from netops.check.health import (
+    check_cpu as _shared_check_cpu,
+    check_interface_errors as _shared_check_interface_errors,
+    check_memory as _shared_check_memory,
+)
 from netops.core import DeviceConnection
 from netops.core.connection import ConnectionParams, Transport, jump_host_from_inventory
 from netops.core.inventory import Inventory
@@ -39,12 +44,7 @@ from netops.parsers.cisco import (
     parse_ospf_neighbors,
     parse_version_cisco,
 )
-from netops.parsers.health import (
-    parse_cpu_cisco,
-    parse_interface_errors_cisco,
-    parse_logs_cisco,
-    parse_memory_cisco,
-)
+from netops.parsers.health import parse_logs_cisco
 
 logger = logging.getLogger(__name__)
 
@@ -59,90 +59,18 @@ DEFAULT_MEM_THRESHOLD = 85.0
 
 
 def check_cisco_cpu(conn: DeviceConnection, threshold: float) -> dict:
-    """Return CPU utilisation check result for a Cisco IOS/IOS-XE device.
-
-    Returns
-    -------
-    dict
-        Dict with keys:
-
-        * ``utilization``  – 1-minute average CPU % (``float``) or ``None`` on parse failure
-        * ``threshold``    – configured alert threshold
-        * ``alert``        – ``True`` when ``utilization >= threshold``
-        * ``raw``          – full parsed data from the ``show processes cpu`` output
-
-    """
-    try:
-        output = conn.send("show processes cpu")
-        data = parse_cpu_cisco(output)
-        utilization = data.get("one_minute", 0.0)
-        return {
-            "utilization": utilization,
-            "threshold": threshold,
-            "alert": utilization >= threshold,
-            "raw": data,
-        }
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("CPU check failed: %s", exc)
-        return {"utilization": None, "threshold": threshold, "alert": False, "error": str(exc)}
+    """Validate Cisco CPU evidence using the shared fail-closed check contract."""
+    return _shared_check_cpu(conn, "cisco_ios", threshold)
 
 
 def check_cisco_memory(conn: DeviceConnection, threshold: float) -> dict:
-    """Return memory utilisation check result for a Cisco IOS/IOS-XE device.
-
-    Returns
-    -------
-    dict
-        Dict with keys:
-
-        * ``utilization``  – memory used % (``float``) or ``None`` on parse failure
-        * ``threshold``    – configured alert threshold
-        * ``alert``        – ``True`` when ``utilization >= threshold``
-        * ``raw``          – full parsed data from the ``show processes memory`` output
-
-    """
-    try:
-        output = conn.send("show processes memory")
-        data = parse_memory_cisco(output)
-        utilization = data.get("utilization", 0.0)
-        return {
-            "utilization": utilization,
-            "threshold": threshold,
-            "alert": utilization >= threshold,
-            "raw": data,
-        }
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("Memory check failed: %s", exc)
-        return {"utilization": None, "threshold": threshold, "alert": False, "error": str(exc)}
+    """Validate Cisco memory evidence using the shared fail-closed check contract."""
+    return _shared_check_memory(conn, "cisco_ios", threshold)
 
 
 def check_cisco_interfaces(conn: DeviceConnection) -> dict:
-    """Return interface error-counter check result for a Cisco IOS/IOS-XE device.
-
-    Returns
-    -------
-    dict
-        Dict with keys:
-
-        * ``interfaces``   – list of per-interface error dicts
-        * ``total``        – total number of interfaces parsed
-        * ``with_errors``  – count of interfaces that have at least one error counter > 0
-        * ``alert``        – ``True`` when any interface has errors
-
-    """
-    try:
-        output = conn.send("show interfaces")
-        interfaces = parse_interface_errors_cisco(output)
-        errored = [i for i in interfaces if i["has_errors"]]
-        return {
-            "interfaces": interfaces,
-            "total": len(interfaces),
-            "with_errors": len(errored),
-            "alert": len(errored) > 0,
-        }
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("Interface check failed: %s", exc)
-        return {"interfaces": [], "total": 0, "with_errors": 0, "alert": False, "error": str(exc)}
+    """Require observed input and output counters, not merely an interface header."""
+    return _shared_check_interface_errors(conn, "cisco_ios")
 
 
 def check_cisco_logs(conn: DeviceConnection) -> dict:
@@ -161,6 +89,8 @@ def check_cisco_logs(conn: DeviceConnection) -> dict:
     """
     try:
         output = conn.send("show logging")
+        if not output.strip():
+            raise ValueError("Logging command returned no evidence")
         events = parse_logs_cisco(output)
         critical = sum(1 for e in events if e.get("severity", 9) <= 2)
         major = sum(1 for e in events if e.get("severity", 9) == 3)
@@ -202,6 +132,10 @@ def check_cisco_bgp(conn: DeviceConnection, device_type: str = "cisco_ios") -> d
         else:
             output = conn.send("show ip bgp summary")
         peers = parse_bgp_summary_cisco(output)
+        if not peers:
+            raise ValueError(
+                "BGP check returned no peer evidence; disable explicitly if not configured"
+            )
         established = sum(1 for p in peers if p.get("state") == "Established")
         not_established = len(peers) - established
         return {
@@ -241,6 +175,10 @@ def check_cisco_ospf(conn: DeviceConnection) -> dict:
     try:
         output = conn.send("show ip ospf neighbor")
         neighbors = parse_ospf_neighbors(output)
+        if not neighbors:
+            raise ValueError(
+                "OSPF check returned no neighbor evidence; disable explicitly if not configured"
+            )
         full = sum(1 for n in neighbors if n["is_full"])
         not_full = len(neighbors) - full
         return {
@@ -280,6 +218,8 @@ def check_cisco_environment(conn: DeviceConnection) -> dict:
     try:
         output = conn.send("show environment all")
         data = parse_environment_cisco(output)
+        if not any(data.get(key) for key in ("fans", "temperatures", "power_supplies")):
+            raise ValueError("Environment parser returned no observed components")
         return {
             "fans": data["fans"],
             "temperatures": data["temperatures"],
@@ -318,6 +258,8 @@ def check_cisco_uptime(conn: DeviceConnection) -> dict:
     try:
         output = conn.send("show version")
         data = parse_version_cisco(output)
+        if not data.get("version") or not data.get("uptime"):
+            raise ValueError("Version/uptime parser returned incomplete evidence")
         return {
             "version": data.get("version"),
             "platform": data.get("platform"),
@@ -400,6 +342,8 @@ def run_cisco_health_check(
         "success": False,
         "checks": {},
         "overall_alert": False,
+        "overall_unknown": True,
+        "status": "UNKNOWN",
         "error": None,
     }
 
@@ -422,7 +366,16 @@ def run_cisco_health_check(
         result["error"] = str(exc)
         return result
 
-    result["overall_alert"] = any(result["checks"][k].get("alert", False) for k in result["checks"])
+    result["overall_alert"] = any(
+        check.get("alert", False) for check in result["checks"].values()
+    )
+    result["overall_unknown"] = any(
+        bool(check.get("error")) for check in result["checks"].values()
+    )
+    result["status"] = (
+        "ALERT" if result["overall_alert"] else
+        "UNKNOWN" if result["overall_unknown"] else "HEALTHY"
+    )
     return result
 
 
@@ -460,11 +413,18 @@ def build_cisco_health_report(results: list[dict]) -> dict:
         return sum(1 for r in reachable if r.get("checks", {}).get(key, {}).get("alert"))
 
     devices_with_alerts = sum(1 for r in reachable if r.get("overall_alert"))
+    devices_unknown = sum(
+        1 for r in results
+        if not r.get("success") or r.get("overall_unknown")
+        or any(bool(c.get("error")) for c in r.get("checks", {}).values())
+    )
 
     return {
         "devices": len(results),
         "devices_reachable": len(reachable),
         "devices_with_alerts": devices_with_alerts,
+        "devices_unknown": devices_unknown,
+        "overall_unknown": not results or devices_unknown > 0,
         "cpu_alerts": _count_alert("cpu"),
         "memory_alerts": _count_alert("memory"),
         "interface_error_alerts": _count_alert("interface_errors"),
@@ -501,7 +461,10 @@ def _parse_thresholds(raw: str | None) -> dict[str, float]:
 
 def _print_result(result: dict) -> None:
     """Pretty-print a single device Cisco health result."""
-    icon = "🚨" if result.get("overall_alert") else ("✅" if result.get("success") else "❌")
+    icon = (
+        "🚨" if result.get("overall_alert") else
+        "❌" if not result.get("success") or result.get("overall_unknown") else "✅"
+    )
     print(f"{icon} {result['host']} [{result['timestamp']}]")
 
     if not result.get("success"):
@@ -509,6 +472,9 @@ def _print_result(result: dict) -> None:
         return
 
     checks = result.get("checks", {})
+    for name, check in checks.items():
+        if check.get("error"):
+            print(f"   UNKNOWN {name}: {check['error']}")
 
     cpu = checks.get("cpu", {})
     if cpu.get("utilization") is not None:
@@ -594,7 +560,10 @@ def main() -> None:
     parser.add_argument("--no-ospf", action="store_true", help="Skip OSPF check")
     parser.add_argument("--no-env", action="store_true", help="Skip environment check")
     parser.add_argument("--json", action="store_true", help="Output results as JSON")
-    parser.add_argument("--fail-on-alert", action="store_true", help="Exit 1 if any alert fires")
+    parser.add_argument(
+        "--fail-on-alert", action="store_true",
+        help="Exit 1 on alert or unknown/incomplete evidence",
+    )
     args = parser.parse_args()
 
     thresholds = _parse_thresholds(args.threshold)
@@ -653,7 +622,7 @@ def main() -> None:
         for r in results:
             _print_result(r)
 
-    if args.fail_on_alert and report.get("overall_alert"):
+    if args.fail_on_alert and (report["overall_alert"] or report["overall_unknown"]):
         sys.exit(1)
 
 
