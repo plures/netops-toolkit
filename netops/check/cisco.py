@@ -133,7 +133,9 @@ def check_cisco_bgp(conn: DeviceConnection, device_type: str = "cisco_ios") -> d
             output = conn.send("show ip bgp summary")
         peers = parse_bgp_summary_cisco(output)
         if not peers:
-            raise ValueError("BGP check returned no peer evidence; disable explicitly if not configured")
+            raise ValueError(
+                "BGP check returned no peer evidence; disable explicitly if not configured"
+            )
         established = sum(1 for p in peers if p.get("state") == "Established")
         not_established = len(peers) - established
         return {
@@ -174,7 +176,9 @@ def check_cisco_ospf(conn: DeviceConnection) -> dict:
         output = conn.send("show ip ospf neighbor")
         neighbors = parse_ospf_neighbors(output)
         if not neighbors:
-            raise ValueError("OSPF check returned no neighbor evidence; disable explicitly if not configured")
+            raise ValueError(
+                "OSPF check returned no neighbor evidence; disable explicitly if not configured"
+            )
         full = sum(1 for n in neighbors if n["is_full"])
         not_full = len(neighbors) - full
         return {
@@ -556,7 +560,10 @@ def main() -> None:
     parser.add_argument("--no-ospf", action="store_true", help="Skip OSPF check")
     parser.add_argument("--no-env", action="store_true", help="Skip environment check")
     parser.add_argument("--json", action="store_true", help="Output results as JSON")
-    parser.add_argument("--fail-on-alert", action="store_true", help="Exit 1 on alert or unknown/incomplete evidence")
+    parser.add_argument(
+        "--fail-on-alert", action="store_true",
+        help="Exit 1 on alert or unknown/incomplete evidence",
+    )
     args = parser.parse_args()
 
     thresholds = _parse_thresholds(args.threshold)
