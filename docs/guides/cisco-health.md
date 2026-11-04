@@ -271,3 +271,42 @@ dict and sets ``overall_alert`` when any individual check fires:
   "error": null
 }
 ```
+
+
+## Evidence coverage and fail-closed automation gates
+
+> **Review-branch behavior (PLU-42)** — The behavior below is proposed, not
+> available in released `main` until peer review, merge, and lab qualification.
+
+The Cisco-specific checker reuses the generic health checker for CPU, memory,
+and interface error counters. Missing or malformed CPU/memory observations and
+interface samples lacking **both observed input and output error counters**
+are `UNKNOWN`, not measured zero.
+
+Each device reports independent `overall_alert`, `overall_unknown`, and
+`status` (`HEALTHY`, `ALERT`, `UNKNOWN`) fields. `success` still means the SSH
+connection worked; it **does not** establish health. An observed alarm and
+incomplete evidence can coexist: both boolean flags may be true.
+
+The Cisco-specific optional checks require evidence before a green result:
+
+- BGP must parse peers; use `--no-bgp` when not configured.
+- OSPF must parse neighbors; use `--no-ospf` when not configured.
+- Environment must parse sensors; use `--no-env` only under an explicitly
+  reviewed exception when no such telemetry is supported.
+- Uptime must parse both software version and uptime.
+- Empty logging output is UNKNOWN. A nonempty unrecognized logging format
+  remains an outstanding compatibility risk requiring vendor fixtures.
+
+The aggregate report adds `devices_unknown` and `overall_unknown`.
+`--fail-on-alert` exits 1 on alert, unknown evidence, or zero target devices.
+JSON consumers must inspect coverage fields; `overall_alert=false` or
+`success=true` alone **never** proves that health evidence is complete.
+
+**Dependencies:** synthetic tests do not certify real IOS/IOS-XE output;
+support requires vendor fixtures, disabled-check policy, and peer/lab review.
+The Ansible `netops_facts` module collects inventory facts separately;
+missing facts may not be used as a passing operational-health gate.
+No live changes or production safety claims are made.
+
+Tracking: [PLU-42](https://linear.app/plures/issue/PLU-42/m1-close-legacy-cisco-health-false-green-paths-and-downstream-evidence).
