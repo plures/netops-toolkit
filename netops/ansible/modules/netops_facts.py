@@ -92,7 +92,13 @@ _GATHER_ALL = {"health", "interfaces", "bgp", "vlans"}
 
 
 def _gather_health(conn: BaseConnection) -> dict:
-    """Collect CPU/memory health facts."""
+    """Collect observed CPU/memory facts without fabricating zero measurements.
+
+    The evidence object reports observation coverage, *not* a healthy status.
+    Health policy and thresholds belong to the downstream safety gate.
+    """
+    import math
+
     from netops.parsers.health import (
         parse_cpu_cisco,
         parse_cpu_nokia,
@@ -100,48 +106,71 @@ def _gather_health(conn: BaseConnection) -> dict:
         parse_memory_nokia,
     )
 
-    vendor = conn.device_type
-    facts: dict = {}
+    vendor = str(conn.device_type).lower()
+    facts: dict = {"evidence": {"cpu": "UNKNOWN", "memory": "UNKNOWN"}}
 
-    # CPU
+    if "cisco" in vendor or "ios" in vendor:
+        cpu_command = "show processes cpu | include utilization"
+        memory_command = "show processes memory | include Processor"
+        cpu_parser = parse_cpu_cisco
+        memory_parser = parse_memory_cisco
+        cpu_key = "five_seconds"
+    elif "nokia" in vendor or "sros" in vendor:
+        cpu_command = "show system cpu"
+        memory_command = "show system memory-pools"
+        cpu_parser = parse_cpu_nokia
+        memory_parser = parse_memory_nokia
+        cpu_key = "avg"
+    else:
+        facts["evidence"] = {"cpu": "UNSUPPORTED", "memory": "UNSUPPORTED"}
+        facts["evidence_complete"] = False
+        return facts
+
+    def _valid_percent(value: object) -> bool:
+        return (
+            isinstance(value, (int, float))
+            and not isinstance(value, bool)
+            and math.isfinite(value)
+            and 0 <= value <= 100
+        )
+
     try:
-        if "cisco" in vendor or "ios" in vendor:
-            raw = conn.send_command("show processes cpu | include utilization")
-            parsed = parse_cpu_cisco(raw)
-        elif "nokia" in vendor or "sros" in vendor:
-            raw = conn.send_command("show system cpu")
-            parsed = parse_cpu_nokia(raw)
-        else:
-            raw = conn.send_command("show processes cpu | include utilization")
-            parsed = parse_cpu_cisco(raw)
-        if parsed:
-            facts["cpu_percent"] = parsed.get("five_sec_cpu")
+        cpu = cpu_parser(conn.send_command(cpu_command))
+        observed_cpu = cpu.get(cpu_key)
+        if _valid_percent(observed_cpu):
+            facts["cpu_percent"] = float(observed_cpu)
+            facts["evidence"]["cpu"] = "OBSERVED"
     except Exception:  # noqa: BLE001
-        pass
+        # Do not leak command output or credentials into Ansible facts.
+        facts["evidence"]["cpu_reason"] = "collection_failed"
 
-    # Memory
     try:
-        if "cisco" in vendor or "ios" in vendor:
-            raw = conn.send_command("show processes memory | include Processor")
-            parsed = parse_memory_cisco(raw)
-        elif "nokia" in vendor or "sros" in vendor:
-            raw = conn.send_command("show system memory-pools")
-            parsed = parse_memory_nokia(raw)
-        else:
-            raw = conn.send_command("show processes memory | include Processor")
-            parsed = parse_memory_cisco(raw)
-        if parsed:
-            total = parsed.get("total_bytes", 0)
-            used = parsed.get("used_bytes", 0)
-            if total:
-                facts["memory_percent"] = round(used / total * 100, 1)
+        memory = memory_parser(conn.send_command(memory_command))
+        total = memory.get("total")
+        used = memory.get("used")
+        percent = memory.get("utilization")
+        if (
+            isinstance(total, int)
+            and not isinstance(total, bool)
+            and total > 0
+            and isinstance(used, int)
+            and not isinstance(used, bool)
+            and 0 <= used <= total
+            and _valid_percent(percent)
+            and abs((used / total * 100) - percent) <= 0.05
+        ):
             facts["memory_total_bytes"] = total
             facts["memory_used_bytes"] = used
+            facts["memory_percent"] = float(percent)
+            facts["evidence"]["memory"] = "OBSERVED"
     except Exception:  # noqa: BLE001
-        pass
+        facts["evidence"]["memory_reason"] = "collection_failed"
 
+    facts["evidence_complete"] = (
+        facts["evidence"]["cpu"] == "OBSERVED"
+        and facts["evidence"]["memory"] == "OBSERVED"
+    )
     return facts
-
 
 def _gather_interfaces(conn: BaseConnection) -> list[dict]:
     """Collect interface status facts."""
