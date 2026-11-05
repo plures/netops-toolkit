@@ -137,7 +137,7 @@ def _gather_health(conn: BaseConnection) -> dict:
     try:
         cpu = cpu_parser(conn.send_command(cpu_command))
         observed_cpu = cpu.get(cpu_key)
-        if _valid_percent(observed_cpu):
+        if isinstance(observed_cpu, (int, float)) and _valid_percent(observed_cpu):
             facts["cpu_percent"] = float(observed_cpu)
             facts["evidence"]["cpu"] = "OBSERVED"
     except Exception:  # noqa: BLE001
@@ -156,6 +156,7 @@ def _gather_health(conn: BaseConnection) -> dict:
             and isinstance(used, int)
             and not isinstance(used, bool)
             and 0 <= used <= total
+            and isinstance(percent, (int, float))
             and _valid_percent(percent)
             and abs((used / total * 100) - percent) <= 0.05
         ):
