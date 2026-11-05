@@ -9,7 +9,6 @@ import pytest
 
 from netops.ansible.modules.netops_facts import _gather_health
 
-
 CISCO_CPU = "CPU utilization for five seconds: 12%/3%; one minute: 8%; five minutes: 6%"
 CISCO_MEMORY = "Processor 7F2B3C18 1000 400 600"
 NOKIA_CPU = "CPU Usage : 5% 12%"
