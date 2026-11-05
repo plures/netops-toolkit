@@ -2,6 +2,7 @@
 
 No live-device I/O. They validate parsed evidence, not network health.
 """
+
 from __future__ import annotations
 
 import pytest
