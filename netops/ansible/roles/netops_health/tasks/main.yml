@@ -1,57 +1,90 @@
 ---
-# tasks/main.yml — netops_health role
-#
-# Runs a configurable set of health checks against each device and optionally
-# fails the play when any CRITICAL finding is returned.
+# tasks/main.yml — netops_health role (PLU-43)
+# Supported measurement proof: ansible_facts.netops.health CPU/memory evidence.
+# Inventory and peer counts are not proof of healthy interfaces or BGP sessions.
 
-- name: Run health checks via netops_facts
+- name: Reject unsupported or uncertifiable requested health checks
+  ansible.builtin.assert:
+    that:
+      - not (netops_health_check_ospf | bool)
+      - >-
+        (not (netops_health_fail_on_critical | bool))
+        or (not (netops_health_check_interfaces | bool)
+            and not (netops_health_check_bgp | bool))
+    fail_msg: >-
+      UNKNOWN: OSPF is not supported by netops_facts; interface/BGP inventory
+      is not safety-grade health evidence. Disable these checks or run
+      a separately qualified health evaluator. No HEALTHY result is issued.
+
+- name: Validate configured CPU and memory thresholds
+  ansible.builtin.assert:
+    that:
+      - (netops_health_cpu_critical | float) > 0
+      - (netops_health_cpu_critical | float) <= 100
+      - (netops_health_memory_critical | float) > 0
+      - (netops_health_memory_critical | float) <= 100
+    fail_msg: "Health thresholds must be greater than zero and at most 100 percent."
+
+- name: Build supported fact categories without empty or unsupported selectors
+  ansible.builtin.set_fact:
+    _netops_health_gather: >-
+      {{
+        (['health'] if ((netops_health_check_cpu | bool)
+                        or (netops_health_check_memory | bool)) else [])
+        + (['interfaces'] if (netops_health_check_interfaces | bool) else [])
+        + (['bgp'] if (netops_health_check_bgp | bool) else [])
+      }}
+
+- name: Refuse empty health checks
+  ansible.builtin.assert:
+    that:
+      - _netops_health_gather | length > 0
+    fail_msg: "UNKNOWN: No supported health or inventory checks were selected."
+
+- name: Gather supported observations via netops_facts
   netops_facts:
     host: "{{ ansible_host }}"
     vendor: "{{ netops_health_vendor }}"
     username: "{{ netops_health_username }}"
     password: "{{ netops_health_password }}"
     port: "{{ netops_health_port }}"
-    gather:
-      - "{{ 'cpu' if netops_health_check_cpu else '' }}"
-      - "{{ 'memory' if netops_health_check_memory else '' }}"
-      - "{{ 'interfaces' if netops_health_check_interfaces else '' }}"
-      - "{{ 'bgp' if netops_health_check_bgp else '' }}"
-      - "{{ 'ospf' if netops_health_check_ospf else '' }}"
+    gather: "{{ _netops_health_gather }}"
   register: _health_facts
+  no_log: true
 
-- name: Evaluate CPU threshold
+- name: Extract observed CPU and memory with no default-zero substitution
+  ansible.builtin.set_fact:
+    _netops_health_observation: "{{ _health_facts.ansible_facts.netops.health | default({}) }}"
+
+- name: Reject missing CPU evidence or critical CPU utilization
   ansible.builtin.assert:
     that:
+      - _netops_health_observation.evidence.cpu | default('UNKNOWN') == 'OBSERVED'
+      - _netops_health_observation.cpu_percent is number
       - >-
-        (_health_facts.ansible_facts.netops_cpu | default(0) | int)
-        < (netops_health_cpu_critical | int)
-    fail_msg: >-
-      CRITICAL: {{ inventory_hostname }} CPU
-      {{ _health_facts.ansible_facts.netops_cpu }}% >=
-      {{ netops_health_cpu_critical }}%
-    success_msg: "CPU OK: {{ _health_facts.ansible_facts.netops_cpu | default('N/A') }}%"
+        0 <= (_netops_health_observation.cpu_percent | float)
+        < (netops_health_cpu_critical | float)
+    fail_msg: "UNKNOWN or CRITICAL: CPU evidence absent, invalid, or above threshold."
+    success_msg: "CPU observed below critical threshold."
   when:
-    - netops_health_check_cpu
-    - netops_health_fail_on_critical
+    - netops_health_check_cpu | bool
+    - netops_health_fail_on_critical | bool
 
-- name: Evaluate memory threshold
+- name: Reject missing memory evidence or critical memory utilization
   ansible.builtin.assert:
     that:
+      - _netops_health_observation.evidence.memory | default('UNKNOWN') == 'OBSERVED'
+      - _netops_health_observation.memory_percent is number
       - >-
-        (_health_facts.ansible_facts.netops_memory_used_pct | default(0) | int)
-        < (netops_health_memory_critical | int)
-    fail_msg: >-
-      CRITICAL: {{ inventory_hostname }} memory
-      {{ _health_facts.ansible_facts.netops_memory_used_pct }}% >=
-      {{ netops_health_memory_critical }}%
-    success_msg: >-
-      Memory OK:
-      {{ _health_facts.ansible_facts.netops_memory_used_pct | default('N/A') }}%
+        0 <= (_netops_health_observation.memory_percent | float)
+        < (netops_health_memory_critical | float)
+    fail_msg: "UNKNOWN or CRITICAL: memory evidence absent, invalid, or above threshold."
+    success_msg: "Memory observed below critical threshold."
   when:
-    - netops_health_check_memory
-    - netops_health_fail_on_critical
+    - netops_health_check_memory | bool
+    - netops_health_fail_on_critical | bool
 
-- name: Write health report to file
+- name: Write observed facts to local report when configured
   ansible.builtin.copy:
     content: "{{ _health_facts.ansible_facts | to_nice_json }}"
     dest: "{{ netops_health_report_path }}/{{ inventory_hostname }}_health.json"
@@ -59,9 +92,13 @@
   delegate_to: localhost
   when: netops_health_report_path | length > 0
 
-- name: Emit health summary
+- name: Emit evidence-scoped summary
   ansible.builtin.debug:
     msg: >-
-      Health check complete for {{ inventory_hostname }}.
-      CPU: {{ _health_facts.ansible_facts.netops_cpu | default('N/A') }}%
-      Memory: {{ _health_facts.ansible_facts.netops_memory_used_pct | default('N/A') }}%
+      Observation for {{ inventory_hostname }}:
+      CPU={{ _netops_health_observation.cpu_percent | default('UNKNOWN') }}%
+      ({{ _netops_health_observation.evidence.cpu | default('UNKNOWN') }});
+      Memory={{ _netops_health_observation.memory_percent | default('UNKNOWN') }}%
+      ({{ _netops_health_observation.evidence.memory | default('UNKNOWN') }});
+      policy={{ 'ENFORCED' if netops_health_fail_on_critical else 'NOT_ENFORCED' }};
+      interface/BGP inventory is NOT a health certification.
