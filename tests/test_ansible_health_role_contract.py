@@ -13,6 +13,9 @@ from jinja2.nativetypes import NativeEnvironment
 
 ROLE = Path(__file__).resolve().parents[1] / "netops/ansible/roles/netops_health"
 ENV = NativeEnvironment(undefined=StrictUndefined)
+# Ansible supplies its own bool filter; vanilla Jinja does not.
+# These synthetic tests pass Python booleans, so bool() matches that subset.
+ENV.filters["bool"] = bool
 
 
 def _tasks() -> list[dict]:
