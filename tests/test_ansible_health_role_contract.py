@@ -125,6 +125,7 @@ def test_default_collectors_do_not_claim_uncertified_health() -> None:
     assert defaults["netops_health_check_bgp"] is False
     assert defaults["netops_health_check_ospf"] is False
     assert defaults["netops_health_fail_on_critical"] is True
+    assert "default('')" in defaults["netops_health_vendor"]
 
 
 def test_role_uses_nested_evidence_and_never_defaults_missing_to_zero() -> None:
