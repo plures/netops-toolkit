@@ -16,6 +16,12 @@
       is not safety-grade health evidence. Disable these checks or run
       a separately qualified health evaluator. No HEALTHY result is issued.
 
+- name: Require an explicit device operating system
+  ansible.builtin.assert:
+    that:
+      - netops_health_vendor | trim | length > 0
+    fail_msg: "UNKNOWN: Explicit ansible_network_os/netops_health_vendor is required."
+
 - name: Validate configured CPU and memory thresholds
   ansible.builtin.assert:
     that:
