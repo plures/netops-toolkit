@@ -174,20 +174,26 @@ def _gather_health(conn: BaseConnection) -> dict:
     return facts
 
 def _gather_interfaces(conn: BaseConnection) -> list[dict]:
-    """Collect interface status facts."""
+    """Collect vendor-supported interface inventory; never certify health.
+
+    Cisco IOS/XE/XR uses detailed ``show interfaces`` output because the
+    error-counter parser cannot parse tabular ``show interfaces status``.
+    Nokia SR-OS uses the separate ``show port`` inventory parser.  Empty
+    results and command failures mean *unknown* inventory coverage to any
+    downstream health evaluator, not zero errors or healthy interfaces.
+    """
     from netops.parsers.health import parse_interface_errors_cisco
 
+    vendor = str(conn.device_type).lower()
     try:
-        if "nokia" in conn.device_type or "sros" in conn.device_type:
+        if "nokia" in vendor or "sros" in vendor:
             from netops.parsers.nokia_sros import parse_interfaces
 
-            raw = conn.send_command("show port")
-            return parse_interfaces(raw)
-        else:
-            raw = conn.send_command("show interfaces status")
-            # Fall back to error parser which returns per-interface dicts
-            ifaces = parse_interface_errors_cisco(raw)
-            return ifaces if ifaces else []
+            return parse_interfaces(conn.send_command("show port"))
+        if "cisco" in vendor or "ios" in vendor:
+            return parse_interface_errors_cisco(conn.send_command("show interfaces"))
+        # Do not silently send Cisco CLI commands to unsupported platforms.
+        return []
     except Exception:  # noqa: BLE001
         return []
 
