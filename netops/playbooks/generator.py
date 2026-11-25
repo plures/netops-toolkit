@@ -210,8 +210,10 @@ def _cmd_task(
 
     task: dict = {"name": name}
     if is_generic:
-        # cli_command takes a single "command:" key
-        task[module] = {"command": commands[0] if commands else ""}
+        # cli_command takes one command. A loop preserves all selected commands
+        # rather than silently discarding every command after the first.
+        task[module] = {"command": "{{ item }}"}
+        task["loop"] = list(commands)
     else:
         task[module] = {"commands": commands}
 
@@ -304,6 +306,7 @@ def _build_remediation_block(
                 name=f"ROLLBACK: Undo {template.description}",
                 vendor=vendor,
                 commands=rb_cmds,
+                when="not dry_run | bool",
             )
         )
     rescue_tasks.append(
@@ -442,6 +445,19 @@ def generate_playbook(
         not successful.
 
     """
+    if not health_result.get("success", False) or not extract_failures(health_result):
+        return None
+    return _generate_playbook(
+        health_result, vendor, dry_run, include_pause,
+        str(uuid.uuid4()), datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+    )
+
+
+def _generate_playbook(
+    health_result: dict, vendor: str | None, dry_run: bool, include_pause: bool,
+    playbook_id: str, created_at: str,
+) -> GeneratedPlaybook | None:
+    """Shared native assembly with explicit identity/time for pure companions."""
     if not health_result.get("success", False):
         return None
 
@@ -453,8 +469,6 @@ def generate_playbook(
     resolved_vendor = vendor or health_result.get("device_type", "_default")
 
     play = _build_play(host, resolved_vendor, failures, dry_run, include_pause)
-    playbook_id = str(uuid.uuid4())
-    created_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     failure_types = [ft for ft, _ in failures]
     description = f"Auto-generated remediation for {host}: " + ", ".join(
         ft.value for ft in failure_types

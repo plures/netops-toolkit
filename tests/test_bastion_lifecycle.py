@@ -7,7 +7,9 @@ coverage of the SOCKS/control protocol helpers.
 
 from __future__ import annotations
 
+import ctypes
 import json
+import os
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -53,7 +55,22 @@ class _FakeChild:
 
 def test_connect_active_bastion_passes_token_over_stdin_not_argv(tmp_path: Path, monkeypatch) -> None:
     """The bearer token must never appear in the child process's argv."""
-    state_file = tmp_path / "active-bastion.json"
+    monkeypatch.setattr("netops.core.bastion._find_open_port", lambda: 42420)
+    parent = tmp_path / "task-owned-bastion"
+    native = None
+    if os.name == "nt":
+        from netops.ansible.artifact_platform import WindowsHandles
+
+        native = WindowsHandles()
+        with native._security() as security:
+            assert native.kernel.CreateDirectoryW(str(parent), ctypes.byref(security))
+        with native.directory(str(parent)) as handle:
+            native.prove(handle, True)
+    else:
+        parent.mkdir(mode=0o700)
+    sentinel = tmp_path / "unrelated-user-sentinel"
+    sentinel.write_bytes(b"preserve user state")
+    state_file = parent / "active-bastion.json"
     monkeypatch.setenv("NETOPS_BASTION_STATE", str(state_file))
 
     fake_child = _FakeChild()
@@ -93,21 +110,63 @@ def test_connect_active_bastion_passes_token_over_stdin_not_argv(tmp_path: Path,
     assert state.host == "bastion.example.com"
     assert captured["stdin_payload"]["token"] == state.token
     assert captured["stdin_payload"]["password"] == "hunter2"  # noqa: S105
-    # Only the non-secret state file (with owner-only permissions) is left on disk.
+    assert state.token not in repr(captured["args"])
+    assert "hunter2" not in repr(captured["args"])
     assert state_file.exists()
-    assert (state_file.stat().st_mode & 0o777) == 0o600
+    if native is not None:
+        with native.directory(str(parent)) as handle:
+            assert set(native.names(handle)) == {state_file.name, "active-bastion.log"}
+            assert json.loads(native.read(handle, state_file.name, 4096))["token"] == state.token
+            native.remove(handle, state_file.name)
+    else:
+        assert (state_file.stat().st_mode & 0o777) == 0o600
+        state_file.unlink()
+    log = parent / "active-bastion.log"
+    assert state.token not in log.read_text(encoding="utf-8")
+    assert "hunter2" not in log.read_text(encoding="utf-8")
+    log.unlink()
+    parent.rmdir()
+    assert sentinel.read_bytes() == b"preserve user state"
 
 
 def test_connect_active_bastion_raises_when_child_process_exits(tmp_path: Path, monkeypatch) -> None:
-    state_file = tmp_path / "active-bastion.json"
+    parent = tmp_path / "task-owned-child-exit"
+    if os.name == "nt":
+        from netops.ansible.artifact_platform import WindowsHandles
+
+        native = WindowsHandles()
+        with native._security() as security:
+            assert native.kernel.CreateDirectoryW(str(parent), ctypes.byref(security))
+        with native.directory(str(parent)) as handle:
+            native.prove(handle, True)
+    else:
+        parent.mkdir(mode=0o700)
+    sentinel = tmp_path / "unrelated-child-exit-sentinel"
+    sentinel.write_bytes(b"preserve unrelated state")
+    state_file = parent / "active-bastion.json"
     monkeypatch.setenv("NETOPS_BASTION_STATE", str(state_file))
+    monkeypatch.setattr("netops.core.bastion._find_open_port", lambda: 42420)
 
     fake_child = _FakeChild()
     fake_child._exit_code = 1
 
-    with patch("netops.core.bastion.subprocess.Popen", return_value=fake_child):
+    with patch("netops.core.bastion.subprocess.Popen", return_value=fake_child) as popen:
         with pytest.raises(RuntimeError, match="could not connect to bastion"):
             connect_active_bastion("bastion.example.com", "netops", 22, None, "hunter2")  # noqa: S106
+    popen.assert_called_once()
+    payload = json.loads(fake_child.stdin.write.call_args.args[0])
+    assert payload["password"] == "hunter2" and payload["token"]
+    fake_child.stdin.close.assert_called_once()
+    assert "--token" not in popen.call_args.args[0]
+    assert payload["token"] not in repr(popen.call_args.args[0])
+    assert payload["password"] not in repr(popen.call_args.args[0])
+    assert not fake_child.terminated and not state_file.exists()
+    log = parent / "active-bastion.log"
+    assert payload["token"] not in log.read_text(encoding="utf-8")
+    assert payload["password"] not in log.read_text(encoding="utf-8")
+    log.unlink()
+    parent.rmdir()
+    assert sentinel.read_bytes() == b"preserve unrelated state"
 
 
 def test_disconnect_active_bastion_notifies_control_endpoint_and_clears_state(monkeypatch) -> None:

@@ -30,15 +30,20 @@ import subprocess
 import sys
 import threading
 import time
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from types import FrameType
-from typing import Protocol, cast
+from typing import IO, Protocol, cast
 
 logger = logging.getLogger(__name__)
 
 _STATE_ENV = "NETOPS_BASTION_STATE"
-_DEFAULT_STATE_PATH = Path.home() / ".netops" / "active-bastion.json"
+_LEGACY_STATE_PATH = Path.home() / ".netops" / "active-bastion.json"
+_DEFAULT_STATE_PATH = Path.home() / (
+    ".netops-bastion" if os.name == "nt" else ".netops"
+) / "active-bastion.json"
 _DEFAULT_KNOWN_HOSTS_PATH = Path.home() / ".netops" / "known_hosts"
 
 
@@ -108,13 +113,27 @@ def _optional_string(value: object) -> str | None:
 
 def state_path() -> Path:
     """Return the user-scoped active-bastion state path."""
-    return Path(os.environ.get(_STATE_ENV, _DEFAULT_STATE_PATH))
+    selected = os.environ.get(_STATE_ENV)
+    if selected is not None:
+        return Path(selected)
+    if os.name == "nt" and not _DEFAULT_STATE_PATH.exists() and _LEGACY_STATE_PATH.exists():
+        return _LEGACY_STATE_PATH
+    return _DEFAULT_STATE_PATH
 
 
 def _read_state(path: Path | None = None) -> ActiveBastion | None:
     path = path or state_path()
     try:
-        raw = json.loads(path.read_text(encoding="utf-8"))
+        if os.name == "nt":
+            from netops.ansible.artifact_platform import windows
+
+            native = windows()
+            value = path.absolute()
+            with native.directory(str(value.parent)) as parent:
+                content = native.read(parent, value.name, 1024 * 1024)
+            raw = json.loads(content)
+        else:
+            raw = json.loads(path.read_text(encoding="utf-8"))
         return ActiveBastion(
             host=str(raw["host"]),
             port=int(raw["port"]),
@@ -493,9 +512,27 @@ def _write_state(state: ActiveBastion, path: Path) -> None:
     This file carries the bearer token used to authorize both SOCKS routing
     and service shutdown, so it must never be readable by other local
     accounts. Creating the temporary file with an explicit mode (and then
-    ``chmod``, since ``os.open``'s mode is still masked by the process
-    umask) closes that window before the file is renamed into place.
+    ``chmod`` on POSIX, since ``os.open``'s mode is masked by the process
+    umask) closes that window before the file is renamed into place. Windows
+    requires an existing protected owner-only parent: mode bits are not ACLs.
     """
+    if os.name == "nt":
+        from netops.ansible.artifact_platform import windows
+
+        native = windows()
+        value = path.absolute()
+        with native.directory(str(value.parent)) as parent:
+            # CREATE_NEW with an owner-only protected DACL precedes all token
+            # bytes. Never truncate an existing temp member or repair its ACL.
+            temporary_name = value.name + "." + secrets.token_hex(16) + ".tmp"
+            content = json.dumps(asdict(state), indent=2).encode("utf-8")
+            native.write(parent, temporary_name, content)
+            try:
+                native.rename(parent, temporary_name, value.name, True)
+            finally:
+                if temporary_name in native.names(parent):
+                    native.remove(parent, temporary_name)
+        return
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
@@ -509,6 +546,19 @@ def _write_state(state: ActiveBastion, path: Path) -> None:
     else:
         os.close(fd)
     temporary.replace(path)
+
+
+@contextmanager
+def _state_log(path: Path) -> Iterator[IO[str]]:
+    if os.name == "nt":
+        from netops.ansible.artifact_platform import windows
+
+        native = windows()
+        with native.directory(str(path.absolute().parent)) as parent, native.log(parent, path.name) as log:
+            yield log
+    else:
+        with path.open("w", encoding="utf-8") as log:
+            yield log
 
 
 def connect_active_bastion(
@@ -527,6 +577,21 @@ def connect_active_bastion(
 
     disconnect_active_bastion()
     path = state_path()
+    if os.name == "nt":
+        from netops.ansible.artifact_platform import windows
+
+        native = windows()
+        if path == _DEFAULT_STATE_PATH and _STATE_ENV not in os.environ:
+            try:
+                native.create_private_directory(str(path.parent))
+            except FileExistsError:
+                # Only a live protection proof permits reuse; no sentinel or
+                # ordinary inherited directory establishes ownership.
+                pass
+        with native.directory(str(path.absolute().parent)):
+            pass
+    else:
+        path.parent.mkdir(parents=True, exist_ok=True)
     token = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode("ascii").rstrip("=")
     state = ActiveBastion(
         host=host.strip(),
@@ -561,7 +626,7 @@ def connect_active_bastion(
     ]
     if state.key_file:
         args.extend(["--key-file", state.key_file])
-    with log_path.open("w", encoding="utf-8") as log:
+    with _state_log(log_path) as log:
         child = subprocess.Popen(
             args,
             stdin=subprocess.PIPE,

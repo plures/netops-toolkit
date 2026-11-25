@@ -58,7 +58,7 @@ def main() -> int:
     # Rewrite sys.argv so the delegate module sees itself as the entry point
     sys.argv = [f"netops {command}"] + sys.argv[2:]
 
-    if command != "logs":
+    if command != "logs" and not (command == "report" and "--preview" in sys.argv):
         # Keep the shared retention and verbosity policy active for every
         # unified CLI command. Individual commands can still add console-only
         # verbosity.
@@ -83,7 +83,7 @@ def main() -> int:
         diff.main()
     elif command == "report":
         from netops.report import generator
-        generator.main()
+        return generator.main(sys.argv[1:])
     elif command == "tui":
         try:
             from netops.tui.__main__ import main as tui_main

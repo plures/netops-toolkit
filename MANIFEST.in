@@ -1,0 +1,13 @@
+include LICENSE
+include examples/ansible/collect_facts.yml
+include examples/ansible/inventory.yaml
+include examples/ansible/run_commands.yml
+include tools/ansible_px_reference/Cargo.toml
+include tools/ansible_px_reference/Cargo.lock
+recursive-include tools/ansible_px_reference/src *.rs
+include tests/policy/canonical-corpus.json
+include tests/policy/test_policy_derivation.py
+include tests/policy/test_p01_semantic_expectations.py
+recursive-include tests/policy *.py
+recursive-include netops/ansible/roles *.yml *.md
+recursive-include netops/report/templates *.j2

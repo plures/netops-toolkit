@@ -1,5 +1,26 @@
 # CLI Reference
 
+## Saved reports
+
+```console
+netops report --input saved-sections.json --preview
+netops report --input saved-sections.json --output report.html
+netops report --input saved-outcome.json --format pdf --output report.pdf
+```
+
+`--input` accepts a JSON object with `sections` (`name`, `type`, `data`) or a
+versioned companion outcome. `--preview` loads/validates only the selected
+input, without rendering, output mutation, logging bootstrap or device I/O.
+The dispatcher returns the actual report command exit, including original
+non-success source status. HTML without `--output` prints to stdout; PDF
+requires an explicit output. Missing report extras/native PDF libraries return
+blocked guidance, never an HTML file disguised as PDF or implicit installation.
+
+Native `--output` preserves the native explicit-file API (atomic replacement,
+symlink rejection), not an A02 permission/ownership claim. Companion protected
+publication requires the separate exact reviewed output intent. See the
+[report API](../api/report.md) for error and remaining qualification boundaries.
+
 This reference follows the commands implemented in the current source tree.
 Use `--help` on the installed version for the authoritative, version-specific
 argument list.

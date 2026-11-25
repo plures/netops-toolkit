@@ -1,0 +1,56 @@
+[
+  {
+    "id": "0001",
+    "slug": "ansible-integration-uses-explicit-companion-workflows",
+    "title": "Ansible integration uses explicit companion workflows",
+    "status": "accepted",
+    "feature": "ansible-molecule-integration",
+    "tags": [
+      "ansible",
+      "molecule",
+      "companion-workflows",
+      "native-python"
+    ],
+    "supersedes": "",
+    "file": "0001-ansible-integration-uses-explicit-companion-workflows.md",
+    "created_utc": "2026-11-04T23:52:31.2366028Z",
+    "updated_utc": "2026-11-04T23:52:31.2366028Z"
+  },
+  {
+    "id": "0002",
+    "slug": "ansible-companions-use-a-managed-per-user-python-controller",
+    "title": "Ansible companions use a managed per-user Python controller",
+    "status": "accepted",
+    "feature": "ansible-molecule-integration",
+    "tags": [
+      "ansible",
+      "molecule",
+      "managed-python",
+      "controller",
+      "wsl",
+      "consent"
+    ],
+    "supersedes": "",
+    "file": "0002-ansible-companions-use-a-managed-per-user-python-controller.md",
+    "created_utc": "2026-11-05T00:13:47.8913935Z",
+    "updated_utc": "2026-11-05T00:13:47.8913935Z"
+  },
+  {
+    "id": "0003",
+    "slug": "molecule-uses-daemon-free-defaults-with-an-opt-in-container-tier",
+    "title": "Molecule uses daemon-free defaults with an opt-in container tier",
+    "status": "accepted",
+    "feature": "ansible-molecule-integration",
+    "tags": [
+      "ansible",
+      "molecule",
+      "daemon-free",
+      "container-tier",
+      "consent"
+    ],
+    "supersedes": "",
+    "file": "0003-molecule-uses-daemon-free-defaults-with-an-opt-in-container-tier.md",
+    "created_utc": "2026-11-05T01:00:37.4954906Z",
+    "updated_utc": "2026-11-05T01:00:37.4954906Z"
+  }
+]

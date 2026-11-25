@@ -21,6 +21,22 @@ Three output formats are available:
 - **semantic** — human-readable tree view with parent context and highlights
 - **json** — machine-readable dict suitable for programmatic consumption
 
+Bound companion comparison independently validates loaded bytes, source
+kind/digest and paired parser/vendor identity before invoking this native owner.
+Explicit `cisco`, `junos` and `flat` parser selectors and retained `parser-1`
+autodetection are supported. Paired namespaced source revisions, such as
+`collector-parser-v2` / `collector-vendor-v2`, identify source provenance rather
+than select a parser. Their namespace and positive revision must agree, and
+both snapshots must retain the exact same parser/vendor pair. They use native
+autodetection with the original decoded bytes, including case and final
+newlines; no source normalization or rehash substitutes for the bound input.
+Unsupported/mismatched identities and malformed
+Junos/mixed syntax reject safely; missing configuration is blocked rather than
+healthy absence. Native Junos bracket detection and repeated directive retention
+also apply to ordinary native calls. No preview collection, device I/O, hidden
+source reopen, credential resolution, logging or clock access is introduced.
+See [comparison architecture](https://github.com/plures/netops-toolkit/blob/main/documentation/change/change-architecture.md).
+
 **CLI usage:**
 ```
 python -m netops.change.diff --before before.txt --after after.txt
@@ -59,6 +75,17 @@ python -m netops.change.rollback --host 10.0.0.1 --vendor cisco_ios --commands c
 ```
 
 ::: netops.change.push
+
+The optional `run_push(..., hooks=PushHooks)` seam is for a trusted companion,
+not a reusable confirmation bypass. It injects an exact selected connection,
+checks cancellation/current authority immediately before issuance, requires a
+measured protected prestate, and confirms only an observed approved poststate.
+With hooks, raw changelog paths and interactive confirmation timers reject
+before I/O; returned records omit raw pre/post configuration and diffs, and
+exceptions use safe error codes. Ordinary calls without hooks retain their
+existing behavior. Hooked apply does not automatically restore on an exception:
+the companion must enter a separately authorized fixed recovery occurrence.
+See [guarded mutation boundaries](ansible.md#guarded-native-configuration-mutation-a02-inert-adapter-qualification).
 
 ---
 

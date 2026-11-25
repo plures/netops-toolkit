@@ -124,7 +124,7 @@
     <h1>{{ title }}</h1>
     <p>Generated: {{ generated_at }}{% if period %} &nbsp;&#x2022;&nbsp; Period: {{ period }}{% endif %}</p>
   </div>
-  <div>{{ status_badge(overall_alert) }}</div>
+  <div>{% if sections %}{{ status_badge(overall_alert) }}{% else %}<span class="status-na">No selected coverage</span>{% endif %}</div>
 </div>
 
 {# ------------------------------------------------------------------ #}
@@ -373,6 +373,26 @@
     {% endfor %}
     </tbody>
   </table>
+</div>
+
+{# ---- Bound companion coverage, never connectivity-only success ---- #}
+{% elif section.type in ("companion", "outcomes") %}
+<div class="section-box">
+  <div class="section-title">
+    <h3>Source: {{ d.source_status }} — {{ d.selected_count }} selected, {{ d.missing_count }} missing</h3>
+    {{ status_badge(d.overall_alert) }}
+  </div>
+  <table>
+    <thead><tr><th>Target</th><th>Status</th><th>Attempted</th><th>Changed</th><th>Remote state</th></tr></thead>
+    <tbody>
+    {% for target in d.coverage %}
+      <tr><td>{{ target.target_id }}</td><td>{{ target.status }}</td><td>{{ target.attempted }}</td><td>{{ target.changed }}</td><td>{{ target.remote_state }}</td></tr>
+    {% else %}
+      <tr><td colspan="5" class="status-na">No selected target coverage</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <pre style="padding:16px;white-space:pre-wrap">{{ d | tojson(indent=2) }}</pre>
 </div>
 
 {# ---- Generic/unknown section ---- #}

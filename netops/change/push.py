@@ -32,13 +32,39 @@ import os
 import sys
 import threading
 import time
+from contextlib import AbstractContextManager
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Protocol
 
 from netops.core.connection import ConnectionParams, DeviceConnection, Transport
 
 logger = logging.getLogger(__name__)
+
+
+class PushHooks(Protocol):
+    """Trusted companion I/O seams; never constructed from request permission flags."""
+
+    def connect(self, params: ConnectionParams) -> AbstractContextManager[DeviceConnection]:
+        """Open only the already selected private connection and route."""
+        ...
+
+    def check(self) -> None:
+        """Recheck current authority and cancellation before ordinary I/O."""
+        ...
+
+    def prestate(self, content: str) -> None:
+        """Require exact measured, protected prestate before the first write."""
+        ...
+
+    def mutating(self) -> None:
+        """Check authority at the final write boundary and record actual issuance."""
+        ...
+
+    def confirm(self, before: str, after: str) -> bool:
+        """Verify actual poststate against the exact approved confirmation."""
+        ...
 
 
 # ---------------------------------------------------------------------------
@@ -165,6 +191,7 @@ def run_push(
     confirm_timer_minutes: int = 0,
     operator: str = "",
     changelog_path: Path | None = None,
+    hooks: PushHooks | None = None,
 ) -> ChangeRecord:
     """Execute the full safe-push workflow.
 
@@ -185,8 +212,14 @@ def run_push(
     changelog_path:
         Optional path to a JSON-lines changelog file.  Each call appends one
         record.
+    hooks:
+        Optional trusted companion connection, cancellation, protected-prestate
+        and poststate-confirmation hooks. Raw changelogs and interactive timer
+        confirmation are forbidden with hooks; ordinary native calls are unchanged.
 
     """
+    if hooks is not None and (changelog_path is not None or confirm_timer_minutes != 0):
+        raise ValueError("guarded-output-required")
     started_at = datetime.now(timezone.utc).isoformat()
     record = ChangeRecord(
         host=params.host,
@@ -197,10 +230,16 @@ def run_push(
     )
 
     try:
-        with DeviceConnection(params) as conn:
+        if hooks is not None:
+            hooks.check()
+        with (DeviceConnection(params) if hooks is None else hooks.connect(params)) as conn:
             # 1. Pre-change snapshot
             logger.info("Taking pre-change config snapshot …")
-            record.pre_config = _snapshot_config(conn, params.device_type)
+            pre_config = _snapshot_config(conn, params.device_type)
+            if hooks is None:
+                record.pre_config = pre_config
+            else:
+                hooks.prestate(pre_config)
 
             if not commit:
                 logger.info("Dry-run mode — no changes pushed (use --commit to apply)")
@@ -208,12 +247,22 @@ def run_push(
 
             # 2. Push commands
             logger.info("Pushing %d command(s) to %s …", len(commands), params.host)
+            if hooks is not None:
+                hooks.mutating()
             _push_commands(conn, commands)
             record.committed = True
 
             # 3. Post-change snapshot + diff
-            record.post_config = _snapshot_config(conn, params.device_type)
-            record.diff = _unified_diff(record.pre_config, record.post_config, params.host)
+            if hooks is not None:
+                hooks.check()
+            post_config = _snapshot_config(conn, params.device_type)
+            if hooks is not None:
+                record.confirmed = hooks.confirm(pre_config, post_config) is True
+                if not record.confirmed:
+                    record.error = "apply-failed"
+                return record
+            record.post_config = post_config
+            record.diff = _unified_diff(pre_config, post_config, params.host)
 
             # 4. Confirm timer / auto-rollback
             if confirm_timer_minutes > 0:
@@ -231,13 +280,42 @@ def run_push(
                 record.confirmed = True
 
     except Exception as exc:
-        record.error = str(exc)
-        logger.error("Push failed for %s: %s", params.host, exc)
+        record.error = str(exc) if hooks is None else "apply-failed"
+        logger.error("Push failed for %s: %s", params.host, record.error)
 
     finally:
         if changelog_path:
             append_changelog(record, changelog_path)
 
+    return record
+
+
+def _run_guarded_rollback(
+    params: ConnectionParams, pre_config: str, hooks: PushHooks,
+) -> ChangeRecord:
+    """Restore only an explicitly admitted exact configuration snapshot.
+
+    The companion owns recovery admission; this native owner never decides
+    that an apply exception authorizes a compensating write.
+    """
+    record = ChangeRecord(
+        params.host, "companion", datetime.now(timezone.utc).isoformat(), [], "",
+    )
+    try:
+        hooks.check()
+        with hooks.connect(params) as conn:
+            hooks.mutating()
+            _rollback_to(conn, params.device_type, pre_config)
+            record.committed = True
+            hooks.check()
+            after = _snapshot_config(conn, params.device_type)
+            record.confirmed = hooks.confirm(pre_config, after) is True
+            record.rolled_back = record.confirmed
+            if not record.confirmed:
+                record.error = "apply-failed"
+    except Exception:
+        record.error = "apply-failed"
+        logger.error("Guarded rollback failed for %s", params.host)
     return record
 
 

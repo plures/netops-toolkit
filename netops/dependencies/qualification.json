@@ -1,0 +1,7 @@
+{
+  "schema_version": "1.0",
+  "qualified": [],
+  "required_tuple": ["os", "architecture", "native_python", "controller_python", "ansible_core", "molecule", "collections", "assets", "runtime", "image", "pdf", "credential_route", "policy_profile", "policy_source", "policy_contracts", "policy_bundle", "policy_reducer"],
+  "evidence_owner": "Q03",
+  "state": "unqualified"
+}

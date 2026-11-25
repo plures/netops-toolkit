@@ -31,54 +31,59 @@ Use the exact device type expected by Netmiko in `vendor` fields.
 
 ### Linux and macOS
 
-The maintained installer creates a user-local environment at `~/.venv/netops`
-and installs the TUI, scanning, HTML report, and documentation build extras.
-It also builds an offline documentation site at
-`~/.local/share/netops-toolkit/docs/index.html`. It selects the newest
-compatible installed Python (3.9+) for that environment, so `netops` and
-`netops-tui` use the same interpreter. If no compatible Python is installed,
-`uv` provisions one. It does not require `sudo`.
+Use a reviewed local checkout/archive and an existing compatible Python
+environment containing the source host's prerequisites (including PyYAML).
+The scripts invoke the registered `netops.setup.main` protected setup host.
+They do not acquire Python, elevate, clear environments or edit shell settings.
+Full registry selection also retains documentation tooling and the legacy
+`[tui,snmp,report,docs]` delivery contract. After successful install/update the
+installer offers a separate reviewed-source/new-owned-output strict MkDocs build.
+Already installed docs tooling can be used independently:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/plures/netops-toolkit/main/install.sh | bash
-source ~/.venv/netops/bin/activate
-netops --help
+NETOPS_DOCS_DIR=/absolute/path/new-owned-doc-output ./install.sh --docs-only
 ```
 
-For an offline installation, download and extract a release archive, then run
-`./install.sh` from its root.
+```powershell
+.\install.ps1 -DocsOnly -DocsDirectory C:\path\new-owned-doc-output
+```
 
-### Linux disk quota or no-space recovery
-
-If `uv` reports `Disk quota exceeded` or `No space left on device`, the install
-did not complete; activate neither the partial environment nor an unrelated
-`/home/...` path. Confirm the actual home directory with `echo "$HOME"`, then
-free the uv cache and retry:
+Missing tooling or strict source-link errors remain explicit blockers. No global
+pip/config/rc changes, new network or existing output/ACL adoption occurs.
+The bridge's strict output receipt is not managed-generation/publisher
+qualification; independent installed-delivery equivalence remains required.
 
 ```bash
-deactivate 2>/dev/null || true
-UV_BIN="$(command -v uv || true)"
-[ -x "$UV_BIN" ] || UV_BIN="$HOME/.local/bin/uv"
-[ -x "$UV_BIN" ] || UV_BIN="$HOME/.cargo/bin/uv"
-"$UV_BIN" cache clean
-quota -s 2>/dev/null || true
-df -h "$HOME" /tmp
-curl -sSL https://raw.githubusercontent.com/plures/netops-toolkit/main/install.sh | bash
-source "$HOME/.venv/netops/bin/activate"
-netops --help
+./install.sh plan --root /absolute/path/new-owned-root
+# After independently obtaining and reviewing an exact local setup descriptor:
+./install.sh install --root /absolute/path/new-owned-root --plan-file /absolute/path/plan.json
 ```
 
-When your home directory cannot hold the environment, place the virtual
-environment, uv cache, and uv-managed Python installs on a filesystem with
-adequate user quota:
+Default selection covers the full native/companion registry; `--enhanced`
+adds Molecule. `--capability` deliberately selects a narrower scope. The local
+descriptor must bind the complete selected archive and compatible wheel/
+collection closure. Missing pins block before root creation. Installed pip uses
+offline, hash-required wheels, no dependency resolution/builds/cache, and checks
+the resulting exact closure.
 
-```bash
-export NETOPS_VENV_DIR=/path/with/space/netops
-export NETOPS_UV_CACHE_DIR=/path/with/space/netops-uv-cache
-export UV_PYTHON_INSTALL_DIR=/path/with/space/netops-uv-python
-curl -sSL https://raw.githubusercontent.com/plures/netops-toolkit/main/install.sh | bash
-source "$NETOPS_VENV_DIR/bin/activate"
-```
+Creation, provisioning and activation have separate typed confirmations. Exit
+zero requires a succeeded selected lifecycle, not merely a directory or catalog.
+**Current limit:** production full-closure locks, clean bootstrap prerequisites,
+qualified controller/platform/runtime/service integrations and complete crash
+reconciliation remain unfinished. Native offline author execution is not
+Ansible/Molecule or platform qualification. See [setup boundaries](docs/api/dependencies.md#guided-protected-source-setup).
+
+### Partial bootstrap and recovery
+
+Existing and partial environments are deliberately retained, not rebuilt on
+retry. Keep the prior working environment, inventory, vault, backups and settings.
+Do not activate a candidate merely because its directory exists. Reruns accept
+only the exact protected setup ownership records; unknown roots are not adopted.
+Use `resume --installation-id <id>` for recorded recovery, or reviewed `update`
+to register a new descriptor while retaining the prior generation. `restore`
+requires actual retained qualification. `uninstall --generation-id <id>` removes
+only exact inactive manifest-owned members; active generations, unknown files
+and live/crash-held run references block removal. No TTL purge occurs.
 
 ### Windows and source development
 
@@ -99,10 +104,15 @@ netops --help
 Download the ZIP from [Releases](https://github.com/plures/netops-toolkit/releases), extract it, then run in PowerShell:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\netops-toolkit-<version>\install.ps1"
+powershell.exe -NoProfile -File ".\netops-toolkit-<version>\install.ps1" -Action plan
 ```
 
-The installer finds the newest compatible Python (3.9+) registered on the machine, then creates a virtual environment under `%LOCALAPPDATA%\netops-toolkit`. Both `netops` and `netops-tui` run from that same environment. It builds offline documentation at `%LOCALAPPDATA%\netops-toolkit\docs\index.html`, adds a per-user Start menu shortcut, and does not require administrator rights.
+Supply `-Python <existing-compatible-python>` when needed and
+`-PlanFile <reviewed-local-descriptor>` for provisioning. `-Action` selects plan,
+install, update, resume, verify, restore or uninstall. `-InstallRoot` selects the
+owned root; `-Capability` narrows selection and `-Enhanced` adds Molecule.
+It does not create shortcuts, elevate, configure WSL, install a service or reboot.
+Native Windows is not a supported Ansible controller.
 
 To see which interpreter the installer will use without making changes:
 
@@ -126,6 +136,12 @@ pip install -e ".[report-pdf]"   # HTML and PDF report API
 pip install -e ".[ansible]"      # Ansible helpers
 pip install -e ".[dev]"          # test and lint tooling
 ```
+
+These explicit development installs do not activate or qualify a managed
+controller. Native Windows Ansible controllers are not supported; Linux/macOS
+managed controllers and any existing Windows WSL controller still require their
+actual consuming-context and platform qualification. Plain pip has no new
+post-install acquisition hook.
 
 ## First run
 

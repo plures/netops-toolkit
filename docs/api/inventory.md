@@ -11,6 +11,11 @@ Scan subnets for network devices using ping sweep and SNMP fingerprinting.
 Produces `ScanResult` objects that can be merged into an existing inventory
 or exported as a new YAML/JSON inventory file.
 
+Companion `scan.save` reuses the native merge's private hydrated-data helper:
+known/manual values and non-placeholder tags are retained. The companion reads
+only its bound source bytes and publishes through protected artifact storage;
+the existing `merge_inventory(path, fragment)` native file behavior is unchanged.
+
 **CLI usage:**
 ```
 python -m netops.inventory.scan --subnet 10.0.0.0/24

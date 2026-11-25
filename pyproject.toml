@@ -36,7 +36,6 @@ snmp = [
 ]
 ansible = [
     "ansible-core>=2.16",
-    "ansible.netcommon>=6.0",
 ]
 report = [
     "jinja2>=3.1.6",
@@ -58,9 +57,23 @@ netops-tui = "netops.tui.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
+include = ["netops*"]
 
 [tool.setuptools.package-data]
-netops = ["py.typed"]
+netops = [
+    "py.typed",
+    "dependencies/registry.json",
+    "dependencies/operations.json",
+    "dependencies/qualification.json",
+    "dependencies/publisher-catalogue.json",
+    "ansible/policy/ansible_molecule.px",
+    "ansible/policy/ansible_molecule.contracts.px",
+    "ansible/policy/bundle.json",
+    "ansible/roles/*/README.md",
+    "ansible/roles/*/*/*.yml",
+    "ansible/roles/*/molecule/default/*.yml",
+    "report/templates/*.j2",
+]
 
 [tool.mypy]
 python_version = "3.9"
@@ -88,6 +101,7 @@ disable_error_code = ["attr-defined"]
 [tool.pytest.ini_options]
 addopts = "--cov=netops --cov-report=term-missing --cov-report=xml --cov-fail-under=30"
 testpaths = ["tests"]
+pythonpath = ["."]
 
 [tool.coverage.run]
 source = ["netops"]

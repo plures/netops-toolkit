@@ -1,0 +1,523 @@
+# ORIGINAL DRAFT — not parsed, evaluated, installed or qualified.
+# Authority: effective LLD v3 sections 5–6; build-only canonical projection.
+# An action is an intent, never a host permit or proof of a completed effect.
+
+constraint netops_companion_invariant_input_binding:
+  when: event.kind != "Cancelled"
+  require: binding.input_valid == true
+  severity: error
+  message: "policy-input-invalid"
+
+constraint netops_companion_invariant_identity:
+  when: event.kind != "Cancelled"
+  require: binding.plan_current == true and binding.policy_current == true and event.expected_revision == state.revision and state.phase != "Completed" and state.phase != "Cancelled"
+  severity: error
+  message: "policy-input-invalid"
+
+constraint netops_companion_invariant_cancellation:
+  when: event.kind != "Cancelled" and event.kind != "StepCompleted" and event.kind != "Activated"
+  require: control.cancelled == false and control.remaining_ms > 0
+  severity: error
+  message: "policy-input-invalid"
+
+constraint netops_companion_invariant_ownership:
+  when: event.kind == "InstallConsented" or event.kind == "CandidateVerified" or event.kind == "Activated"
+  require: ownership.valid == true
+  severity: error
+  message: "policy-input-invalid"
+
+constraint netops_companion_invariant_consent:
+  when: event.kind == "InstallConsented" or event.kind == "ApplyConsented" or ((event.kind == "StepCompleted" or event.kind == "CandidateVerified") and request.area == "setup" and lifecycle.next_effect_kind != "none")
+  require: consent.present == true and consent.binding_matches == true and consent.effects_match == true and consent.remaining_ms > 0 and request.mode != "preview" and request.mode != "check"
+  severity: error
+  message: "policy-input-invalid"
+
+constraint netops_companion_invariant_consequential:
+  when: event.kind == "InstallConsented"
+  require: consequential.required == false or consequential.granted == true
+  severity: error
+  message: "policy-input-invalid"
+
+constraint netops_companion_invariant_mode:
+  when: event.kind == "ApplyConsented"
+  require: config.enabled == true and config.mode == "enforce" and (request.mode == "apply" or request.mode == "rollback")
+  severity: error
+  message: "policy-input-invalid"
+
+constraint netops_companion_invariant_route:
+  when: request.mode == "observe" or event.kind == "ApplyConsented"
+  require: controller.qualified == true and route.qualified == true
+  severity: error
+  message: "policy-input-invalid"
+
+constraint netops_companion_invariant_credential_channel:
+  when: request.mode == "observe" or event.kind == "ApplyConsented"
+  require: credentials.channel_qualified == true
+  severity: error
+  message: "policy-input-invalid"
+
+constraint netops_companion_invariant_source_integrity:
+  when: request.area == "inventory"
+  require: inventory.source_valid == true and inventory.cache_binding_valid == true and inventory.hostvars_safe == true
+  severity: error
+  message: "policy-input-invalid"
+
+constraint netops_companion_invariant_pre_state:
+  when: event.kind == "ApplyConsented" and request.mode == "apply"
+  require: change.prestate_bound == true and change.vendor_recovery_qualified == true and storage.sensitive_ready == true
+  severity: error
+  message: "policy-input-invalid"
+
+constraint netops_companion_invariant_recovery:
+  when: event.kind == "ApplyConsented" and request.mode == "rollback"
+  require: consent.recovery_matches == true and change.vendor_recovery_qualified == true and storage.sensitive_ready == true
+  severity: error
+  message: "policy-input-invalid"
+
+constraint netops_companion_invariant_output_safety:
+  when: request.mode == "output"
+  require: consent.present == true and consent.binding_matches == true and consent.effects_match == true and consent.remaining_ms > 0 and report.output_safe == true
+  severity: error
+  message: "policy-input-invalid"
+
+rule netops_companion_catalog_operation_requested_set_phase:
+  when:
+    - event.kind == "OperationRequested"
+    - request.mode == "preview" or request.mode == "check"
+  then:
+    - action: set_phase phase: "Planned"
+
+rule netops_companion_dependency_readiness_dependency_observed_record_outcome:
+  when:
+    - event.kind == "DependencyObserved"
+    - readiness.selected_complete == true
+    - (readiness.native == "ready" or readiness.native == "not-requested") and (readiness.companion == "ready" or readiness.companion == "not-requested") and (readiness.enhanced == "ready" or readiness.enhanced == "not-requested")
+  then:
+    - action: record_outcome status: "success"
+
+rule netops_companion_dependency_readiness_dependency_observed_blocked:
+  when:
+    - event.kind == "DependencyObserved"
+    - readiness.selected_complete == false
+  then:
+    - action: record_outcome status: "blocked"
+
+rule netops_companion_setup_consent_install_consented_set_phase:
+  when:
+    - event.kind == "InstallConsented"
+    - event.payload.lifecycle_kind == "install"
+    - state.phase == "Planned"
+  then:
+    - action: set_phase phase: "Staging"
+
+rule netops_companion_setup_consent_install_consented_uninstall:
+  when:
+    - event.kind == "InstallConsented"
+    - event.payload.lifecycle_kind == "uninstall"
+    - state.phase == "Planned"
+    - lifecycle.next_effect_kind == "dependency-uninstall"
+  then:
+    - action: set_phase phase: "Admitted"
+    - action: request_effect kind: "dependency-uninstall"
+
+rule netops_companion_setup_consent_install_consented_restore:
+  when:
+    - event.kind == "InstallConsented"
+    - event.payload.lifecycle_kind == "restore"
+    - state.phase == "Planned"
+    - lifecycle.next_effect_kind == "restore-active-pointer"
+    - candidate.verified == true and candidate.retained_owned == true and candidate.pointer_matches == true
+  then:
+    - action: set_phase phase: "Admitted"
+    - action: request_effect kind: "restore-active-pointer"
+
+rule netops_companion_candidate_lifecycle_candidate_verified_set_phase:
+  when:
+    - event.kind == "CandidateVerified"
+    - state.phase == "Staging"
+    - candidate.verified == true and readiness.selected_complete == true
+  then:
+    - action: set_phase phase: "Verified"
+
+rule netops_companion_candidate_lifecycle_activated_set_phase:
+  when:
+    - event.kind == "Activated"
+    - state.phase == "Verified"
+    - candidate.verified == true and candidate.pointer_matches == true
+  then:
+    - action: set_phase phase: "Active"
+
+rule netops_companion_scan_operation_requested_request_effect:
+  when:
+    - event.kind == "OperationRequested"
+    - request.area == "scan" and request.operation == "discover" and request.mode == "observe"
+    - config.enabled == true and readiness.companion == "ready"
+    - discovery.scope_valid == true and scope.exclusions_valid == true
+    - scope.selected_count > 0 and scope.selected_count <= 4096
+  then:
+    - action: request_effect kind: "scan"
+
+rule netops_companion_scan_operation_requested_save:
+  when:
+    - event.kind == "OperationRequested"
+    - request.area == "scan" and request.operation == "save" and request.mode == "output"
+    - discovery.scope_valid == true
+  then:
+    - action: request_effect kind: "save"
+
+rule netops_companion_inventory_operation_requested_record_outcome:
+  when:
+    - event.kind == "OperationRequested"
+    - request.area == "inventory" and request.operation == "validate"
+    - request.mode != "preview" and request.mode != "check"
+  then:
+    - action: record_outcome status: "success"
+
+rule netops_companion_inventory_operation_requested_export:
+  when:
+    - event.kind == "OperationRequested"
+    - request.area == "inventory" and request.operation == "export" and request.mode == "output"
+  then:
+    - action: request_effect kind: "export"
+
+rule netops_companion_inventory_operation_requested_refresh:
+  when:
+    - event.kind == "OperationRequested"
+    - request.area == "inventory" and request.operation == "refresh" and request.mode == "observe"
+  then:
+    - action: request_effect kind: "refresh"
+
+rule netops_companion_vault_operation_requested_record_outcome:
+  when:
+    - event.kind == "OperationRequested"
+    - request.area == "vault" and request.operation == "preflight"
+    - request.mode != "preview" and request.mode != "check"
+    - credentials.channel_qualified == true and controller.qualified == true and route.qualified == true
+  then:
+    - action: record_outcome status: "success"
+
+rule netops_companion_vault_operation_requested_resolve_for_run:
+  when:
+    - event.kind == "OperationRequested"
+    - request.area == "vault" and request.operation == "resolve-for-run" and request.mode == "observe"
+    - credentials.channel_qualified == true and controller.qualified == true and route.qualified == true
+    - readiness.companion == "ready"
+  then:
+    - action: request_effect kind: "resolve-for-run"
+
+rule netops_companion_config_collect_operation_requested_request_effect:
+  when:
+    - event.kind == "OperationRequested"
+    - request.area == "config" and request.operation == "collect" and request.mode == "observe"
+    - config.enabled == true and readiness.companion == "ready"
+    - scope.selected_count > 0
+  then:
+    - action: request_effect kind: "collect"
+
+rule netops_companion_config_collect_operation_requested_backup:
+  when:
+    - event.kind == "OperationRequested"
+    - request.area == "config" and request.operation == "backup" and request.mode == "output"
+    - operational.next_effect_kind == "backup"
+    - storage.sensitive_ready == true and config.enabled == true and readiness.companion == "ready"
+  then:
+    - action: request_effect kind: "backup"
+
+rule netops_companion_config_collect_operation_requested_backup_collect:
+  when:
+    - event.kind == "OperationRequested"
+    - request.area == "config" and request.operation == "backup"
+    - request.mode == "observe" or request.mode == "output"
+    - operational.next_effect_kind == "collect"
+    - config.enabled == true and readiness.companion == "ready" and scope.selected_count > 0
+  then:
+    - action: request_effect kind: "collect"
+
+rule netops_companion_config_collect_operation_requested_backup_retention:
+  when:
+    - event.kind == "OperationRequested"
+    - request.area == "config" and request.operation == "backup" and request.mode == "output"
+    - operational.next_effect_kind == "retention"
+    - output.retention_requested == true and storage.sensitive_ready == true
+    - config.enabled == true and readiness.companion == "ready"
+  then:
+    - action: request_effect kind: "retention"
+
+rule netops_companion_config_collect_operation_requested_backup_git:
+  when:
+    - event.kind == "OperationRequested"
+    - request.area == "config" and request.operation == "backup" and request.mode == "output"
+    - operational.next_effect_kind == "git"
+    - output.git_requested == true and storage.sensitive_ready == true
+    - config.enabled == true and readiness.companion == "ready"
+  then:
+    - action: request_effect kind: "git"
+
+rule netops_companion_config_mutate_apply_consented_request_effect:
+  when:
+    - event.kind == "ApplyConsented"
+    - request.area == "config" and request.operation == "apply" and request.mode == "apply"
+    - state.phase == "Planned"
+  then:
+    - action: set_phase phase: "Admitted"
+    - action: request_effect kind: "apply"
+
+rule netops_companion_recovery_apply_consented_request_effect:
+  when:
+    - event.kind == "ApplyConsented"
+    - request.area == "config" and request.operation == "rollback" and request.mode == "rollback"
+    - state.phase == "Planned" or state.phase == "Uncertain"
+  then:
+    - action: set_phase phase: "Admitted"
+    - action: request_effect kind: "rollback"
+
+rule netops_companion_config_mutate_step_completed_record_step:
+  when:
+    - event.kind == "StepCompleted"
+    - request.area == "config" and request.operation == "apply"
+    - state.phase == "Executing" or state.phase == "Cancelling"
+    - change.poststate_verified == true and result.remote_uncertain == false
+  then:
+    - action: record_step disposition: "success"
+
+rule netops_companion_recovery_step_completed_record_step:
+  when:
+    - event.kind == "StepCompleted"
+    - request.area == "config" and request.operation == "rollback"
+    - state.phase == "Executing" or state.phase == "Cancelling"
+    - change.poststate_verified == true and result.remote_uncertain == false
+  then:
+    - action: record_step disposition: "success"
+
+rule netops_companion_config_mutate_step_completed_uncertain:
+  when:
+    - event.kind == "StepCompleted"
+    - request.area == "config" and request.operation == "apply"
+    - state.phase == "Executing" or state.phase == "Cancelling"
+    - result.remote_uncertain == true
+  then:
+    - action: set_phase phase: "Uncertain"
+    - action: record_step disposition: "failed"
+
+rule netops_companion_recovery_step_completed_uncertain:
+  when:
+    - event.kind == "StepCompleted"
+    - request.area == "config" and request.operation == "rollback"
+    - state.phase == "Executing" or state.phase == "Cancelling"
+    - result.remote_uncertain == true
+  then:
+    - action: set_phase phase: "Uncertain"
+    - action: record_step disposition: "failed"
+
+rule netops_companion_health_observed_record_outcome:
+  when:
+    - event.kind == "Observed" and request.area == "health"
+    - health.check_supported == true and health.reading_present == true and health.reading_finite == true
+    - health.reading >= health.threshold
+  then:
+    - action: record_outcome status: "failed"
+
+rule netops_companion_health_operation_requested_gather:
+  when:
+    - event.kind == "OperationRequested"
+    - request.area == "health" and request.operation == "gather" and request.mode == "observe"
+    - config.enabled == true and readiness.companion == "ready"
+    - scope.selected_count > 0 and scope.selected_count <= 4096
+  then:
+    - action: request_effect kind: "gather"
+
+rule netops_companion_health_observed_unsupported:
+  when:
+    - event.kind == "Observed" and request.area == "health"
+    - health.check_supported == false
+  then:
+    - action: record_outcome status: "unsupported"
+
+rule netops_companion_health_observed_unknown:
+  when:
+    - event.kind == "Observed" and request.area == "health"
+    - health.check_supported == true
+    - health.reading_present == false or health.reading_finite == false
+  then:
+    - action: record_outcome status: "failed"
+
+rule netops_companion_health_observed_success:
+  when:
+    - event.kind == "Observed" and request.area == "health"
+    - health.check_supported == true and health.reading_present == true and health.reading_finite == true
+    - health.reading < health.threshold
+  then:
+    - action: record_outcome status: "success"
+
+rule netops_companion_compare_operation_requested_record_outcome:
+  when:
+    - event.kind == "OperationRequested" and request.area == "compare"
+    - request.mode != "preview" and request.mode != "check"
+    - compare.inputs_bound == true and compare.vendor_supported == true
+    - request.operation == "compare" or request.operation == "remediation-preview" or request.operation == "generate"
+    - request.operation != "generate" or request.mode != "output"
+  then:
+    - action: record_outcome status: "success"
+
+rule netops_companion_compare_operation_requested_save:
+  when:
+    - event.kind == "OperationRequested"
+    - request.area == "compare" and request.operation == "generate" and request.mode == "output"
+    - compare.inputs_bound == true and compare.vendor_supported == true
+    - report.output_safe == true
+  then:
+    - action: request_effect kind: "save"
+
+rule netops_companion_report_operation_requested_request_effect:
+  when:
+    - event.kind == "OperationRequested" and request.area == "report"
+    - request.operation == "render" and request.mode == "output"
+    - report.coverage_complete == true and report.output_safe == true
+    - readiness.companion == "ready"
+  then:
+    - action: request_effect kind: "render"
+
+rule netops_companion_aggregate_step_completed_partial:
+  when:
+    - event.kind == "StepCompleted"
+    - result.completed > 0 and result.unsuccessful > 0
+  then:
+    - action: record_outcome status: "partial"
+
+rule netops_companion_aggregate_step_completed_failed:
+  when:
+    - event.kind == "StepCompleted"
+    - result.completed == 0 or result.unsuccessful == 0
+    - result.failed > 0 or result.policy_failed == true or result.cleanup_failed == true or result.remote_uncertain == true
+  then:
+    - action: record_outcome status: "failed"
+
+rule netops_companion_aggregate_step_completed_cancelled:
+  when:
+    - event.kind == "StepCompleted" and result.completed == 0
+    - result.failed == 0 and result.policy_failed == false and result.cleanup_failed == false and result.remote_uncertain == false
+    - result.cancelled > 0
+  then:
+    - action: record_outcome status: "cancelled"
+
+rule netops_companion_aggregate_step_completed_unsupported:
+  when:
+    - event.kind == "StepCompleted" and result.completed == 0
+    - result.failed == 0 and result.policy_failed == false and result.cleanup_failed == false and result.remote_uncertain == false
+    - result.cancelled == 0 and result.unsupported > 0
+  then:
+    - action: record_outcome status: "unsupported"
+
+rule netops_companion_aggregate_step_completed_blocked:
+  when:
+    - event.kind == "StepCompleted" and result.completed == 0
+    - result.failed == 0 and result.policy_failed == false and result.cleanup_failed == false and result.remote_uncertain == false
+    - result.cancelled == 0 and result.unsupported == 0 and result.blocked > 0
+  then:
+    - action: record_outcome status: "blocked"
+
+rule netops_companion_aggregate_step_completed_success:
+  when:
+    - event.kind == "StepCompleted"
+    - result.selected > 0 and result.completed == result.selected and result.unsuccessful == 0
+    - result.policy_failed == false and result.cleanup_failed == false and result.remote_uncertain == false
+    - request.area != "config" or (request.operation != "apply" and request.operation != "rollback") or change.poststate_verified == true
+    - request.area != "setup" or request.operation != "uninstall" or change.poststate_verified == true
+  then:
+    - action: record_outcome status: "success"
+
+rule netops_companion_cancel_control_cancelled_revoke_pending:
+  when:
+    - event.kind == "Cancelled"
+    - state.phase != "Completed" and state.phase != "Cancelled"
+  then:
+    - action: revoke_pending scope: "operation"
+    - action: set_phase phase: "Cancelling"
+
+rule netops_companion_qualification_candidate_verified_record_outcome:
+  when:
+    - event.kind == "CandidateVerified"
+    - state.phase == "Verified"
+    - candidate.verified == true and readiness.selected_complete == true
+  then:
+    - action: record_outcome status: "success"
+
+# Only the bound next occurrence is projected. These intents are not permits.
+rule netops_companion_candidate_lifecycle_install_next_probe:
+  when:
+    - event.kind == "InstallConsented" or event.kind == "StepCompleted"
+    - request.area == "setup" and request.operation == "install"
+    - state.phase == "Planned" or state.phase == "Staging"
+    - lifecycle.next_effect_kind == "dependency-probe"
+    - control.cancelled == false and control.remaining_ms > 0
+    - ownership.valid == true and consent.binding_matches == true and consent.effects_match == true
+  then:
+    - action: request_effect kind: "dependency-probe"
+
+rule netops_companion_candidate_lifecycle_install_next_download:
+  when:
+    - event.kind == "InstallConsented" or event.kind == "StepCompleted"
+    - request.area == "setup" and request.operation == "install"
+    - state.phase == "Planned" or state.phase == "Staging"
+    - lifecycle.next_effect_kind == "dependency-download"
+    - control.cancelled == false and control.remaining_ms > 0
+    - ownership.valid == true and consent.binding_matches == true and consent.effects_match == true
+  then:
+    - action: request_effect kind: "dependency-download"
+
+rule netops_companion_candidate_lifecycle_install_next_stage:
+  when:
+    - event.kind == "InstallConsented" or event.kind == "StepCompleted"
+    - request.area == "setup" and request.operation == "install"
+    - state.phase == "Planned" or state.phase == "Staging"
+    - lifecycle.next_effect_kind == "dependency-stage"
+    - control.cancelled == false and control.remaining_ms > 0
+    - ownership.valid == true and consent.binding_matches == true and consent.effects_match == true
+  then:
+    - action: request_effect kind: "dependency-stage"
+
+rule netops_companion_candidate_lifecycle_install_next_verify:
+  when:
+    - event.kind == "InstallConsented" or event.kind == "StepCompleted"
+    - request.area == "setup" and request.operation == "install"
+    - state.phase == "Planned" or state.phase == "Staging"
+    - lifecycle.next_effect_kind == "dependency-verify"
+    - control.cancelled == false and control.remaining_ms > 0
+    - ownership.valid == true and consent.binding_matches == true and consent.effects_match == true
+  then:
+    - action: request_effect kind: "dependency-verify"
+
+rule netops_companion_candidate_lifecycle_install_next_activate:
+  when:
+    - event.kind == "CandidateVerified" or event.kind == "StepCompleted"
+    - request.area == "setup" and request.operation == "install"
+    - (event.kind == "CandidateVerified" and state.phase == "Staging") or (event.kind == "StepCompleted" and state.phase == "Verified")
+    - lifecycle.next_effect_kind == "dependency-activate"
+    - candidate.verified == true and candidate.pointer_matches == true and readiness.selected_complete == true
+    - control.cancelled == false and control.remaining_ms > 0
+    - ownership.valid == true and consent.binding_matches == true and consent.effects_match == true
+  then:
+    - action: request_effect kind: "dependency-activate"
+
+rule netops_companion_candidate_lifecycle_uninstall_next_uninstall:
+  when:
+    - event.kind == "StepCompleted"
+    - request.area == "setup" and request.operation == "uninstall"
+    - state.phase == "Admitted" or state.phase == "Executing"
+    - lifecycle.next_effect_kind == "dependency-uninstall"
+    - control.cancelled == false and control.remaining_ms > 0
+    - ownership.valid == true and consent.binding_matches == true and consent.effects_match == true
+  then:
+    - action: request_effect kind: "dependency-uninstall"
+
+rule netops_companion_candidate_lifecycle_uninstall_next_restore:
+  when:
+    - event.kind == "StepCompleted"
+    - request.area == "setup" and request.operation == "uninstall"
+    - state.phase == "Admitted" or state.phase == "Executing"
+    - lifecycle.next_effect_kind == "restore-active-pointer"
+    - candidate.verified == true and candidate.retained_owned == true and candidate.pointer_matches == true
+    - control.cancelled == false and control.remaining_ms > 0
+    - ownership.valid == true and consent.binding_matches == true and consent.effects_match == true
+  then:
+    - action: request_effect kind: "restore-active-pointer"

@@ -1,0 +1,19 @@
+[package]
+name = "ansible-px-reference"
+version = "0.0.0"
+edition = "2021"
+rust-version = "1.85"
+publish = false
+description = "Unqualified build-only canonical PX projection adapter"
+license-file = "../../LICENSE"
+
+[dependencies]
+px-ast = { git = "https://github.com/plures/praxis-lang", rev = "6d367fe673756dabaa6085bc6b5202debaaabe6f" }
+px-compiler = { git = "https://github.com/plures/praxis-lang", rev = "6d367fe673756dabaa6085bc6b5202debaaabe6f" }
+px-eval = { git = "https://github.com/plures/praxis-lang", rev = "6d367fe673756dabaa6085bc6b5202debaaabe6f" }
+serde_json = { version = "=1.0.154", features = ["float_roundtrip"] }
+sha2 = "=0.10.9"
+tracing = "=0.1.41"
+tracing-subscriber = { version = "=0.3.20", default-features = false, features = ["fmt", "json", "registry", "std"] }
+
+[workspace]

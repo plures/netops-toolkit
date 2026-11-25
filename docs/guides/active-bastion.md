@@ -14,6 +14,21 @@ bastion and exposes an authenticated loopback-only SOCKS endpoint to the
 toolkit. The password is sent to that service over stdin, never written to the
 active-bastion state file, and is retained only in the service's memory.
 
+The random local routing/shutdown bearer token is separate from the bastion
+password and is stored in the protected state file. On Windows, `chmod(0600)`
+does not enforce owner-only access: state publication requires an existing
+owner-only protected parent directory and creates the state file with a native
+protected DACL before writing any token bytes. The writer does not modify an
+existing parent ACL or grant permissions automatically. An ordinary inherited
+test-directory ACL is not equivalent to this contract. On Windows a new default
+`~/.netops-bastion` directory is created with owner-only native protection.
+Existing default and explicit parents must already pass that protection proof.
+Existing legacy `~/.netops/active-bastion.json` remains selected when no new
+default state exists; its protected parent and stable single-link file are proved
+before token use. Unsafe legacy state fails closed without ACL repair or a
+silent direct-connection fallback. Logs retain the fixed state-related filename
+and use a protected native handle before truncation and child output attachment.
+
 Check or end the session with:
 
 ```powershell

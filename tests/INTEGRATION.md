@@ -79,3 +79,20 @@ These tests run in CI with no special setup:
 ```
 
 Port range 22220–22235 is used for mock servers (no root required, all > 1024).
+
+## Credential fixture isolation
+
+Credential test modules also export fixtures through `pytest_plugins`. Their
+autouse process/socket/bastion guards apply only to scoped-credential tests or
+tests consuming the real `composition` fixture, not unrelated collected modules.
+They retain pytest's shared `monkeypatch` stack and automatic teardown, including
+test-call exceptions; manually separate patch stacks can restore intermediate
+test mocks instead of the original ports.
+
+`test_nov22_credential_guard_isolation.py` runs actual ordered pytest collection
+and fixtures in an isolated process. It checks active rejection inside credential
+cases, exact original function identities/source hashes after teardown and at
+unconfigure, and a mocked offline subprocess probe before/after credential cases.
+The intentional call-failure scenario requires exactly the three credential
+failures and both unrelated cases to pass. This does not authorize SSH listeners
+or external services.
