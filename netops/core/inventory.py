@@ -115,6 +115,11 @@ class Inventory:
         else:
             data = json.loads(path.read_text())
 
+        return cls._from_data(data)
+
+    @classmethod
+    def _from_data(cls, data: dict) -> Inventory:
+        """Use already hydrated data with the same native defaults and groups."""
         inv = cls()
         inv.defaults = data.get("defaults", {})
 

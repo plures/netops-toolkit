@@ -101,6 +101,10 @@ class ConfigStyle(str, Enum):
         set_lines = sum(1 for ln in lines if ln.lstrip().startswith("set "))
         if set_lines > len(lines) * 0.4:
             return cls.JUNOS
+        if any(ln.strip().endswith("{") for ln in lines) and any(
+            ln.strip() == "}" for ln in lines
+        ):
+            return cls.JUNOS
         indented = sum(1 for ln in lines if ln.startswith((" ", "\t")))
         if indented > len(lines) * 0.2:
             return cls.CISCO
@@ -344,7 +348,7 @@ def _node_map(nodes: list[ConfigNode]) -> dict[str, ConfigNode]:
     counts: dict[str, int] = {}
     for node in nodes:
         base = node.key
-        if base in result:
+        if base in counts:
             # second occurrence: rename existing entry
             count = counts.get(base, 1)
             if count == 1:

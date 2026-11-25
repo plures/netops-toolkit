@@ -639,6 +639,11 @@ def merge_inventory(existing_path: str, fragment: dict) -> dict:
     else:
         existing = {}
 
+    return _merge_inventory_data(existing, fragment)
+
+
+def _merge_inventory_data(existing: dict, fragment: dict) -> dict:
+    """Apply the native non-overwriting merge to already hydrated values."""
     if existing.get("devices") is None:
         existing["devices"] = {}
     else:

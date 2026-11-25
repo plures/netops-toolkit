@@ -47,6 +47,7 @@ nav:
   - Home: index.md
   - Guides:
     - Getting Started: guides/getting-started.md
+    - Dependency Setup and Controllers: guides/setup-and-controller.md
     - Terminal UI: guides/tui.md
     - TUI Screen Reference: guides/tui-screens.md
     - CLI Reference: guides/cli-reference.md

@@ -40,6 +40,8 @@ import json
 import logging
 import os
 import re
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -126,6 +128,22 @@ class CredentialVault:
         self._key: bytes | None = None
         # In-memory store: {"devices": {...}, "groups": {...}, "defaults": {...}}
         self._data: dict = {"devices": {}, "groups": {}, "defaults": {}}
+
+    @contextmanager
+    def private_session(self) -> Iterator[CredentialVault]:
+        """Yield an isolated reader, discarding its decrypted state on every exit.
+
+        Companion operations must not unlock, overwrite or clear a native caller's
+        live vault. Only the selected path is shared; encryption and lookup remain
+        the native implementation. Python cannot guarantee erasure of immutable
+        strings or cryptography-library allocations.
+        """
+        reader = CredentialVault(vault_path=self._path)
+        try:
+            yield reader
+        finally:
+            reader._key = None
+            reader._data.clear()
 
     # ------------------------------------------------------------------
     # Vault lifecycle

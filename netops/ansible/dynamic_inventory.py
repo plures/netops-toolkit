@@ -253,6 +253,21 @@ def build_inventory(
     from netops.core.inventory import Inventory  # local import keeps module light
 
     inv = Inventory.from_file(inventory_path)
+    result = _from_inventory(inv, vault_path)
+    if not no_cache:
+        try:
+            _save_cache(cache_path, result)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Could not write inventory cache to %s: %s", cache_path, exc)
+    return result
+
+
+def _from_inventory(inv: object, vault_path: str | None = None) -> dict:
+    """Build the native shape from hydrated inventory without cache or source I/O."""
+    from netops.core.inventory import Inventory
+
+    if not isinstance(inv, Inventory):
+        raise TypeError("inventory required")
     ansible_dict = inv.to_ansible()
 
     # ------------------------------------------------------------------ #
@@ -290,13 +305,6 @@ def build_inventory(
     # Emit each group as a top-level key with its member list
     for group, members in all_children.items():
         result[group] = {"hosts": members}
-
-    # Persist cache
-    if not no_cache:
-        try:
-            _save_cache(cache_path, result)
-        except Exception as exc:  # noqa: BLE001
-            logger.warning("Could not write inventory cache to %s: %s", cache_path, exc)
 
     return result
 
